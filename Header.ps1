@@ -30,10 +30,22 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.43
+    1.9.44
 
 .LAST UPDATED
     03/02/2026
+
+.CHANGELOG v1.9.44
+    FEATURES & QOL PATCH:
+    - NEW: "home" / "main" / "m" navigation command — jump to main menu from any submenu
+    - NEW: Performance Dashboard auto-refresh loop with [R] to refresh and top 5 processes display
+    - NEW: Event Log Viewer custom search (log name, keyword, event ID, time range) with CSV export
+    - NEW: Configurable Service Manager — override monitored services via defaults.json MonitoredServices
+    - NEW: Changelog loaded from Changelog.md file instead of hardcoded heredoc
+    - NEW: Batch mode pre-execution summary showing all planned actions before starting
+    - NEW: Cluster operation timeouts via Invoke-WithTimeout — Get-Cluster/Get-ClusterNode/Get-ClusterResource no longer hang indefinitely
+    - Expanded default service list from 10 to 15 (added Server, Workstation, EventLog, Netlogon, NTDS)
+    - Added MonitoredServices config section to defaults.example.json
 
 .CHANGELOG v1.9.43
     HARDENING & DOCS PATCH:

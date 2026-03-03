@@ -9,6 +9,7 @@ function Test-NavigationCommand {
 
     $backCommands = @("back", "b", "cancel", "c", "0")
     $exitCommands = @("exit", "quit", "q")
+    $homeCommands = @("home", "main", "m")
 
     if ([string]::IsNullOrWhiteSpace($UserInput)) {
         return @{ Action = "empty"; ShouldReturn = $false }
@@ -24,6 +25,10 @@ function Test-NavigationCommand {
         return @{ Action = "exit"; ShouldReturn = $true }
     }
 
+    if ($lowerInput -in $homeCommands) {
+        return @{ Action = "home"; ShouldReturn = $true }
+    }
+
     return @{ Action = "continue"; ShouldReturn = $false }
 }
 
@@ -36,6 +41,11 @@ function Invoke-NavigationAction {
 
     if ($NavResult.Action -eq "exit") {
         Exit-Script
+    }
+
+    if ($NavResult.Action -eq "home") {
+        $global:ReturnToMainMenu = $true
+        return $true
     }
 
     # For "back", the calling function should handle the return
@@ -516,5 +526,37 @@ function Get-FileHashBackground {
     $hash = Receive-Job $hashJob
     Remove-Job $hashJob -Force -ErrorAction SilentlyContinue
     return $hash
+}
+
+# Run a scriptblock with a timeout using a background job
+function Invoke-WithTimeout {
+    param(
+        [Parameter(Mandatory=$true)]
+        [scriptblock]$ScriptBlock,
+        [int]$TimeoutSeconds = 30,
+        [string]$Activity = "Operation"
+    )
+
+    $job = Start-Job -ScriptBlock $ScriptBlock
+    $spinChars = @('|', '/', '-', '\')
+    $elapsed = 0
+
+    while ($job.State -eq "Running" -and $elapsed -lt $TimeoutSeconds) {
+        $spin = $spinChars[$elapsed % 4]
+        Write-Host "`r  [$spin] $Activity... ${elapsed}s    " -NoNewline
+        Start-Sleep -Seconds 1
+        $elapsed++
+    }
+    Write-Host ""
+
+    if ($job.State -eq "Running") {
+        Stop-Job $job -Force
+        Remove-Job $job -Force
+        return @{ TimedOut = $true; Result = $null }
+    }
+
+    $result = Receive-Job $job
+    Remove-Job $job -Force
+    return @{ TimedOut = $false; Result = $result }
 }
 #endregion

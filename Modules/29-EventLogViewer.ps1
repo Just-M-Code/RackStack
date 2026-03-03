@@ -1,6 +1,8 @@
 ﻿#region ===== EVENT LOG VIEWER =====
 # Function to view recent event log entries
 function Show-EventLogViewer {
+    $lastEvents = $null
+
     while ($true) {
         if ($global:ReturnToMainMenu) { return }
         Clear-Host
@@ -19,6 +21,8 @@ function Show-EventLogViewer {
         Write-MenuItem "[4]  Security Log (Audit Failures)"
         Write-MenuItem "[5]  Hyper-V Events"
         Write-MenuItem "[6]  Cluster Events"
+        Write-MenuItem "[7]  Custom Search"
+        Write-MenuItem "[8]  Export Last Results to CSV"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
         Write-OutputColor "  [B] ◄ Back" -color "Info"
@@ -56,9 +60,39 @@ function Show-EventLogViewer {
                 $title = "Cluster Events"
                 $events = Get-WinEvent -LogName "Microsoft-Windows-FailoverClustering/Operational" -MaxEvents 30 -ErrorAction SilentlyContinue
             }
-            "b" { return }
+            "7" {
+                # Custom Search
+                $searchResult = Show-EventLogCustomSearch
+                if ($searchResult) {
+                    $events = $searchResult.Events
+                    $title = $searchResult.Title
+                }
+            }
+            "8" {
+                # Export last results to CSV
+                if (-not $lastEvents) {
+                    Write-OutputColor "  No results to export. Run a query first." -color "Warning"
+                    Write-PressEnter
+                    continue
+                }
+                $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+                $csvPath = "$script:TempPath\EventLog_$timestamp.csv"
+                try {
+                    $lastEvents | Select-Object TimeCreated, LevelDisplayName, Id, ProviderName, Message |
+                        Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
+                    Write-OutputColor "  Exported $($lastEvents.Count) events to:" -color "Success"
+                    Write-OutputColor "  $csvPath" -color "Info"
+                }
+                catch {
+                    Write-OutputColor "  Export failed: $_" -color "Error"
+                }
+                Write-PressEnter
+                continue
+            }
             default { Write-OutputColor "  Invalid choice." -color "Error"; Start-Sleep -Seconds 1; continue }
         }
+
+        if ($choice -eq "8") { continue }
 
         Clear-Host
         Write-OutputColor "" -color "Info"
@@ -71,6 +105,7 @@ function Show-EventLogViewer {
             Write-OutputColor "  No events found." -color "Info"
         }
         else {
+            $lastEvents = $events
             foreach ($logEvent in $events | Select-Object -First 20) {
                 $levelColor = switch ($logEvent.LevelDisplayName) {
                     "Critical" { "Error" }
@@ -87,5 +122,79 @@ function Show-EventLogViewer {
 
         Write-PressEnter
     }
+}
+
+# Custom event log search
+function Show-EventLogCustomSearch {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  CUSTOM EVENT LOG SEARCH".PadRight(72))│" -color "Info"
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Log name
+    Write-OutputColor "  Log name [System/Application/Security/or custom]:" -color "Info"
+    Write-OutputColor "  (Press Enter for System)" -color "Info"
+    $logName = Read-Host "  Log"
+    if (-not $logName) { $logName = "System" }
+
+    # Keyword filter
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  Keyword filter (source or message substring, blank for none):" -color "Info"
+    $keyword = Read-Host "  Keyword"
+
+    # Event ID filter
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  Event ID filter (blank for none):" -color "Info"
+    $eventIdStr = Read-Host "  Event ID"
+
+    # Time range
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  Time range:  [1] 1h  [2] 6h  [3] 24h  [4] 7d  [5] All" -color "Info"
+    $timeChoice = Read-Host "  Range"
+    $startTime = switch ($timeChoice) {
+        "1" { (Get-Date).AddHours(-1) }
+        "2" { (Get-Date).AddHours(-6) }
+        "3" { (Get-Date).AddHours(-24) }
+        "4" { (Get-Date).AddDays(-7) }
+        default { $null }
+    }
+
+    # Build filter
+    $filter = @{ LogName = $logName }
+    if ($startTime) { $filter['StartTime'] = $startTime }
+    if ($eventIdStr -match '^\d+$') { $filter['ID'] = [int]$eventIdStr }
+
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  Searching..." -color "Info"
+
+    try {
+        $events = @(Get-WinEvent -FilterHashtable $filter -MaxEvents 100 -ErrorAction Stop)
+    }
+    catch {
+        if ($_.Exception.Message -like "*No events were found*") {
+            $events = @()
+        } else {
+            Write-OutputColor "  Search error: $_" -color "Error"
+            Write-PressEnter
+            return $null
+        }
+    }
+
+    # Apply keyword filter on source/message
+    if ($keyword -and $events.Count -gt 0) {
+        $events = @($events | Where-Object {
+            ($_.ProviderName -like "*$keyword*") -or
+            ($_.Message -and $_.Message -like "*$keyword*")
+        })
+    }
+
+    $titleParts = @("Custom: $logName")
+    if ($keyword) { $titleParts += "keyword='$keyword'" }
+    if ($eventIdStr) { $titleParts += "ID=$eventIdStr" }
+    $title = $titleParts -join " | "
+
+    return @{ Events = $events; Title = $title }
 }
 #endregion

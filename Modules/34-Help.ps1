@@ -15,6 +15,7 @@ function Show-Help {
     Write-OutputColor "  │$("  NAVIGATION".PadRight(72))│" -color "Info"
     Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
     Write-OutputColor "  │$("  back / b          Go back one menu".PadRight(72))│" -color "Success"
+    Write-OutputColor "  │$("  home / main / m   Jump to main menu from anywhere".PadRight(72))│" -color "Success"
     Write-OutputColor "  │$("  exit / quit / q   Exit the script (shows session summary)".PadRight(72))│" -color "Success"
     Write-OutputColor "  │$("  r / refresh       Refresh adapter lists in network menus".PadRight(72))│" -color "Success"
     Write-OutputColor "  │$("  help              Show this screen (from Settings menu)".PadRight(72))│" -color "Success"
@@ -248,185 +249,20 @@ function Show-Changelog {
     Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
     Write-OutputColor "" -color "Info"
 
-    # Changelog content (extracted from script header comments)
-    $changelog = @"
-v1.0.0
-======
-RackStack - White-Label & Open Source:
-- Configurable tool identity via defaults.json (ToolName, ToolFullName, SupportContact)
-- All UI banners, filenames, scheduled tasks, and reports use configurable names
-- defaults.example.json template for new deployments
-- File server setup guide (docs/FileServer-Setup.md)
-- Removed all hardcoded organization references from code
-- All paths use relative references (no hardcoded user paths)
-- Git repository with .gitignore (defaults.json excluded from tracking)
-
-v2.9.0
-======
-Agent Installer:
-- Hostname without site number now prompts to set hostname first
-- Pending hostname change detected via registry - blocks install until reboot
-- Agent list paginated (25 per page) with [N]ext/[P]rev navigation
-- Agent list sorted numerically by site number (smallest to largest)
-- Inline [S]earch within paginated list to filter by name or number
-- Blank site names now display as (unknown)
-
-Compatibility:
-- Added Test-WindowsServer helper function
-- Get-WindowsFeature calls guarded by server OS check
-- Eliminates TerminatingError on Windows client (MPIO, Clustering, BitLocker, Dedup, Storage Replica)
-
-Network & Remote Management:
-- Network Diagnostics: ping, traceroute, port test, subnet sweep, DNS lookup, ARP table, active connections
-- Operations Menu: Remote PS Session, Remote Health Check, Remote Service Manager
-
-Infrastructure:
-- FileServer file server integration (replaced Nextcloud WebDAV)
-- Pre-flight validation checks before feature installations (Hyper-V, MPIO, Clustering)
-- Disk space validation before large file downloads
-- IP configuration rollback on failure
-- Batch mode: Test-WindowsServer guard for feature installs
-
-New Features:
-- Server Readiness dashboard with scored checklist
-- Quick Setup Wizard: guided 6-step initial configuration
-- Role Templates: Hyper-V Host, Standalone Server, Cluster Node profiles with auto-configure
-- JSON audit logging with 10MB rotation and viewer in Settings
-- Menu status indicators showing live install/config state in submenus
-- Health dashboard on main menu (hostname, OS, uptime, CPU, RAM, disk)
-- HTML Readiness Report export
-- Session log persistence across restarts
-- Centralized constants for power plan GUIDs and licensing AppId
-
-v2.8.0
-======
-VM Operations:
-- VM Checkpoint Management (list, create, restore, delete)
-- VM Export with progress tracking (background jobs)
-- VM Import with copy/register options
-
-Cluster Operations:
-- Enhanced Cluster Dashboard with node status, CSV health
-- Drain Node (suspend and migrate VMs)
-- Resume Node from Drain with optional failback
-- CSV Health monitoring with redirected I/O warnings
-
-HTML Reporting:
-- Professional HTML Health Report with embedded CSS
-- HTML Profile Comparison with color highlighting
-- Auto-open in browser option
-
-Quality of Life:
-- Favorites system to save frequently used menus
-- Command History tracking (last 100 operations)
-- Session Resume for VM queue and state
-
-Menu Changes:
-- New [7] Operations submenu in Configure Server
-- New [9] Favorites and [10] History in Settings
-
-v2.7.0
-======
-Security:
-- Windows Defender Exclusions for Hyper-V
-- Firewall Rule Templates (Hyper-V, Cluster, etc.)
-- BitLocker Management
-
-System Utilities:
-- NTP Configuration
-- Disk Cleanup utility
-- Performance Dashboard
-- Event Log Viewer
-- Service Manager
-
-Storage Features:
-- Data Deduplication
-- Storage Replica
-
-Cluster Management:
-- Create/Join Cluster, Validation
-- CSV Management, Live Migration
-- Quorum Configuration
-
-v2.6.0
-======
-SET Smart Auto-Detection:
-- Auto-detect NICs with internet connectivity for SET
-- Remaining NICs identified as iSCSI candidates
-- Option to configure iSCSI immediately after SET creation
-
-iSCSI Smart Auto-Configuration:
-- Detects host number from hostname (e.g., HV2 = Host 2)
-- Calculates IPs: {iSCSI subnet}.{(host+1)*10 + port}
-- A-side/B-side NIC identification with disable/enable helper
-- SAN target auto-assignment per host (cycling A0/B1, A1/B0)
-
-iSCSI & SAN Management Menu:
-- Configure iSCSI NICs (auto or manual)
-- Identify NICs (disable for switch identification)
-- Discover and ping SAN targets
-- Connect to iSCSI targets with multipath
-- Configure MPIO (Round Robin)
-- View iSCSI/MPIO status and disk mappings
-- Disconnect iSCSI sessions
-
-Utilities (Settings Menu):
-- Compare Configuration Profiles (color diff)
-- Check for Script Updates
-- Manage Stored Credentials
-- Remote Profile Application via WinRM
-
-v2.5.0
-======
-- Help & Documentation: Configure Server renumbered, added VHD/ISO section
-- Configuration Profiles: Added MPIO, Clustering, LocalAdmin, BuiltInAdmin
-- Batch Configuration: 14 steps, added MPIO/Clustering/Admin fields
-- Export: Added MPIO and Clustering status sections
-- Settings: Added View Changelog option
-- Maintenance: Auto-cleanup transcripts older than 30 days
-- UI: All menus standardized to 72-char width, firewall color logic fixed
-
-v2.4.0
-======
-- Sysprepped VHD deployment from Nextcloud (Server 2019/2022/2025)
-- VHD caching, copy and convert, offline customization
-- ISO download system for Server installation media
-- Host storage setup (D: drive validation, folder creation)
-- Full VM Deployment system for Standalone and Failover Clusters
-- Standard templates: FS, PS, PACS, EVP, APP, COMM, REPT
-- Custom VM with multi-disk, multi-NIC, VLAN support
-- VM name collision detection (Hyper-V + DNS)
-- Batch VM deployment queue
-
-v2.3.0
-======
-- Full Storage Manager with 14 disk management options
-- View disks, volumes, partitions
-- Initialize, online/offline, clear disk
-- Create/delete partitions, format volumes
-- Extend/shrink volumes, change drive letters
-
-v2.2.0
-======
-- MPIO installation for SAN connectivity
-- Failover Clustering installation
-- Improved cluster connection with AD discovery
-- Profile system improvements
-
-v2.1.0
-======
-- Configuration profiles (save/load)
-- Batch configuration templates
-- Export server configuration to text
-- Session change tracking
-
-v2.0.0
-======
-- Complete rewrite with modular architecture
-- Color theme system
-- Undo system for reversible changes
-- Navigation commands (back, exit, help)
-"@
+    # Load changelog from file (source of truth is Changelog.md)
+    $changelogPath = Join-Path $PSScriptRoot "Changelog.md"
+    if (-not (Test-Path -LiteralPath $changelogPath)) {
+        # Monolithic/EXE mode: try relative to script location
+        $changelogPath = Join-Path (Split-Path $PSCommandPath) "Changelog.md"
+    }
+    if (Test-Path -LiteralPath $changelogPath) {
+        $changelog = Get-Content $changelogPath -Raw -Encoding UTF8
+        # Strip markdown headers for cleaner display
+        $changelog = $changelog -replace '^# Changelog\s*\n', ''
+        $changelog = $changelog -replace '(?m)^## ', ''
+    } else {
+        $changelog = "(Changelog file not found. See GitHub releases for version history.)"
+    }
 
     # Display with pagination
     $lines = $changelog -split "`n"

@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    Automated Test Runner for RackStack v1.9.43
+    Automated Test Runner for RackStack v1.9.44
 
 .DESCRIPTION
     Comprehensive non-interactive test suite covering:
@@ -4163,16 +4163,17 @@ try {
     Write-TestResult "Show-Help: documentation" $false $_.Exception.Message
 }
 
-# Show-Changelog covers v1.0.0 features
+# Show-Changelog covers key features (changelog loaded from Changelog.md)
 try {
-    $helpContent = Get-Content (Join-Path $modulesPath "34-Help.ps1") -Raw
-    Write-TestResult "Show-Changelog: mentions Network Diagnostics" ($helpContent -match 'Network Diagnostics.*ping')
-    Write-TestResult "Show-Changelog: mentions FileServer" ($helpContent -match 'FileServer.*integration')
-    Write-TestResult "Show-Changelog: mentions Pre-flight validation" ($helpContent -match 'Pre-flight validation')
-    Write-TestResult "Show-Changelog: mentions Role Templates" ($helpContent -match 'Role Templates.*auto-configure')
-    Write-TestResult "Show-Changelog: mentions JSON audit logging" ($helpContent -match 'JSON audit logging')
+    $changelogPath = Join-Path $script:ModuleRoot "Changelog.md"
+    $changelogContent = Get-Content $changelogPath -Raw
+    Write-TestResult "Show-Changelog: mentions Network Diagnostics" ($changelogContent -match 'Network Diagnostics')
+    Write-TestResult "Show-Changelog: mentions FileServer" ($changelogContent -match 'FileServer')
+    Write-TestResult "Show-Changelog: mentions Pre-flight validation" ($changelogContent -match 'Pre-flight validation')
+    Write-TestResult "Show-Changelog: mentions Role Templates" ($changelogContent -match 'Role Templates')
+    Write-TestResult "Show-Changelog: mentions audit log" ($changelogContent -match 'audit log')
 } catch {
-    Write-TestResult "Show-Changelog: v1.0.0" $false $_.Exception.Message
+    Write-TestResult "Show-Changelog: changelog content" $false $_.Exception.Message
 }
 
 # ============================================================================

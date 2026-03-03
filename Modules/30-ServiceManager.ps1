@@ -10,19 +10,28 @@ function Show-ServiceManager {
         Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
         Write-OutputColor "" -color "Info"
 
-        # Key services to monitor
-        $keyServices = @(
-            @{ Name = "vmms"; DisplayName = "Hyper-V Virtual Machine Management" }
-            @{ Name = "vmcompute"; DisplayName = "Hyper-V Host Compute Service" }
-            @{ Name = "ClusSvc"; DisplayName = "Cluster Service" }
-            @{ Name = "MSiSCSI"; DisplayName = "Microsoft iSCSI Initiator Service" }
-            @{ Name = "WinRM"; DisplayName = "Windows Remote Management" }
-            @{ Name = "DNS"; DisplayName = "DNS Client" }
-            @{ Name = "DHCP"; DisplayName = "DHCP Client" }
-            @{ Name = "wuauserv"; DisplayName = "Windows Update" }
-            @{ Name = "Spooler"; DisplayName = "Print Spooler" }
-            @{ Name = "W32Time"; DisplayName = "Windows Time" }
-        )
+        # Key services to monitor (configurable via defaults.json)
+        $keyServices = if ($script:Defaults.MonitoredServices) {
+            $script:Defaults.MonitoredServices
+        } else {
+            @(
+                @{ Name = "vmms"; DisplayName = "Hyper-V Virtual Machine Management" }
+                @{ Name = "vmcompute"; DisplayName = "Hyper-V Host Compute Service" }
+                @{ Name = "ClusSvc"; DisplayName = "Cluster Service" }
+                @{ Name = "MSiSCSI"; DisplayName = "Microsoft iSCSI Initiator Service" }
+                @{ Name = "WinRM"; DisplayName = "Windows Remote Management" }
+                @{ Name = "DNS"; DisplayName = "DNS Client" }
+                @{ Name = "DHCP"; DisplayName = "DHCP Client" }
+                @{ Name = "wuauserv"; DisplayName = "Windows Update" }
+                @{ Name = "Spooler"; DisplayName = "Print Spooler" }
+                @{ Name = "W32Time"; DisplayName = "Windows Time" }
+                @{ Name = "LanmanServer"; DisplayName = "Server (SMB)" }
+                @{ Name = "LanmanWorkstation"; DisplayName = "Workstation (SMB Client)" }
+                @{ Name = "EventLog"; DisplayName = "Windows Event Log" }
+                @{ Name = "Netlogon"; DisplayName = "Netlogon" }
+                @{ Name = "NTDS"; DisplayName = "Active Directory Domain Services" }
+            )
+        }
 
         Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
         Write-OutputColor "  │$("  KEY SERVICES STATUS".PadRight(72))│" -color "Info"

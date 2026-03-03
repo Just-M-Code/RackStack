@@ -97,15 +97,21 @@ function Show-ClusterManagementMenu {
         return
     }
 
-    # Check if node is part of a cluster
-    $cluster = Get-Cluster -ErrorAction SilentlyContinue
+    # Check if node is part of a cluster (with timeout)
+    $clusterResult = Invoke-WithTimeout -ScriptBlock { Get-Cluster } -TimeoutSeconds 15 -Activity "Querying cluster"
+    $cluster = if ($clusterResult.TimedOut) { $null } else { $clusterResult.Result }
 
-    if ($cluster) {
+    if ($clusterResult.TimedOut) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  Cluster query timed out (15s). Cluster may be unreachable.".PadRight(72))│" -color "Warning"
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    } elseif ($cluster) {
         Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
         Write-OutputColor "  │$("  CURRENT CLUSTER".PadRight(72))│" -color "Info"
         Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
         Write-OutputColor "  │$("  Name: $($cluster.Name)".PadRight(72))│" -color "Success"
-        $nodes = (Get-ClusterNode -ErrorAction SilentlyContinue) -join ", "
+        $nodeResult = Invoke-WithTimeout -ScriptBlock { Get-ClusterNode } -TimeoutSeconds 15 -Activity "Querying nodes"
+        $nodes = if ($nodeResult.TimedOut) { "(timed out)" } else { ($nodeResult.Result) -join ", " }
         $lineStr = "  Nodes: $nodes"
         if ($lineStr.Length -gt 72) { $lineStr = $lineStr.Substring(0, 69) + "..." }
         Write-OutputColor "  │$($lineStr.PadRight(72))│" -color "Info"
@@ -157,7 +163,8 @@ function New-ClusterWizard {
     Write-OutputColor "" -color "Info"
 
     # Check if already in a cluster
-    $existingCluster = Get-Cluster -ErrorAction SilentlyContinue
+    $clusterCheck = Invoke-WithTimeout -ScriptBlock { Get-Cluster } -TimeoutSeconds 15 -Activity "Checking cluster membership"
+    $existingCluster = if ($clusterCheck.TimedOut) { $null } else { $clusterCheck.Result }
     if ($existingCluster) {
         Write-OutputColor "  This server is already part of cluster: $($existingCluster.Name)" -color "Warning"
         Write-OutputColor "  Remove from cluster first before creating a new one." -color "Info"
@@ -273,7 +280,8 @@ function Add-NodeToCluster {
     Write-OutputColor "" -color "Info"
 
     # Check if already in a cluster
-    $existingCluster = Get-Cluster -ErrorAction SilentlyContinue
+    $clusterCheck = Invoke-WithTimeout -ScriptBlock { Get-Cluster } -TimeoutSeconds 15 -Activity "Checking cluster membership"
+    $existingCluster = if ($clusterCheck.TimedOut) { $null } else { $clusterCheck.Result }
     if ($existingCluster) {
         Write-OutputColor "  This server is already part of cluster: $($existingCluster.Name)" -color "Warning"
         return
@@ -351,11 +359,10 @@ function Edit-ClusterSharedVolume {
     Write-OutputColor "" -color "Info"
 
     # Check if in a cluster
-    try {
-        $null = Get-Cluster -ErrorAction Stop
-    }
-    catch {
-        Write-OutputColor "  This server is not part of a cluster." -color "Warning"
+    $csvClusterCheck = Invoke-WithTimeout -ScriptBlock { Get-Cluster } -TimeoutSeconds 15 -Activity "Checking cluster"
+    if ($csvClusterCheck.TimedOut -or -not $csvClusterCheck.Result) {
+        $msg = if ($csvClusterCheck.TimedOut) { "Cluster query timed out." } else { "This server is not part of a cluster." }
+        Write-OutputColor "  $msg" -color "Warning"
         return
     }
 
@@ -642,12 +649,18 @@ function Set-ClusterQuorum {
     Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
     Write-OutputColor "" -color "Info"
 
+    $quorumClusterCheck = Invoke-WithTimeout -ScriptBlock { Get-Cluster } -TimeoutSeconds 15 -Activity "Querying cluster"
+    if ($quorumClusterCheck.TimedOut -or -not $quorumClusterCheck.Result) {
+        $msg = if ($quorumClusterCheck.TimedOut) { "Cluster query timed out." } else { "This server is not part of a cluster." }
+        Write-OutputColor "  $msg" -color "Warning"
+        return
+    }
+    $cluster = $quorumClusterCheck.Result
     try {
-        $cluster = Get-Cluster -ErrorAction Stop
         $quorum = Get-ClusterQuorum -ErrorAction Stop
     }
     catch {
-        Write-OutputColor "  This server is not part of a cluster." -color "Warning"
+        Write-OutputColor "  Failed to query quorum: $_" -color "Error"
         return
     }
 
@@ -774,10 +787,14 @@ function Show-ClusterStatus {
     Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
     Write-OutputColor "" -color "Info"
 
-    try {
-        $cluster = Get-Cluster -ErrorAction Stop
+    $clusterResult = Invoke-WithTimeout -ScriptBlock { Get-Cluster } -TimeoutSeconds 15 -Activity "Querying cluster"
+    if ($clusterResult.TimedOut) {
+        Write-OutputColor "  Cluster query timed out (15s). Cluster may be unreachable." -color "Warning"
+        Write-PressEnter
+        return
     }
-    catch {
+    $cluster = $clusterResult.Result
+    if (-not $cluster) {
         Write-OutputColor "  This server is not part of a cluster." -color "Warning"
         Write-PressEnter
         return
@@ -793,7 +810,11 @@ function Show-ClusterStatus {
     Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
     Write-OutputColor "  │$("  NODES".PadRight(72))│" -color "Info"
     Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
-    $nodes = Get-ClusterNode -ErrorAction SilentlyContinue
+    $nodeResult = Invoke-WithTimeout -ScriptBlock { Get-ClusterNode } -TimeoutSeconds 15 -Activity "Querying nodes"
+    $nodes = if ($nodeResult.TimedOut) { @() } else { $nodeResult.Result }
+    if ($nodeResult.TimedOut) {
+        Write-OutputColor "  │$("  Node query timed out".PadRight(72))│" -color "Warning"
+    }
     foreach ($node in $nodes) {
         $color = if ($node.State -eq "Up") { "Success" } else { "Error" }
         Write-OutputColor "  │$("  $($node.Name) - $($node.State)".PadRight(72))│" -color $color
@@ -805,15 +826,20 @@ function Show-ClusterStatus {
     Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
     Write-OutputColor "  │$("  CLUSTER RESOURCES".PadRight(72))│" -color "Info"
     Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
-    $resources = Get-ClusterResource -ErrorAction SilentlyContinue | Select-Object -First 10
-    foreach ($res in $resources) {
-        $color = if ($res.State -eq "Online") { "Success" } elseif ($res.State -eq "Offline") { "Warning" } else { "Error" }
-        $resName = if ($res.Name.Length -gt 40) { $res.Name.Substring(0,37) + "..." } else { $res.Name }
-        Write-OutputColor "  │$("  $resName - $($res.State)".PadRight(72))│" -color $color
-    }
-    $totalResources = @(Get-ClusterResource -ErrorAction SilentlyContinue).Count
-    if ($totalResources -gt 10) {
-        Write-OutputColor "  │$("  ... and $($totalResources - 10) more resources".PadRight(72))│" -color "Info"
+    $resResult = Invoke-WithTimeout -ScriptBlock { Get-ClusterResource } -TimeoutSeconds 15 -Activity "Querying resources"
+    if ($resResult.TimedOut) {
+        Write-OutputColor "  │$("  Resource query timed out".PadRight(72))│" -color "Warning"
+    } else {
+        $resources = $resResult.Result | Select-Object -First 10
+        foreach ($res in $resources) {
+            $color = if ($res.State -eq "Online") { "Success" } elseif ($res.State -eq "Offline") { "Warning" } else { "Error" }
+            $resName = if ($res.Name.Length -gt 40) { $res.Name.Substring(0,37) + "..." } else { $res.Name }
+            Write-OutputColor "  │$("  $resName - $($res.State)".PadRight(72))│" -color $color
+        }
+        $totalResources = @($resResult.Result).Count
+        if ($totalResources -gt 10) {
+            Write-OutputColor "  │$("  ... and $($totalResources - 10) more resources".PadRight(72))│" -color "Info"
+        }
     }
     Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
 

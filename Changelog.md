@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.9.44
+
+- **New Feature:** "Home" navigation command — type `home`, `main`, or `m` at any menu to jump straight back to the main menu (04-Navigation, 34-Help).
+- **New Feature:** Performance Dashboard auto-refresh — press `[R]` to refresh metrics without leaving the dashboard. Added top 5 CPU-consuming processes display (28-PerformanceDashboard).
+- **New Feature:** Event Log custom search — search by log name, keyword, event ID, and time range. Export results to CSV (29-EventLogViewer).
+- **New Feature:** Configurable Service Manager — monitored services list can be overridden via `MonitoredServices` in defaults.json. Expanded built-in default from 10 to 15 services (30-ServiceManager).
+- **New Feature:** Changelog loaded from file — `Show-Changelog` now reads from Changelog.md instead of a hardcoded heredoc, so it stays current automatically (34-Help).
+- **New Feature:** Batch mode pre-execution summary — shows a table of all planned actions (green) and skips (gray) with confirmation prompt before starting (50-EntryPoint).
+- **New Feature:** Cluster operation timeouts — `Get-Cluster`, `Get-ClusterNode`, and `Get-ClusterResource` calls wrapped with 15-second timeout via new `Invoke-WithTimeout` helper to prevent indefinite hangs on unreachable clusters (04-Navigation, 27-FailoverClustering).
+- Added `MonitoredServices` and `_MonitoredServices_help` to defaults.example.json.
+- 63 modules, 1854 tests
+
 ## v1.9.43
 
 - **Bug Fix:** DNS resolution display crashed when CNAME records returned no IP address — filtered null values before joining results (05-SystemCheck).

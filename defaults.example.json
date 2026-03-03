@@ -349,6 +349,20 @@
         }
     },
 
+    "MonitoredServices": [
+        { "Name": "vmms", "DisplayName": "Hyper-V Virtual Machine Management" },
+        { "Name": "vmcompute", "DisplayName": "Hyper-V Host Compute Service" },
+        { "Name": "ClusSvc", "DisplayName": "Cluster Service" },
+        { "Name": "MSiSCSI", "DisplayName": "Microsoft iSCSI Initiator Service" },
+        { "Name": "WinRM", "DisplayName": "Windows Remote Management" },
+        { "Name": "DNS", "DisplayName": "DNS Client" },
+        { "Name": "DHCP", "DisplayName": "DHCP Client" },
+        { "Name": "wuauserv", "DisplayName": "Windows Update" },
+        { "Name": "Spooler", "DisplayName": "Print Spooler" },
+        { "Name": "W32Time", "DisplayName": "Windows Time" }
+    ],
+    "_MonitoredServices_help": "Services shown in the Service Manager dashboard. Each entry needs 'Name' (Windows service name) and 'DisplayName' (friendly label). Add or remove services to match your environment. Default: 10 common services (Hyper-V, Cluster, iSCSI, WinRM, DNS, DHCP, Updates, Spooler, Time).",
+
     "CustomVMDefaults": {
         "_comment": "Default specs used when deploying a 'custom' VM (one that doesn't use a template). These are the starting values shown in the deployment wizard -- you can still change them during deployment.",
         "vCPU": 4,
