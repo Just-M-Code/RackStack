@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.9.57
+
+- **Enhancement:** `Invoke-WithTimeout` now detects failed background jobs (state `"Failed"`) and returns error details in the result — previously, a failed job returned `TimedOut = $false; Result = $null`, indistinguishable from a successful job that returned `$null`. Callers in Failover Clustering and other modules can now check `$result.Failed` (04-Navigation).
+- **Enhancement:** `Get-FileHashBackground` validates file existence with `Test-Path` before launching the background SHA256 computation — returns `$null` with an error message instead of silently failing when the file doesn't exist (04-Navigation).
+- **Bug Fix:** Adapter info box on the Configure Server menu now handles adapters with multiple IPv4 addresses by selecting the primary IP via `Select-Object -First 1` — previously, multi-homed adapters returned an array of IPs that broke the 72-char box column alignment (48-MenuDisplay).
+- **Enhancement:** `Add-SessionChange` now guards against empty or null `$script:AppConfigDir` before attempting disk writes — prevents `Join-Path` and `Add-Content` from failing on malformed paths in constrained environments (04-Navigation).
+- 63 modules, 1854 tests
+
 ## v1.9.56
 
 - **Enhancement:** Batch role template installation pre-fetches all Windows Feature states in a single `Get-WindowsFeature` call instead of querying individually per feature — reduces WMI/DISM round-trips by up to 10x for large templates (50-EntryPoint).

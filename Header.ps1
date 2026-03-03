@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.56
+    1.9.57
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.57
+    CORE INFRASTRUCTURE PATCH:
+    - IMPROVED: Invoke-WithTimeout now detects failed background jobs and returns error details instead of silently returning null — callers can distinguish failure from timeout
+    - IMPROVED: Get-FileHashBackground validates file exists before launching background job — returns null with error message instead of silent failure
+    - FIX: Adapter info box now handles multi-homed adapters (multiple IPv4 addresses) by selecting the primary IP instead of returning an array that breaks box alignment
+    - IMPROVED: Add-SessionChange guards against empty/null AppConfigDir before attempting disk writes
 
 .CHANGELOG v1.9.56
     OPERATIONS & SAFETY PATCH:

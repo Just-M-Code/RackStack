@@ -78,6 +78,7 @@ function Add-SessionChange {
 
     # Persist to session log on disk
     $logDir = $script:AppConfigDir
+    if ([string]::IsNullOrWhiteSpace($logDir)) { return }
     if (-not (Test-Path $logDir)) {
         $null = New-Item -Path $logDir -ItemType Directory -Force -ErrorAction SilentlyContinue
     }
@@ -507,6 +508,11 @@ function Get-FileHashBackground {
         [string]$FilePath
     )
 
+    if (-not (Test-Path -LiteralPath $FilePath)) {
+        Write-OutputColor "  File not found: $FilePath" -color "Error"
+        return $null
+    }
+
     $hashJob = Start-Job -ScriptBlock {
         param($path)
         (Get-FileHash -Path $path -Algorithm SHA256).Hash
@@ -553,6 +559,12 @@ function Invoke-WithTimeout {
         Stop-Job $job -Force
         Remove-Job $job -Force
         return @{ TimedOut = $true; Result = $null }
+    }
+
+    if ($job.State -eq "Failed") {
+        $errorMsg = $job.ChildJobs[0].JobStateInfo.Reason.Message
+        Remove-Job $job -Force
+        return @{ TimedOut = $false; Result = $null; Failed = $true; Error = $errorMsg }
     }
 
     $result = Receive-Job $job

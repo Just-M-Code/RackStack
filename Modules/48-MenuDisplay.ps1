@@ -591,8 +591,9 @@ function Show-AdapterInfoBox {
             $ipConfig = Get-NetIPConfiguration -InterfaceAlias $AdapterName -ErrorAction SilentlyContinue
             if ($ipConfig) {
                 if ($ipConfig.IPv4Address) {
-                    $ipAddress  = $ipConfig.IPv4Address.IPAddress
-                    $prefix     = $ipConfig.IPv4Address.PrefixLength
+                    $primaryIP = $ipConfig.IPv4Address | Select-Object -First 1
+                    $ipAddress  = $primaryIP.IPAddress
+                    $prefix     = $primaryIP.PrefixLength
                     $subnetMask = "/$prefix"
                 }
                 if ($ipConfig.IPv4DefaultGateway) {
