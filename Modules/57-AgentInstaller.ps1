@@ -114,7 +114,7 @@ function ConvertFrom-AgentFilename {
         $namePart = if ($regexMatches[2]) { $regexMatches[2] } else { "" }
 
         # Split numbers by - or _ and filter to valid numbers only
-        $numbers = $numbersPart -split '[-_]' | Where-Object { $_ -match '^\d+$' }
+        $numbers = @($numbersPart -split '[-_]' | Where-Object { $_ -match '^\d+$' })
 
         if ($numbers.Count -gt 0) {
             $result.SiteNumbers = @($numbers)

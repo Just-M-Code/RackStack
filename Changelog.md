@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.9.58
+
+- **Bug Fix:** Agent installer site number parsing now wraps the `-split` pipeline in `@()` — single-site filenames (e.g., `Agent.12345.exe`) returned a bare string instead of an array, causing `.Count` to return the string length instead of 1 in PS 5.1 (57-AgentInstaller).
+- **Bug Fix:** Favorites and Command History import now wraps `ConvertFrom-Json` results in `@()` — JSON files containing a single entry lost their array type on deserialization, causing `.Count` to return property count instead of 1 and array operations to fail (55-QoLFeatures).
+- **Enhancement:** File server download validation uses `-ErrorAction SilentlyContinue` on `Get-Item` calls during post-download size checks — prevents a terminating error if the file is removed between download completion and size verification (39-FileServer).
+- **Enhancement:** SNMP Add Manager now validates hostname/IP format before writing to registry — rejects entries with spaces, semicolons, or other invalid characters that would create non-functional permitted manager entries (55-QoLFeatures).
+- 63 modules, 1854 tests
+
 ## v1.9.57
 
 - **Enhancement:** `Invoke-WithTimeout` now detects failed background jobs (state `"Failed"`) and returns error details in the result — previously, a failed job returned `TimedOut = $false; Result = $null`, indistinguishable from a successful job that returned `$null`. Callers in Failover Clustering and other modules can now check `$result.Failed` (04-Navigation).

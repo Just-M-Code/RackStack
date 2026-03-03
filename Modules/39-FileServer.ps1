@@ -438,7 +438,7 @@ function Get-FileServerFile {
             }
 
             # Check for error page (tiny file = likely HTML error)
-            $fileSize = (Get-Item $destFile).Length
+            $fileSize = (Get-Item $destFile -ErrorAction SilentlyContinue).Length
             if ($fileSize -lt 1000) {
                 $content = Get-Content $destFile -Raw -ErrorAction SilentlyContinue
                 if ($content -match "html|error|not found|denied|exception") {
@@ -467,7 +467,7 @@ function Get-FileServerFile {
             return @{ Success = $false; Error = "Download failed after $maxAttempts attempts."; FilePath = $null }
         }
 
-        $fileSize = (Get-Item $destFile).Length
+        $fileSize = (Get-Item $destFile -ErrorAction SilentlyContinue).Length
 
         # SHA256 integrity verification
         $integrity = Test-FileIntegrity -FilePath $destFile -ExpectedSize $expectedSize -RemoteFilePath $FilePath

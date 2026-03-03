@@ -16,7 +16,7 @@ function Import-Favorites {
     Initialize-AppConfigDir
     if (Test-Path $script:FavoritesPath) {
         try {
-            $script:Favorites = Get-Content $script:FavoritesPath -Raw | ConvertFrom-Json
+            $script:Favorites = @(Get-Content $script:FavoritesPath -Raw | ConvertFrom-Json)
             if (-not $script:Favorites) { $script:Favorites = @() }
         }
         catch {
@@ -235,7 +235,7 @@ function Import-CommandHistory {
     Initialize-AppConfigDir
     if (Test-Path $script:HistoryPath) {
         try {
-            $script:CommandHistory = Get-Content $script:HistoryPath -Raw | ConvertFrom-Json
+            $script:CommandHistory = @(Get-Content $script:HistoryPath -Raw | ConvertFrom-Json)
             if (-not $script:CommandHistory) { $script:CommandHistory = @() }
         }
         catch {
@@ -912,6 +912,12 @@ function Set-SNMPConfiguration {
                         Write-OutputColor "  Enter manager IP or hostname:" -color "Info"
                         $mgrHost = Read-Host "  "
                         if ([string]::IsNullOrWhiteSpace($mgrHost)) { continue }
+                        # Validate hostname/IP format
+                        if ($mgrHost -notmatch '^[a-zA-Z0-9._-]+$') {
+                            Write-OutputColor "  Invalid hostname or IP address format." -color "Error"
+                            Write-PressEnter
+                            continue
+                        }
 
                         # Find next available number
                         $nextNum = 1

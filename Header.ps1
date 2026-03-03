@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.57
+    1.9.58
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.58
+    DATA SAFETY & VALIDATION PATCH:
+    - FIX: Agent installer site number parsing now wraps pipeline in @() — single-site filenames no longer fail .Count check in PS 5.1
+    - FIX: Favorites and Command History import now wraps ConvertFrom-Json in @() — single-entry JSON files no longer lose array type
+    - IMPROVED: File server download validation uses -ErrorAction SilentlyContinue on Get-Item calls — prevents terminating error if file vanishes between download and size check
+    - IMPROVED: SNMP Add Manager validates hostname/IP format before writing to registry
 
 .CHANGELOG v1.9.57
     CORE INFRASTRUCTURE PATCH:
