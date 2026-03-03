@@ -911,6 +911,13 @@ function Format-DiskVolume {
             "6" { 65536 }
             default { $null }  # Let Windows choose
         }
+
+        # ReFS requires minimum 64K allocation unit on Windows Server
+        if ($fileSystem -eq "ReFS" -and $null -ne $allocationUnitSize -and $allocationUnitSize -lt 65536) {
+            Write-OutputColor "  Note: ReFS requires minimum 64K allocation unit on Windows Server." -color "Warning"
+            Write-OutputColor "  Overriding to 64K." -color "Warning"
+            $allocationUnitSize = 65536
+        }
     }
 
     # Ask for volume label

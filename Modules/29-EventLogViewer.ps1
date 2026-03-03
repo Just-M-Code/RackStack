@@ -53,10 +53,20 @@ function Show-EventLogViewer {
                 $events = Get-WinEvent -FilterHashtable @{LogName='Security'; Keywords=4503599627370496} -MaxEvents 30 -ErrorAction SilentlyContinue
             }
             "5" {
+                if (-not (Test-HyperVInstalled)) {
+                    Write-OutputColor "  Hyper-V is not installed. Event log not available." -color "Warning"
+                    Write-PressEnter
+                    continue
+                }
                 $title = "Hyper-V Events"
                 $events = Get-WinEvent -LogName "Microsoft-Windows-Hyper-V-VMMS-Admin" -MaxEvents 30 -ErrorAction SilentlyContinue
             }
             "6" {
+                if (-not (Test-FailoverClusteringInstalled)) {
+                    Write-OutputColor "  Failover Clustering is not installed. Event log not available." -color "Warning"
+                    Write-PressEnter
+                    continue
+                }
                 $title = "Cluster Events"
                 $events = Get-WinEvent -LogName "Microsoft-Windows-FailoverClustering/Operational" -MaxEvents 30 -ErrorAction SilentlyContinue
             }
@@ -80,7 +90,7 @@ function Show-EventLogViewer {
                 try {
                     $lastEvents | Select-Object TimeCreated, LevelDisplayName, Id, ProviderName, Message |
                         Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
-                    Write-OutputColor "  Exported $($lastEvents.Count) events to:" -color "Success"
+                    Write-OutputColor "  Exported $(@($lastEvents).Count) events to:" -color "Success"
                     Write-OutputColor "  $csvPath" -color "Info"
                 }
                 catch {

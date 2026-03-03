@@ -51,6 +51,9 @@ function Show-PerformanceDashboard {
         Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
 
         $volumes = Get-Volume -ErrorAction SilentlyContinue | Where-Object { $_.DriveLetter -and $_.DriveType -eq "Fixed" }
+        if (-not $volumes) {
+            Write-OutputColor "  │$("  No fixed volumes detected".PadRight(72))│" -color "Warning"
+        }
         foreach ($vol in $volumes) {
             $totalGB = [math]::Round($vol.Size / 1GB, 1)
             $freeGB = [math]::Round($vol.SizeRemaining / 1GB, 1)
@@ -68,6 +71,9 @@ function Show-PerformanceDashboard {
         Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
 
         $adapters = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq "Up" } | Select-Object -First 5
+        if (-not $adapters) {
+            Write-OutputColor "  │$("  No active network adapters".PadRight(72))│" -color "Warning"
+        }
         foreach ($adapter in $adapters) {
             $speed = if ($adapter.LinkSpeed) { $adapter.LinkSpeed } else { "Unknown" }
             $name = if ($adapter.Name.Length -gt 30) { $adapter.Name.Substring(0,27) + "..." } else { $adapter.Name }

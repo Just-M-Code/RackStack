@@ -207,6 +207,16 @@ function New-BatchConfigTemplate {
         $savePath = $customPath
     }
 
+    # Validate save directory exists
+    $parentDir = Split-Path $savePath -Parent
+    if ($parentDir -and -not (Test-Path -LiteralPath $parentDir)) {
+        Write-OutputColor "Directory does not exist: $parentDir" -color "Error"
+        return
+    }
+    if (Test-Path -LiteralPath $savePath) {
+        if (-not (Confirm-UserAction -Message "File already exists. Overwrite?")) { return }
+    }
+
     try {
         $configTemplate | Out-File -FilePath $savePath -Encoding UTF8 -Force
         Write-OutputColor "" -color "Info"
@@ -376,7 +386,7 @@ function Export-BatchConfigFromState {
             "CreateLocalAdmin"                 = $false
             "_CreateLocalAdmin_Help"           = "Create local admin account (true/false). Will prompt for password at runtime."
 
-            "LocalAdminName"                   = $localadminaccountname
+            "LocalAdminName"                   = $script:localadminaccountname
             "_LocalAdminName_Help"             = "Username for the local admin account. Only used if CreateLocalAdmin is true."
 
             "DisableBuiltInAdmin"              = $false
@@ -532,6 +542,16 @@ function Export-BatchConfigFromState {
         }
         else {
             $savePath = $customPath
+        }
+
+        # Validate save directory exists
+        $parentDir = Split-Path $savePath -Parent
+        if ($parentDir -and -not (Test-Path -LiteralPath $parentDir)) {
+            Write-OutputColor "Directory does not exist: $parentDir" -color "Error"
+            return
+        }
+        if (Test-Path -LiteralPath $savePath) {
+            if (-not (Confirm-UserAction -Message "File already exists. Overwrite?")) { return }
         }
 
         $config | ConvertTo-Json -Depth 5 | Out-File -FilePath $savePath -Encoding UTF8 -Force

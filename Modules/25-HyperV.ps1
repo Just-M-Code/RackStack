@@ -80,10 +80,20 @@ function Install-HyperVRole {
             Write-Host ""  # New line after progress
 
             $result = Receive-Job $installJob -ErrorAction SilentlyContinue
-            $jobError = $installJob.ChildJobs[0].Error
+            $jobFailed = $installJob.State -eq "Failed"
+            $jobError = $null
+            try {
+                if ($installJob.ChildJobs.Count -gt 0) {
+                    $jobError = $installJob.ChildJobs[0].Error | Out-String
+                    if ($jobError) { $jobError = $jobError.Trim() }
+                }
+            } catch {}
+            if ($jobFailed -and -not $jobError) {
+                $jobError = "Job failed without error details. Check Windows Event Log."
+            }
             Remove-Job $installJob -Force -ErrorAction SilentlyContinue
 
-            if ($jobError) {
+            if ($jobError -or $jobFailed) {
                 Complete-ProgressMessage -Activity "Hyper-V installation" -Status "Failed" -Failed
                 Write-OutputColor "Error: $jobError" -color "Error"
                 Add-SessionChange -Category "System" -Description "Hyper-V installation failed (Windows Client)"

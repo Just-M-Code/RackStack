@@ -30,10 +30,22 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.50
+    1.9.51
 
 .LAST UPDATED
     03/02/2026
+
+.CHANGELOG v1.9.51
+    DEFENSIVE HARDENING PATCH:
+    - IMPROVED: Hyper-V client-side job error extraction uses defensive pattern (ChildJobs guard, Out-String, state check, fallback message)
+    - NEW: Firewall per-profile toggle — choose [1] recommended config or [2] toggle individual Domain/Private/Public profiles
+    - NEW: Firewall undo support — both recommended and toggle operations register Add-UndoAction with previous state
+    - IMPROVED: Event Log Viewer pre-checks Hyper-V and Cluster feature installation before querying their event logs
+    - FIX: Event log export count wrapped in @() for PS 5.1 single-object .Count safety
+    - FIX: Batch config export uses $script:localadminaccountname (was unscoped, exported null)
+    - IMPROVED: Batch config save validates directory existence and warns on file overwrite (both template and export)
+    - IMPROVED: Performance dashboard shows fallback message when no fixed volumes or active adapters are detected
+    - NEW: Storage Manager ReFS allocation unit size guard — auto-overrides to 64K minimum on Windows Server
 
 .CHANGELOG v1.9.50
     VALIDATION & RELIABILITY PATCH:

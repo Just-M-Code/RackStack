@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.9.51
+
+- **Enhancement:** Hyper-V Windows Client job error extraction now uses the same defensive pattern as `Install-WindowsFeatureWithTimeout` — guards `ChildJobs[0]` access, pipes through `Out-String`, checks job state, and provides fallback error message (25-HyperV).
+- **New Feature:** Firewall per-profile toggle — menu now offers `[1] Apply recommended` (Domain/Private off, Public on) or `[2] Toggle individual profile` for granular control over each firewall profile (16-Firewall).
+- **New Feature:** Firewall undo support — both recommended and individual toggle operations register `Add-UndoAction` with captured previous state, enabling revert via the undo system (16-Firewall).
+- **Enhancement:** Event Log Viewer pre-checks whether Hyper-V and Failover Clustering are installed before querying their event logs — shows "not installed" instead of misleading "no events found" (29-EventLogViewer).
+- **Bug Fix:** Event log CSV export count wrapped in `@()` for PS 5.1 safety — single-event results no longer show blank count (29-EventLogViewer).
+- **Bug Fix:** Batch config export now uses `$script:localadminaccountname` — was unscoped, causing null to be written instead of the configured admin name (36-BatchConfig).
+- **Enhancement:** Batch config save (both template and export) validates that the target directory exists and prompts for confirmation before overwriting existing files (36-BatchConfig).
+- **Enhancement:** Performance Dashboard shows fallback messages when no fixed volumes or active network adapters are detected instead of displaying empty sections (28-PerformanceDashboard).
+- **New Feature:** Storage Manager ReFS allocation unit size guard — automatically overrides allocation units smaller than 64K to the minimum required on Windows Server, preventing cryptic Format-Volume errors (38-StorageManager).
+- 63 modules, 1854 tests
+
 ## v1.9.50
 
 - **Enhancement:** Storage Replica installation now uses `Install-WindowsFeatureWithTimeout` for progress feedback, timeout protection, and detailed error reporting — matching the pattern used by Hyper-V, MPIO, and Failover Clustering installs (33-StorageReplica).
