@@ -98,7 +98,9 @@ function Export-VMWizard {
                 Write-OutputColor "  Free: ${freeGB} GB | Estimated need: ~${neededGB} GB" -color "Warning"
             }
         }
-    } catch {}
+    } catch {
+        Write-OutputColor "  Could not verify disk space: $_" -color "Warning"
+    }
 
     # Warning if VM is running
     if ($selectedVM.State -eq 'Running') {
@@ -124,7 +126,7 @@ function Export-VMWizard {
             $params = @{ Name = $VMName; Path = $Path }
             if ($Computer) { $params['ComputerName'] = $Computer }
             if ($RemoteCred) { $params['Credential'] = $RemoteCred }
-            Export-VM @params
+            Export-VM @params -ErrorAction Stop
         } -ArgumentList $selectedVM.Name, $exportPath, $ComputerName, $Credential
 
         # Wait with progress indication - track export folder size

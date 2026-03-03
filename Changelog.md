@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.9.62
+
+- **Bug Fix:** Health check disk latency evaluation now wraps the pipeline result in `@()` — on single-disk systems, the pipeline returned a bare scalar where `.Count` returned `$null` in PS 5.1, causing `$null -gt 0` to evaluate as `$false` and the "FAIR" warning to never fire when disk latency was between 10-20 ms (37-HealthCheck).
+- **Bug Fix:** VM export job now uses `-ErrorAction Stop` on the `Export-VM` call inside the background job scriptblock — previously, `Export-VM` wrote non-terminating errors on failure, causing the job state to be `Completed` instead of `Failed`, and `Receive-Job -ErrorAction Stop` succeeded without throwing, logging a false successful export while files were absent or corrupt (53-VMExportImport).
+- **Enhancement:** VM export disk space pre-check now surfaces errors with a warning message instead of using a bare `catch {}` — previously, `Get-Volume` or `Get-VHD` failures were silently swallowed, allowing users to proceed with no space warning on a potentially full disk (53-VMExportImport).
+- 63 modules, 1854 tests
+
 ## v1.9.61
 
 - **Bug Fix:** iSCSI target discovery (`Get-IscsiTarget`) now uses `-ErrorAction Stop` — previously, failures (e.g., iSCSI Initiator service issues) produced a non-terminating error, causing `$targets` to be `$null` and silently skipping all target connections with "No disconnected targets found" instead of reporting the error (10-iSCSI).

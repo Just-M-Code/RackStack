@@ -30,10 +30,16 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.61
+    1.9.62
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.62
+    MONITORING & EXPORT PATCH:
+    - FIX: Health check disk latency pipeline wraps result in @() — single-disk systems no longer falsely report "GOOD" when latency is between 10-20ms
+    - FIX: VM export job uses -ErrorAction Stop on Export-VM — export failures now propagate as terminating errors instead of silently completing with missing/corrupt files
+    - IMPROVED: VM export disk space pre-check surfaces errors instead of silently swallowing them with bare catch {}
 
 .CHANGELOG v1.9.61
     STORAGE & DATA PATH PATCH:

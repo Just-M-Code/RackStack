@@ -175,7 +175,7 @@ function Show-SystemHealthCheck {
 
             if ($degradedDisks.Count -gt 0) {
                 Write-OutputColor "  Disk Performance: DEGRADED ($($degradedDisks.Count) disk(s) above threshold)" -color "Error"
-            } elseif (($diskData.Values | ForEach-Object { $_.Values } | Where-Object { $_ -gt 10 }).Count -gt 0) {
+            } elseif (@($diskData.Values | ForEach-Object { $_.Values } | Where-Object { $_ -gt 10 }).Count -gt 0) {
                 Write-OutputColor "  Disk Performance: FAIR (some latency above 10ms)" -color "Warning"
             } else {
                 Write-OutputColor "  Disk Performance: GOOD (all latencies under 10ms)" -color "Success"
