@@ -59,10 +59,26 @@ function Install-WindowsUpdates {
             return
         }
 
-        Complete-ProgressMessage -Activity "Update check" -Status "Complete" -Success
-
-        $updates = Receive-Job $job
+        # Check if the scan job itself failed (don't misreport as "up to date")
+        $scanJobFailed = $job.State -eq "Failed"
+        $updates = Receive-Job $job -ErrorAction SilentlyContinue
+        $scanError = $null
+        if ($scanJobFailed) {
+            try {
+                if ($job.ChildJobs.Count -gt 0) { $scanError = $job.ChildJobs[0].Error | Out-String }
+            } catch {}
+        }
         Remove-Job $job -Force -ErrorAction SilentlyContinue
+
+        if ($scanJobFailed) {
+            Complete-ProgressMessage -Activity "Update check" -Status "Failed" -Failed
+            Write-OutputColor "Update scan failed. Cannot determine update status." -color "Error"
+            if ($scanError) { Write-OutputColor "  Error: $($scanError.Trim())" -color "Error" }
+            Write-OutputColor "Tip: Check Windows Update service (wuauserv) and try again." -color "Warning"
+            return
+        }
+
+        Complete-ProgressMessage -Activity "Update check" -Status "Complete" -Success
 
         if ($null -eq $updates -or @($updates).Count -eq 0) {
             Write-OutputColor "No updates available. System is up to date!" -color "Success"

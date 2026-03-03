@@ -383,6 +383,16 @@ function Install-WindowsFeatureWithTimeout {
 
     $result = Receive-Job $installJob -ErrorAction SilentlyContinue
     $jobFailed = $installJob.State -eq "Failed"
+    # Extract job errors before removing the job (lost otherwise)
+    $jobError = $null
+    if ($jobFailed) {
+        try {
+            if ($installJob.ChildJobs.Count -gt 0) {
+                $jobError = $installJob.ChildJobs[0].Error | Out-String
+            }
+        } catch {}
+        if (-not $jobError) { $jobError = "Job failed without error details. Check Windows Event Log." }
+    }
     Remove-Job $installJob -Force -ErrorAction SilentlyContinue
 
     # Install-WindowsFeature returns a CimInstance with ExitCode, not a hashtable with .Success
@@ -392,11 +402,14 @@ function Install-WindowsFeatureWithTimeout {
 
     if ($succeeded) {
         Complete-ProgressMessage -Activity "$DisplayName installation" -Status "Complete" -Success
-        return @{ Success = $true; TimedOut = $false; Result = $result }
+        return @{ Success = $true; TimedOut = $false; Result = $result; Error = $null }
     }
     else {
         Complete-ProgressMessage -Activity "$DisplayName installation" -Status "Failed" -Failed
-        return @{ Success = $false; TimedOut = $false; Result = $result }
+        if ($jobError) {
+            Write-OutputColor "  Error details: $($jobError.Trim())" -color "Error"
+        }
+        return @{ Success = $false; TimedOut = $false; Result = $result; Error = $jobError }
     }
 }
 

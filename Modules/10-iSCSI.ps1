@@ -886,6 +886,27 @@ function Connect-iSCSITargets {
     Write-OutputColor "" -color "Info"
     Write-OutputColor "Connecting to iSCSI targets..." -color "Info"
 
+    # Pre-check: ensure iSCSI Initiator service is running
+    $iscsiService = Get-Service -Name MSiSCSI -ErrorAction SilentlyContinue
+    if ($null -eq $iscsiService) {
+        Write-OutputColor "  iSCSI Initiator service (MSiSCSI) not found on this system." -color "Error"
+        return
+    }
+    if ($iscsiService.Status -ne 'Running') {
+        Write-OutputColor "  iSCSI Initiator service is not running. Starting..." -color "Warning"
+        try {
+            Set-Service -Name MSiSCSI -StartupType Automatic -ErrorAction Stop
+            Start-Service -Name MSiSCSI -ErrorAction Stop
+            Start-Sleep -Seconds 2
+            Write-OutputColor "  MSiSCSI service started successfully." -color "Success"
+        }
+        catch {
+            Write-OutputColor "  Failed to start MSiSCSI service: $_" -color "Error"
+            Write-OutputColor "  Cannot connect to iSCSI targets without the initiator service." -color "Error"
+            return
+        }
+    }
+
     foreach ($portal in $TargetPortalAddresses) {
         Write-OutputColor "" -color "Info"
         Write-OutputColor "  Processing portal: $portal" -color "Info"

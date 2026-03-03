@@ -30,10 +30,19 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.48
+    1.9.49
 
 .LAST UPDATED
     03/02/2026
+
+.CHANGELOG v1.9.49
+    INFRASTRUCTURE HARDENING PATCH:
+    - IMPROVED: Feature install job error extraction — Install-WindowsFeatureWithTimeout now captures and displays specific error messages instead of generic "may not have completed"
+    - IMPROVED: Windows Update scan failure detection — failed scan jobs now report errors instead of falsely showing "System is up to date"
+    - IMPROVED: RDP enable requires confirmation before making changes, firewall service pre-check prevents silent rule failures
+    - NEW: iSCSI target connection pre-checks MSiSCSI service — auto-starts if stopped, blocks with clear error if unavailable
+    - NEW: SET adapter link speed mismatch warning — alerts when selected adapters have different speeds
+    - IMPROVED: MPIO post-install verification — confirms cmdlet availability, shows next-step guidance for iSCSI configuration
 
 .CHANGELOG v1.9.48
     SAFETY & FEEDBACK PATCH:

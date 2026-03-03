@@ -55,13 +55,29 @@ function Install-MPIOFeature {
         }
         elseif ($installResult.Success) {
             Write-OutputColor "`nMPIO installed successfully!" -color "Success"
+
+            # Post-install verification
+            $mpioModule = Get-Module -ListAvailable -Name MPIO -ErrorAction SilentlyContinue
+            if ($mpioModule) {
+                Write-OutputColor "MPIO management cmdlets are available." -color "Success"
+            }
+            else {
+                Write-OutputColor "MPIO management cmdlets will be available after reboot." -color "Info"
+            }
+
+            Write-OutputColor "" -color "Info"
             Write-OutputColor "A reboot is required to complete the installation." -color "Warning"
+            Write-OutputColor "After rebooting, configure MPIO for your storage via:" -color "Info"
+            Write-OutputColor "  - iSCSI Setup > Initialize MPIO for iSCSI" -color "Info"
             $global:RebootNeeded = $true
             Add-SessionChange -Category "System" -Description "Installed MPIO (Multipath I/O)"
             Clear-MenuCache
         }
         else {
             Write-OutputColor "MPIO installation may not have completed successfully." -color "Error"
+            if ($installResult.Error) {
+                Write-OutputColor "  Details: $($installResult.Error.Trim())" -color "Error"
+            }
             Add-SessionChange -Category "System" -Description "MPIO installation failed"
         }
     }

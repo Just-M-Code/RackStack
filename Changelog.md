@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.9.49
+
+- **Enhancement:** Feature install job error extraction — `Install-WindowsFeatureWithTimeout` now captures child job errors and displays specific failure details instead of generic "may not have completed successfully" messages. Affects Hyper-V, MPIO, and Failover Clustering installs (05-SystemCheck).
+- **Enhancement:** Windows Update scan failure detection — when the scan job fails (e.g., service errors, module issues), reports the actual error instead of falsely showing "System is up to date" (14-WindowsUpdates).
+- **Enhancement:** RDP enable now requires user confirmation before making changes (consistent with other enable functions). Firewall service pre-check detects stopped mpssvc service and warns instead of silently failing (15-RDP).
+- **Enhancement:** iSCSI target connection pre-checks MSiSCSI service before attempting portal registration. Auto-starts the service if stopped; blocks with clear error if the service cannot start (10-iSCSI).
+- **New Feature:** SET adapter link speed mismatch warning — when creating a Switch Embedded Team, detects and warns if selected adapters have different link speeds (e.g., 1 GbE + 10 GbE) since SET performance is limited to the slowest adapter (09-SET).
+- **Enhancement:** MPIO post-install verification — confirms cmdlet availability after install, shows next-step guidance for iSCSI configuration. Failed installs now display error details from the job (26-MPIO).
+- 63 modules, 1854 tests
+
 ## v1.9.48
 
 - **New Feature:** Disable admin lockout prevention — before disabling the built-in Administrator account, verifies that at least one other enabled local admin or domain admin group membership exists. Blocks the operation with clear guidance if no alternate access is available (24-DisableAdmin).

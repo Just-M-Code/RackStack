@@ -7,11 +7,17 @@ function Enable-RDP {
     try {
         # Check current RDP status
         $rdpStatus = Get-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections"
+        $rdpAlreadyEnabled = ($rdpStatus.fDenyTSConnections -eq 0)
 
-        if ($rdpStatus.fDenyTSConnections -eq 0) {
+        if ($rdpAlreadyEnabled) {
             Write-OutputColor "Remote Desktop is already enabled." -color "Info"
         }
         else {
+            if (-not (Confirm-UserAction -Message "Enable Remote Desktop on this server?")) {
+                Write-OutputColor "Remote Desktop configuration cancelled." -color "Info"
+                return
+            }
+
             # Enable Remote Desktop
             Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0 -ErrorAction Stop
 
@@ -25,21 +31,28 @@ function Enable-RDP {
             }
         }
 
-        # Enable firewall rules
-        $firewallRule = Get-NetFirewallRule -DisplayGroup "Remote Desktop" -ErrorAction SilentlyContinue | Where-Object { $_.Enabled -eq $true }
-
-        if ($firewallRule) {
-            Write-OutputColor "RDP firewall rules are already enabled." -color "Info"
+        # Enable firewall rules - pre-check firewall service
+        $fwService = Get-Service -Name mpssvc -ErrorAction SilentlyContinue
+        if ($null -eq $fwService -or $fwService.Status -ne 'Running') {
+            Write-OutputColor "Windows Firewall service (mpssvc) is not running." -color "Warning"
+            Write-OutputColor "Firewall rules cannot be managed. RDP may be accessible but unprotected." -color "Warning"
         }
         else {
-            Enable-NetFirewallRule -DisplayGroup "Remote Desktop" -ErrorAction SilentlyContinue
-
             $firewallRule = Get-NetFirewallRule -DisplayGroup "Remote Desktop" -ErrorAction SilentlyContinue | Where-Object { $_.Enabled -eq $true }
+
             if ($firewallRule) {
-                Write-OutputColor "RDP firewall rules have been enabled." -color "Success"
+                Write-OutputColor "RDP firewall rules are already enabled." -color "Info"
             }
             else {
-                Write-OutputColor "Warning: Could not enable RDP firewall rules." -color "Warning"
+                Enable-NetFirewallRule -DisplayGroup "Remote Desktop" -ErrorAction SilentlyContinue
+
+                $firewallRule = Get-NetFirewallRule -DisplayGroup "Remote Desktop" -ErrorAction SilentlyContinue | Where-Object { $_.Enabled -eq $true }
+                if ($firewallRule) {
+                    Write-OutputColor "RDP firewall rules have been enabled." -color "Success"
+                }
+                else {
+                    Write-OutputColor "Warning: Could not enable RDP firewall rules." -color "Warning"
+                }
             }
         }
 

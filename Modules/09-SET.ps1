@@ -247,7 +247,21 @@ function New-SwitchEmbeddedTeam {
 
     Write-OutputColor "`nSelected adapters:" -color "Info"
     foreach ($adapter in $selectedAdapters) {
-        Write-OutputColor "  - $($adapter.Name) ($($adapter.InterfaceDescription)) [$($adapter.Status)]" -color "Success"
+        Write-OutputColor "  - $($adapter.Name) ($($adapter.InterfaceDescription)) [$($adapter.Status)] - $($adapter.LinkSpeed)" -color "Success"
+    }
+
+    # Check for link speed mismatch
+    if ($adapterCount -gt 1) {
+        $speeds = @($selectedAdapters | ForEach-Object { $_.LinkSpeed })
+        $uniqueSpeeds = @($speeds | Select-Object -Unique)
+        if ($uniqueSpeeds.Count -gt 1) {
+            Write-OutputColor "" -color "Info"
+            Write-OutputColor "Warning: Selected adapters have mismatched link speeds!" -color "Critical"
+            foreach ($adapter in $selectedAdapters) {
+                Write-OutputColor "  - $($adapter.Name): $($adapter.LinkSpeed)" -color "Warning"
+            }
+            Write-OutputColor "SET performance will be limited to the slowest adapter." -color "Warning"
+        }
     }
 
     if (-not (Confirm-UserAction -Message "`nCreate Switch Embedded Team with these adapters?")) {
