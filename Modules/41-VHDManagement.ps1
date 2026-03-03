@@ -311,8 +311,57 @@ function Copy-VHDForVM {
         Remove-Job $convertJob -Force -ErrorAction SilentlyContinue
 
         if ($convertState -eq "Failed" -or -not (Test-Path $fixedPath)) {
-            Write-OutputColor "  Failed to convert VHD to fixed. Using dynamic copy instead." -color "Warning"
-            return $destPath
+            Write-OutputColor "" -color "Info"
+            Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Warning"
+            Write-OutputColor "  ║$("  VHD CONVERSION FAILED — Dynamic VHD will be used instead".PadRight(72))║" -color "Warning"
+            Write-OutputColor "  ╠════════════════════════════════════════════════════════════════════════╣" -color "Warning"
+            Write-OutputColor "  ║$("  Dynamic VHDs have LOWER I/O performance than fixed VHDs.".PadRight(72))║" -color "Warning"
+            Write-OutputColor "  ║$("  This may cause slower VM performance, especially for databases".PadRight(72))║" -color "Warning"
+            Write-OutputColor "  ║$("  and high-IOPS workloads.".PadRight(72))║" -color "Warning"
+            Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Warning"
+            Write-OutputColor "" -color "Info"
+
+            Write-OutputColor "  [1] Use dynamic VHD anyway (lower performance)" -color "Warning"
+            Write-OutputColor "  [2] Retry conversion" -color "Success"
+            Write-OutputColor "  [3] Cancel deployment" -color "Info"
+            Write-OutputColor "" -color "Info"
+            $fallbackChoice = Read-Host "  Select"
+
+            if ($fallbackChoice -eq "2") {
+                Write-OutputColor "  Retrying conversion..." -color "Info"
+                try {
+                    $retryJob = Start-Job -ScriptBlock {
+                        param($src, $dst)
+                        Convert-VHD -Path $src -DestinationPath $dst -VHDType Fixed -ErrorAction Stop
+                    } -ArgumentList $destPath, $fixedPath
+                    $null = $retryJob | Wait-Job -Timeout 600
+                    $null = Receive-Job $retryJob -ErrorAction SilentlyContinue
+                    $retryState = $retryJob.State
+                    Remove-Job $retryJob -Force -ErrorAction SilentlyContinue
+                    if ($retryState -ne "Failed" -and (Test-Path $fixedPath)) {
+                        Write-OutputColor "  Retry succeeded!" -color "Success"
+                        # Fall through to the move logic below
+                    } else {
+                        Write-OutputColor "  Retry also failed. Using dynamic VHD." -color "Warning"
+                        Add-SessionChange -Category "VM" -Description "VHD conversion failed for $VMName — using dynamic VHD (lower performance)"
+                        return $destPath
+                    }
+                }
+                catch {
+                    Write-OutputColor "  Retry failed: $_" -color "Error"
+                    Add-SessionChange -Category "VM" -Description "VHD conversion failed for $VMName — using dynamic VHD (lower performance)"
+                    return $destPath
+                }
+            }
+            elseif ($fallbackChoice -eq "3") {
+                Write-OutputColor "  Deployment cancelled." -color "Info"
+                Remove-Item $destPath -Force -ErrorAction SilentlyContinue
+                return $null
+            }
+            else {
+                Add-SessionChange -Category "VM" -Description "VHD conversion failed for $VMName — using dynamic VHD (lower performance)"
+                return $destPath
+            }
         }
 
         # Move the fixed file to the final name (overwrites the dynamic copy)

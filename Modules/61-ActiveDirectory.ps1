@@ -240,6 +240,81 @@ function Read-DSRMPassword {
     return $dsrmPassword
 }
 
+# Post-promotion replication health check
+function Test-ADDSReplicationHealth {
+    param([string]$DomainName)
+
+    Write-OutputColor "" -color "Info"
+    if (-not (Confirm-UserAction -Message "Run post-promotion replication health check? (requires reboot first for additional/RODC DCs)" -DefaultYes)) {
+        return
+    }
+
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  Checking replication health..." -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    try {
+        Import-Module ActiveDirectory -ErrorAction Stop
+
+        $replPartners = Get-ADReplicationPartnerMetadata -Target $env:COMPUTERNAME -ErrorAction Stop
+
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  POST-PROMOTION REPLICATION STATUS".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+
+        if (@($replPartners).Count -eq 0) {
+            Write-OutputColor "  │$("  No replication partners found (expected for first DC in forest)".PadRight(72))│" -color "Info"
+        } else {
+            foreach ($partner in $replPartners) {
+                $partnerName = $partner.Partner -replace '^CN=NTDS Settings,CN=', '' -replace ',.*$', ''
+                $lastRepl = if ($null -ne $partner.LastReplicationSuccess) {
+                    $partner.LastReplicationSuccess.ToString("yyyy-MM-dd HH:mm:ss")
+                } else { "Pending" }
+                $lastResult = if ($partner.LastReplicationResult -eq 0) { "Success" } else { "Error ($($partner.LastReplicationResult))" }
+                $resultColor = if ($partner.LastReplicationResult -eq 0) { "Success" } else { "Error" }
+
+                $lineStr = "  Partner: $partnerName"
+                if ($lineStr.Length -gt 69) { $lineStr = $lineStr.Substring(0, 69) + "..." }
+                Write-OutputColor "  │$($lineStr.PadRight(72))│" -color "Info"
+                Write-OutputColor "  │$("    Last: $lastRepl  Status: $lastResult".PadRight(72))│" -color $resultColor
+            }
+        }
+
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+
+        # Check SYSVOL share
+        Write-OutputColor "" -color "Info"
+        $sysvolPath = "\\$env:COMPUTERNAME\SYSVOL"
+        $sysvolOk = Test-Path $sysvolPath -ErrorAction SilentlyContinue
+        if ($sysvolOk) {
+            Write-OutputColor "  SYSVOL share: Available ($sysvolPath)" -color "Success"
+        } else {
+            Write-OutputColor "  SYSVOL share: Not yet available (may need reboot)" -color "Warning"
+        }
+
+        # Check DNS
+        try {
+            $dnsZone = Get-DnsServerZone -Name $DomainName -ErrorAction SilentlyContinue
+            if ($null -ne $dnsZone) {
+                Write-OutputColor "  DNS zone: $DomainName (Active)" -color "Success"
+            } else {
+                Write-OutputColor "  DNS zone: $DomainName not found (may need reboot)" -color "Warning"
+            }
+        }
+        catch {
+            Write-OutputColor "  DNS zone check: DNS Server module not available" -color "Warning"
+        }
+    }
+    catch [Microsoft.ActiveDirectory.Management.ADException] {
+        Write-OutputColor "  Replication check unavailable — reboot required to complete promotion." -color "Warning"
+        Write-OutputColor "  Run 'Check AD DS Status' from the menu after reboot to verify." -color "Info"
+    }
+    catch {
+        Write-OutputColor "  Replication check unavailable: $($_.Exception.Message)" -color "Warning"
+        Write-OutputColor "  This is normal before the first reboot. Check status after reboot." -color "Info"
+    }
+}
+
 # Main AD DS Promotion menu
 function Show-ADDSPromotionMenu {
     Clear-Host
@@ -382,6 +457,8 @@ function Install-NewForest {
         $global:RebootNeeded = $true
         Add-SessionChange -Category "AD DS" -Description "Promoted to DC: New forest $domainName"
         Write-OutputColor "  A reboot is required to complete the promotion." -color "Warning"
+
+        Test-ADDSReplicationHealth -DomainName $domainName
     }
     catch {
         Write-OutputColor "  Failed to promote Domain Controller: $_" -color "Error"
@@ -508,6 +585,8 @@ function Install-AdditionalDC {
         $global:RebootNeeded = $true
         Add-SessionChange -Category "AD DS" -Description "Promoted to additional DC in domain $domainName"
         Write-OutputColor "  A reboot is required to complete the promotion." -color "Warning"
+
+        Test-ADDSReplicationHealth -DomainName $domainName
     }
     catch {
         Write-OutputColor "  Failed to promote additional DC: $_" -color "Error"
@@ -656,6 +735,8 @@ function Install-ReadOnlyDC {
         $global:RebootNeeded = $true
         Add-SessionChange -Category "AD DS" -Description "Promoted to RODC in domain $domainName"
         Write-OutputColor "  A reboot is required to complete the promotion." -color "Warning"
+
+        Test-ADDSReplicationHealth -DomainName $domainName
     }
     catch {
         Write-OutputColor "  Failed to promote RODC: $_" -color "Error"

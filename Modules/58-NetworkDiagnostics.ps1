@@ -24,6 +24,7 @@ function Show-NetworkDiagnostics {
         Write-MenuItem "[5]  DNS Lookup"
         Write-MenuItem "[6]  Active Connections"
         Write-MenuItem "[7]  ARP Table"
+        Write-MenuItem "[8]  Quick Port Scan (common services)"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
 
@@ -42,6 +43,7 @@ function Show-NetworkDiagnostics {
             "5" { Invoke-DnsLookup }
             "6" { Show-ActiveConnections }
             "7" { Show-ArpTable }
+            "8" { Invoke-QuickPortScan }
             "b" { return }
             "B" { return }
             "m" { $global:ReturnToMainMenu = $true; return }
@@ -64,26 +66,77 @@ function Invoke-PingHost {
     if ([string]::IsNullOrWhiteSpace($target)) { return }
 
     Write-OutputColor "" -color "Info"
-    Write-OutputColor "  Pinging $target ..." -color "Info"
+    Write-OutputColor "  Pinging $target (20 packets)..." -color "Info"
     Write-OutputColor "" -color "Info"
 
     try {
-        $results = Test-Connection -ComputerName $target -Count 4 -ErrorAction Stop
+        $results = @(Test-Connection -ComputerName $target -Count 20 -ErrorAction Stop)
+        $sent = 20
+        $received = $results.Count
+        $lost = $sent - $received
+        $lossPercent = [math]::Round(($lost / $sent) * 100, 1)
+
+        # Extract latency values
+        $latencies = @($results | ForEach-Object {
+            if ($null -ne $_.ResponseTime) { [double]$_.ResponseTime }
+            elseif ($null -ne $_.Latency) { [double]$_.Latency }
+        } | Where-Object { $null -ne $_ })
+
         $lineStr = "  PING RESULTS: $target"
         if ($lineStr.Length -gt 69) { $lineStr = $lineStr.Substring(0, 69) + "..." }
         Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
         Write-OutputColor "  │$($lineStr.PadRight(72))│" -color "Info"
         Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
-        foreach ($r in $results) {
-            $addr = if ($r.IPV4Address) { $r.IPV4Address.ToString() } elseif ($r.Address) { $r.Address } else { "N/A" }
-            $ms = if ($null -ne $r.ResponseTime) { $r.ResponseTime } elseif ($null -ne $r.Latency) { $r.Latency } else { "?" }
-            $line = "  Reply from $addr - ${ms}ms"
-            Write-MenuItem -Text $line
+
+        if ($latencies.Count -gt 0) {
+            $sorted = $latencies | Sort-Object
+            $minMs = $sorted[0]
+            $maxMs = $sorted[-1]
+            $avgMs = [math]::Round(($latencies | Measure-Object -Average).Average, 1)
+            $p95Index = [math]::Min([math]::Ceiling($sorted.Count * 0.95) - 1, $sorted.Count - 1)
+            $p95Ms = $sorted[$p95Index]
+
+            # Standard deviation
+            $sumSqDiff = 0
+            foreach ($lat in $latencies) { $sumSqDiff += [math]::Pow($lat - $avgMs, 2) }
+            $stdDev = [math]::Round([math]::Sqrt($sumSqDiff / $latencies.Count), 1)
+
+            # Jitter (average difference between consecutive pings)
+            $jitter = 0
+            if ($latencies.Count -gt 1) {
+                $diffs = for ($i = 1; $i -lt $latencies.Count; $i++) {
+                    [math]::Abs($latencies[$i] - $latencies[$i-1])
+                }
+                $jitter = [math]::Round(($diffs | Measure-Object -Average).Average, 1)
+            }
+
+            # Color thresholds (for live migration / iSCSI compatibility)
+            $avgColor = if ($avgMs -gt 100) { "Error" } elseif ($avgMs -gt 50) { "Warning" } else { "Success" }
+            $p95Color = if ($p95Ms -gt 200) { "Error" } elseif ($p95Ms -gt 100) { "Warning" } else { "Success" }
+            $lossColor = if ($lossPercent -gt 5) { "Error" } elseif ($lossPercent -gt 0) { "Warning" } else { "Success" }
+            $jitterColor = if ($jitter -gt 50) { "Error" } elseif ($jitter -gt 20) { "Warning" } else { "Success" }
+
+            Write-OutputColor "  │$("  Packets: $sent sent, $received received, $lost lost ($lossPercent% loss)".PadRight(72))│" -color $lossColor
+            Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+            Write-OutputColor "  │$("  Min:        ${minMs}ms".PadRight(72))│" -color "Info"
+            Write-OutputColor "  │$("  Max:        ${maxMs}ms".PadRight(72))│" -color "Info"
+            Write-OutputColor "  │$("  Average:    ${avgMs}ms".PadRight(72))│" -color $avgColor
+            Write-OutputColor "  │$("  P95:        ${p95Ms}ms".PadRight(72))│" -color $p95Color
+            Write-OutputColor "  │$("  Std Dev:    ${stdDev}ms".PadRight(72))│" -color "Info"
+            Write-OutputColor "  │$("  Jitter:     ${jitter}ms".PadRight(72))│" -color $jitterColor
+            Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+
+            # Thresholds guide
+            if ($p95Ms -gt 100 -or $lossPercent -gt 0) {
+                Write-OutputColor "  │$("  THRESHOLDS  (for Hyper-V live migration / iSCSI)".PadRight(72))│" -color "Warning"
+                Write-OutputColor "  │$("  Avg <50ms = Good  |  P95 <100ms = Good  |  Loss 0% = Good".PadRight(72))│" -color "Info"
+            } else {
+                Write-OutputColor "  │$("  Network quality: Good for live migration and iSCSI".PadRight(72))│" -color "Success"
+            }
+        } else {
+            Write-OutputColor "  │$("  All $sent packets lost (100% loss)".PadRight(72))│" -color "Error"
         }
-        $avgMeasure = $results | ForEach-Object { if ($null -ne $_.ResponseTime) { $_.ResponseTime } elseif ($null -ne $_.Latency) { $_.Latency } else { 0 } } | Measure-Object -Average
-        $avg = if ($null -ne $avgMeasure.Average) { $avgMeasure.Average } else { 0 }
-        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
-        Write-MenuItem -Text "  Average: $([math]::Round($avg, 1))ms"
+
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
     }
     catch {
@@ -341,6 +394,134 @@ function Show-ActiveConnections {
     catch {
         Write-OutputColor "  Failed: $($_.Exception.Message)" -color "Error"
     }
+    Write-PressEnter
+}
+
+function Invoke-QuickPortScan {
+    Clear-Host
+    Write-CenteredOutput "Quick Port Scan" -color "Info"
+    Write-OutputColor "" -color "Info"
+    $target = Read-Host "  Enter hostname or IP"
+    $navResult = Test-NavigationCommand -UserInput $target
+    if ($navResult.ShouldReturn) { return }
+    if ([string]::IsNullOrWhiteSpace($target)) { return }
+
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  SELECT PORT SET".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  [1] Standard (RDP, SMB, WinRM, HTTP, HTTPS, DNS, SSH)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  [2] Hyper-V / Cluster (Live Migration, Cluster, iSCSI, SMB)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  [3] Domain Controller (LDAP, Kerberos, DNS, RPC, GC)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  [4] All (comprehensive scan)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    $setChoice = Read-Host "  Select"
+    $navResult = Test-NavigationCommand -UserInput $setChoice
+    if ($navResult.ShouldReturn) { return }
+
+    $ports = switch ($setChoice) {
+        "1" { @(
+            @{Port=22;   Name="SSH"},
+            @{Port=53;   Name="DNS"},
+            @{Port=80;   Name="HTTP"},
+            @{Port=443;  Name="HTTPS"},
+            @{Port=445;  Name="SMB"},
+            @{Port=3389; Name="RDP"},
+            @{Port=5985; Name="WinRM"},
+            @{Port=5986; Name="WinRM-S"}
+        )}
+        "2" { @(
+            @{Port=445;  Name="SMB"},
+            @{Port=3260; Name="iSCSI"},
+            @{Port=3343; Name="Cluster"},
+            @{Port=5985; Name="WinRM"},
+            @{Port=6600; Name="LiveMig"},
+            @{Port=2049; Name="NFS"},
+            @{Port=3389; Name="RDP"}
+        )}
+        "3" { @(
+            @{Port=53;   Name="DNS"},
+            @{Port=88;   Name="Kerberos"},
+            @{Port=135;  Name="RPC"},
+            @{Port=389;  Name="LDAP"},
+            @{Port=445;  Name="SMB"},
+            @{Port=464;  Name="Kpasswd"},
+            @{Port=636;  Name="LDAPS"},
+            @{Port=3268; Name="GC"},
+            @{Port=3269; Name="GC-SSL"}
+        )}
+        "4" { @(
+            @{Port=22;   Name="SSH"},
+            @{Port=53;   Name="DNS"},
+            @{Port=80;   Name="HTTP"},
+            @{Port=88;   Name="Kerberos"},
+            @{Port=135;  Name="RPC"},
+            @{Port=389;  Name="LDAP"},
+            @{Port=443;  Name="HTTPS"},
+            @{Port=445;  Name="SMB"},
+            @{Port=636;  Name="LDAPS"},
+            @{Port=3260; Name="iSCSI"},
+            @{Port=3268; Name="GC"},
+            @{Port=3343; Name="Cluster"},
+            @{Port=3389; Name="RDP"},
+            @{Port=5985; Name="WinRM"},
+            @{Port=6600; Name="LiveMig"}
+        )}
+        default { return }
+    }
+
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  Scanning $($ports.Count) ports on $target ..." -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Parallel port scan using jobs
+    $jobs = [System.Collections.Generic.List[object]]::new()
+    foreach ($p in $ports) {
+        $jobs.Add((Start-Job -ScriptBlock {
+            param($IP, $Port)
+            try {
+                $tcp = New-Object System.Net.Sockets.TcpClient
+                $connect = $tcp.BeginConnect($IP, $Port, $null, $null)
+                $wait = $connect.AsyncWaitHandle.WaitOne(2000, $false)
+                if ($wait -and $tcp.Connected) {
+                    $tcp.EndConnect($connect)
+                    $tcp.Close()
+                    return "OPEN"
+                }
+                $tcp.Close()
+                return "CLOSED"
+            }
+            catch { return "CLOSED" }
+        } -ArgumentList $target, $p.Port))
+    }
+
+    $jobResults = $jobs | Wait-Job -Timeout 15 | Receive-Job
+    $jobs | Remove-Job -Force
+
+    # Display results
+    $lineStr = "  PORT SCAN: $target"
+    if ($lineStr.Length -gt 69) { $lineStr = $lineStr.Substring(0, 69) + "..." }
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$($lineStr.PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    $header = "  Port".PadRight(10) + "Service".PadRight(14) + "Status"
+    Write-MenuItem -Text $header -Color "Warning"
+    Write-OutputColor "  │$("  $('─' * 70)".PadRight(72))│" -color "Info"
+
+    $openCount = 0
+    for ($i = 0; $i -lt $ports.Count; $i++) {
+        $status = if ($i -lt @($jobResults).Count) { @($jobResults)[$i] } else { "TIMEOUT" }
+        $statusColor = if ($status -eq "OPEN") { "Success" } else { "Error" }
+        if ($status -eq "OPEN") { $openCount++ }
+        $line = "  $($ports[$i].Port.ToString().PadRight(8))$($ports[$i].Name.PadRight(14))$status"
+        Write-OutputColor "  │$($line.PadRight(72))│" -color $statusColor
+    }
+
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  $openCount of $($ports.Count) ports open".PadRight(72))│" -color "Info"
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
     Write-PressEnter
 }
 

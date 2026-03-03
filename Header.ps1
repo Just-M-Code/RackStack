@@ -30,10 +30,18 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.44
+    1.9.45
 
 .LAST UPDATED
     03/02/2026
+
+.CHANGELOG v1.9.45
+    RELIABILITY & DIAGNOSTICS PATCH:
+    - NEW: Enhanced ping with 20-packet statistics (min/max/avg/P95/jitter/packet loss) and color-coded thresholds
+    - NEW: Quick port scan with presets for Standard, Hyper-V/Cluster, Domain Controller services
+    - NEW: VM checkpoint disk space validation before creation (warns on low space)
+    - NEW: VHD conversion failure handling with retry option and explicit performance warning
+    - NEW: AD DS post-promotion replication health check (SYSVOL, DNS zone, replication partners)
 
 .CHANGELOG v1.9.44
     FEATURES & QOL PATCH:

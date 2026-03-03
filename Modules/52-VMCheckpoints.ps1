@@ -162,6 +162,42 @@ function New-VMCheckpointWizard {
     Write-OutputColor "  Type: $cpType" -color "Info"
     Write-OutputColor "" -color "Info"
 
+    # Disk space validation
+    try {
+        $vmPath = $selectedVM.Path
+        if (-not $vmPath) { $vmPath = $selectedVM.ConfigurationLocation }
+        if ($vmPath) {
+            $driveLetter = $vmPath.Substring(0, 2)
+            $volume = Get-Volume -DriveLetter $driveLetter.TrimEnd(':') -ErrorAction SilentlyContinue
+            if ($null -ne $volume) {
+                $freeGB = [math]::Round($volume.SizeRemaining / 1GB, 1)
+                $totalGB = [math]::Round($volume.Size / 1GB, 1)
+                $freePercent = if ($totalGB -gt 0) { [math]::Round(($freeGB / $totalGB) * 100, 1) } else { 0 }
+                $ramGB = [math]::Round($selectedVM.MemoryAssigned / 1GB, 1)
+                if ($ramGB -eq 0) { $ramGB = [math]::Round($selectedVM.MemoryStartup / 1GB, 1) }
+
+                Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+                Write-OutputColor "  │$("  STORAGE CHECK: $driveLetter".PadRight(72))│" -color "Info"
+                Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+                Write-OutputColor "  │$("  Free Space:    ${freeGB} GB / ${totalGB} GB ($freePercent%)".PadRight(72))│" -color "Info"
+                Write-OutputColor "  │$("  VM RAM:        ${ramGB} GB (checkpoint may use up to this amount)".PadRight(72))│" -color "Info"
+                Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+                Write-OutputColor "" -color "Info"
+
+                if ($freeGB -lt 10 -or ($ramGB -gt 0 -and $freeGB -lt ($ramGB * 1.5))) {
+                    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Warning"
+                    Write-OutputColor "  ║$("  WARNING: Low disk space! Checkpoint may fill the volume.".PadRight(72))║" -color "Warning"
+                    Write-OutputColor "  ║$("  If storage fills during checkpoint, the VM may become inaccessible.".PadRight(72))║" -color "Warning"
+                    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Warning"
+                    Write-OutputColor "" -color "Info"
+                }
+            }
+        }
+    }
+    catch {
+        # Non-fatal — proceed without space check
+    }
+
     if (-not (Confirm-UserAction -Message "Create checkpoint?")) { return }
 
     Write-OutputColor "" -color "Info"

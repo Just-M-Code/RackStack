@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.9.45
+
+- **New Feature:** Enhanced ping diagnostics — sends 20 packets with min/max/average/P95/standard deviation/jitter/packet loss statistics, color-coded thresholds for live migration and iSCSI compatibility (58-NetworkDiagnostics).
+- **New Feature:** Quick port scan — test multiple common ports at once with presets for Standard, Hyper-V/Cluster, Domain Controller, or comprehensive scan. Parallel scanning with 2-second timeout per port (58-NetworkDiagnostics).
+- **New Feature:** VM checkpoint disk space validation — checks free space on the storage volume before creating a checkpoint, warns if free space is below 10GB or less than 1.5x the VM's RAM allocation (52-VMCheckpoints).
+- **New Feature:** VHD conversion failure handling — when dynamic-to-fixed conversion fails, shows explicit performance warning banner and offers retry, use dynamic anyway, or cancel deployment. Logs fallback to session changes (41-VHDManagement).
+- **New Feature:** AD DS post-promotion replication health check — after DC promotion, verifies replication partner metadata, SYSVOL share availability, and DNS zone status. Graceful handling when reboot is needed first (61-ActiveDirectory).
+- 63 modules, 1854 tests
+
 ## v1.9.44
 
 - **New Feature:** "Home" navigation command — type `home`, `main`, or `m` at any menu to jump straight back to the main menu (04-Navigation, 34-Help).
