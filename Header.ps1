@@ -30,10 +30,16 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.60
+    1.9.61
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.61
+    STORAGE & DATA PATH PATCH:
+    - FIX: iSCSI target discovery now uses -ErrorAction Stop — previously, Get-IscsiTarget failures produced a non-terminating error that silently skipped all target connections
+    - FIX: Partition selector wraps Get-Partition in @() — single-partition disks no longer falsely report "No eligible partitions" due to PS 5.1 .Count returning null on single objects
+    - IMPROVED: Config export wraps Get-Disk and Get-Volume in individual try/catch blocks — storage section failures now show an error message instead of producing a silently blank export
 
 .CHANGELOG v1.9.60
     VM DEPLOYMENT & SAFETY PATCH:

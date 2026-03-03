@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.9.61
+
+- **Bug Fix:** iSCSI target discovery (`Get-IscsiTarget`) now uses `-ErrorAction Stop` — previously, failures (e.g., iSCSI Initiator service issues) produced a non-terminating error, causing `$targets` to be `$null` and silently skipping all target connections with "No disconnected targets found" instead of reporting the error (10-iSCSI).
+- **Bug Fix:** `Select-Partition` now wraps `Get-Partition` result in `@()` — on disks with exactly one eligible partition, `.Count` returned `$null` in PS 5.1, and `$null -eq 0` evaluated to `$true`, causing the function to falsely report "No eligible partitions found" and refuse to select the partition (38-StorageManager).
+- **Enhancement:** Config export now wraps `Get-Disk` and `Get-Volume` in individual `try/catch` blocks with `-ErrorAction Stop` — previously used `-ErrorAction SilentlyContinue` inside the outer `try`, causing storage/volume sections to be silently blank when WMI or Storage Management services are unavailable, producing an incomplete export with no indication of what was missing (45-ConfigExport).
+- 63 modules, 1854 tests
+
 ## v1.9.60
 
 - **Bug Fix:** VM disk attachment (`Add-VMHardDiskDrive`) now uses `-ErrorAction Stop` instead of `-ErrorAction SilentlyContinue` — previously, if disk attachment failed (path translation on remote hosts, SCSI slot conflicts), the VHD file was created but never attached, and the VM was reported as successfully deployed with a missing disk. Affects all 3 disk attachment paths: blank disks, sysprepped VHDs, and OS fallback disks (44-VMDeployment).

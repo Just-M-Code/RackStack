@@ -326,7 +326,7 @@ function Select-Partition {
         [switch]$AllowSystemPartitions
     )
 
-    $partitions = Get-Partition -DiskNumber $DiskNumber -ErrorAction SilentlyContinue
+    $partitions = @(Get-Partition -DiskNumber $DiskNumber -ErrorAction SilentlyContinue)
 
     if (-not $AllowSystemPartitions) {
         # Filter out system-critical partitions

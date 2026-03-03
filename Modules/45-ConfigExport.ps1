@@ -193,19 +193,29 @@ function Export-ServerConfiguration {
 
         # Storage
         $config += "### STORAGE ###"
-        $disks = Get-Disk -ErrorAction SilentlyContinue
-        foreach ($disk in $disks) {
-            $sizeDisplay = if ($disk.Size -ge 1TB) { "$([math]::Round($disk.Size / 1TB, 2)) TB" } else { "$([math]::Round($disk.Size / 1GB, 1)) GB" }
-            $config += "  Disk $($disk.Number): $($disk.FriendlyName) | $sizeDisplay | $($disk.PartitionStyle) | $($disk.OperationalStatus)"
+        try {
+            $disks = Get-Disk -ErrorAction Stop
+            foreach ($disk in $disks) {
+                $sizeDisplay = if ($disk.Size -ge 1TB) { "$([math]::Round($disk.Size / 1TB, 2)) TB" } else { "$([math]::Round($disk.Size / 1GB, 1)) GB" }
+                $config += "  Disk $($disk.Number): $($disk.FriendlyName) | $sizeDisplay | $($disk.PartitionStyle) | $($disk.OperationalStatus)"
+            }
+        }
+        catch {
+            $config += "  (Unable to enumerate disks: $_)"
         }
         $config += ""
-        $volumes = Get-Volume | Where-Object { $_.DriveLetter -and $_.DriveType -eq 'Fixed' } | Sort-Object DriveLetter -ErrorAction SilentlyContinue
-        foreach ($vol in $volumes) {
-            $totalGB = [math]::Round($vol.Size / 1GB, 1)
-            $freeGB = [math]::Round($vol.SizeRemaining / 1GB, 1)
-            $usedPct = if ($vol.Size -gt 0) { [math]::Round((($vol.Size - $vol.SizeRemaining) / $vol.Size) * 100, 0) } else { 0 }
-            $label = if ($vol.FileSystemLabel) { $vol.FileSystemLabel } else { "(No Label)" }
-            $config += "  $($vol.DriveLetter): $label | $($vol.FileSystem) | $freeGB GB free / $totalGB GB ($usedPct% used)"
+        try {
+            $volumes = Get-Volume -ErrorAction Stop | Where-Object { $_.DriveLetter -and $_.DriveType -eq 'Fixed' } | Sort-Object DriveLetter
+            foreach ($vol in $volumes) {
+                $totalGB = [math]::Round($vol.Size / 1GB, 1)
+                $freeGB = [math]::Round($vol.SizeRemaining / 1GB, 1)
+                $usedPct = if ($vol.Size -gt 0) { [math]::Round((($vol.Size - $vol.SizeRemaining) / $vol.Size) * 100, 0) } else { 0 }
+                $label = if ($vol.FileSystemLabel) { $vol.FileSystemLabel } else { "(No Label)" }
+                $config += "  $($vol.DriveLetter): $label | $($vol.FileSystem) | $freeGB GB free / $totalGB GB ($usedPct% used)"
+            }
+        }
+        catch {
+            $config += "  (Unable to enumerate volumes: $_)"
         }
         $config += ""
 

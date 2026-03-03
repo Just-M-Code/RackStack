@@ -924,7 +924,7 @@ function Connect-iSCSITargets {
             }
 
             # Discover targets
-            $targets = Get-IscsiTarget | Where-Object { $_.IsConnected -eq $false }
+            $targets = Get-IscsiTarget -ErrorAction Stop | Where-Object { $_.IsConnected -eq $false }
 
             if ($targets) {
                 foreach ($target in $targets) {
