@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.9.60
+
+- **Bug Fix:** VM disk attachment (`Add-VMHardDiskDrive`) now uses `-ErrorAction Stop` instead of `-ErrorAction SilentlyContinue` — previously, if disk attachment failed (path translation on remote hosts, SCSI slot conflicts), the VHD file was created but never attached, and the VM was reported as successfully deployed with a missing disk. Affects all 3 disk attachment paths: blank disks, sysprepped VHDs, and OS fallback disks (44-VMDeployment).
+- **Enhancement:** CSV path extraction in `Get-AvailableVMStoragePaths` now filters out volumes with null `SharedVolumeInfo` — prevents a null-dereference exception on degraded CSVs that caused silent fallback to the `"C:\Hyper-V"` hardcoded path, deploying VMs to the wrong location (44-VMDeployment).
+- **Enhancement:** Default NIC removal on newly created VMs now uses `try/catch` with `-ErrorAction Stop` and a warning message — previously used `-ErrorAction SilentlyContinue`, which silently failed if the VM was in an unexpected state, leaving phantom NICs alongside the newly configured ones (44-VMDeployment).
+- **Enhancement:** Batch config firewall idempotency check now guards against `$null` return from `Get-FirewallState` — prevents null-dereference property access on systems with non-standard firewall configurations (50-EntryPoint).
+- 63 modules, 1854 tests
+
 ## v1.9.59
 
 - **Bug Fix:** "Home"/"main" navigation command now works from all 10 submenu runners — previously, typing `main` or `home` at any submenu fell through to `Test-NavigationCommand` with `Action = "home"` which was never checked, resulting in "Invalid choice" instead of returning to the main menu (49-MenuRunner).

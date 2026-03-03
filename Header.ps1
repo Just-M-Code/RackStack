@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.59
+    1.9.60
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.60
+    VM DEPLOYMENT & SAFETY PATCH:
+    - FIX: VM disk attachment now uses -ErrorAction Stop — previously, Add-VMHardDiskDrive failures were silently swallowed, leaving VMs with missing disks while reporting success
+    - IMPROVED: CSV path extraction filters out degraded volumes with null SharedVolumeInfo — prevents null-dereference causing silent fallback to wrong VM storage path
+    - IMPROVED: Default NIC removal on new VMs uses try/catch with warning instead of -ErrorAction SilentlyContinue — surfaces errors that would leave phantom NICs
+    - IMPROVED: Batch config firewall idempotency check guards against null Get-FirewallState return value
 
 .CHANGELOG v1.9.59
     NAVIGATION & CLEANUP PATCH:

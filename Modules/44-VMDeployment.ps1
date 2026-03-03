@@ -405,7 +405,7 @@ function Get-AvailableVMStoragePaths {
         if ($script:VMDeploymentMode -eq "Cluster") {
             $csvs = Get-ClusterSharedVolume -Cluster $script:VMDeploymentTarget -ErrorAction SilentlyContinue
             if ($csvs) {
-                $paths.CSVPaths = $csvs | ForEach-Object {
+                $paths.CSVPaths = $csvs | Where-Object { $null -ne $_.SharedVolumeInfo } | ForEach-Object {
                     $_.SharedVolumeInfo.FriendlyVolumeName
                 }
             }
@@ -1778,7 +1778,7 @@ function New-VMDisk {
     }
 
     $null = New-VHD @vhdParams
-    Add-VMHardDiskDrive -VM $VM -Path $vhdFullPath -ErrorAction SilentlyContinue
+    Add-VMHardDiskDrive -VM $VM -Path $vhdFullPath -ErrorAction Stop
 }
 
 # Create and attach all VM disks (VHD-based or blank)
@@ -1796,7 +1796,7 @@ function New-VMDisks {
             -DiskLabel "OS"
 
         if ($osVhdPath) {
-            Add-VMHardDiskDrive -VM $VM -Path $osVhdPath -ErrorAction SilentlyContinue
+            Add-VMHardDiskDrive -VM $VM -Path $osVhdPath -ErrorAction Stop
             Write-OutputColor "  OS disk attached from sysprepped VHD." -color "Success"
         }
         else {
@@ -1805,7 +1805,7 @@ function New-VMDisks {
             if ($osDisk) {
                 $vhdFullPath = Join-Path $VHDSpecificPath "$($Config.VMName)_OS.vhdx"
                 $null = New-VHD -Path $vhdFullPath -SizeBytes ($osDisk.SizeGB * 1GB) -Fixed -ErrorAction Stop
-                Add-VMHardDiskDrive -VM $VM -Path $vhdFullPath -ErrorAction SilentlyContinue
+                Add-VMHardDiskDrive -VM $VM -Path $vhdFullPath -ErrorAction Stop
             }
         }
 
@@ -1827,7 +1827,12 @@ function Set-VMNetworkConfig {
     param($VM, [hashtable]$Config)
 
     Write-OutputColor "  Configuring network adapters..." -color "Info"
-    Get-VMNetworkAdapter -VM $VM | Remove-VMNetworkAdapter -ErrorAction SilentlyContinue
+    try {
+        Get-VMNetworkAdapter -VM $VM | Remove-VMNetworkAdapter -ErrorAction Stop
+    }
+    catch {
+        Write-OutputColor "  Warning: Could not remove default NICs: $_" -color "Warning"
+    }
 
     $nicIndex = 1
     foreach ($nic in $Config.NICs) {
