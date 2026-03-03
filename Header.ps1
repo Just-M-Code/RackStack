@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.58
+    1.9.59
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.59
+    NAVIGATION & CLEANUP PATCH:
+    - FIX: "home"/"main" navigation command now works from all submenus — previously fell through to "Invalid choice" in 10 submenu runners
+    - FIX: Return-to-main-menu flag now properly bubbles up through Configure Server menu — previously cleared the flag without returning, trapping the user one level deep
+    - IMPROVED: Exit cleanup path deduplication now uses case-insensitive Sort-Object -Unique instead of case-sensitive Select-Object -Unique
+    - IMPROVED: Exit cleanup scheduled task uses -Recurse universally for all paths — eliminates stale-path-type risk from test-at-exit vs delete-at-reboot timing gap
 
 .CHANGELOG v1.9.58
     DATA SAFETY & VALIDATION PATCH:

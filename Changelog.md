@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.9.59
+
+- **Bug Fix:** "Home"/"main" navigation command now works from all 10 submenu runners — previously, typing `main` or `home` at any submenu fell through to `Test-NavigationCommand` with `Action = "home"` which was never checked, resulting in "Invalid choice" instead of returning to the main menu (49-MenuRunner).
+- **Bug Fix:** Return-to-main-menu flag (`$global:ReturnToMainMenu`) now properly bubbles up through `Start-Show-ConfigureServerMenu` — previously, child submenus would set the flag but ConfigureServerMenu cleared it without returning, trapping the user at the Configure Server level instead of navigating all the way back to Main Menu (49-MenuRunner).
+- **Enhancement:** Exit cleanup path deduplication now uses `Sort-Object -Unique` (case-insensitive) instead of `Select-Object -Unique` (case-sensitive) — prevents duplicate `Remove-Item` commands in the scheduled task if the same path appears with different casing (47-ExitCleanup).
+- **Enhancement:** Exit cleanup scheduled task uses `-Recurse` universally for all paths instead of branching on `Test-Path -PathType Container` at script-exit time — eliminates a race condition where a file could become a directory (or vice versa) between exit and reboot-time execution (47-ExitCleanup).
+- 63 modules, 1854 tests
+
 ## v1.9.58
 
 - **Bug Fix:** Agent installer site number parsing now wraps the `-split` pipeline in `@()` — single-site filenames (e.g., `Agent.12345.exe`) returned a bare string instead of an array, causing `.Count` to return the string length instead of 1 in PS 5.1 (57-AgentInstaller).

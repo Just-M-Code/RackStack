@@ -103,49 +103,39 @@ function Start-Show-ConfigureServerMenu {
         if ($navResult.Action -eq "back") {
             return
         }
+        if ($navResult.Action -eq "home") {
+            $global:ReturnToMainMenu = $true
+            return
+        }
 
         switch ($choice) {
             "1" {
                 Start-Show-NetworkMenu
-                if ($global:ReturnToMainMenu) {
-                    $global:ReturnToMainMenu = $false
-                }
+                if ($global:ReturnToMainMenu) { return }
             }
             "2" {
                 Start-Show-SystemConfigMenu
-                if ($global:ReturnToMainMenu) {
-                    $global:ReturnToMainMenu = $false
-                }
+                if ($global:ReturnToMainMenu) { return }
             }
             "3" {
                 Start-Show-RolesFeaturesMenu
-                if ($global:ReturnToMainMenu) {
-                    $global:ReturnToMainMenu = $false
-                }
+                if ($global:ReturnToMainMenu) { return }
             }
             "4" {
                 Start-Show-SecurityAccessMenu
-                if ($global:ReturnToMainMenu) {
-                    $global:ReturnToMainMenu = $false
-                }
+                if ($global:ReturnToMainMenu) { return }
             }
             "5" {
                 Start-Show-ToolsUtilitiesMenu
-                if ($global:ReturnToMainMenu) {
-                    $global:ReturnToMainMenu = $false
-                }
+                if ($global:ReturnToMainMenu) { return }
             }
             "6" {
                 Start-Show-StorageClusteringMenu
-                if ($global:ReturnToMainMenu) {
-                    $global:ReturnToMainMenu = $false
-                }
+                if ($global:ReturnToMainMenu) { return }
             }
             "7" {
                 Show-OperationsMenu
-                if ($global:ReturnToMainMenu) {
-                    $global:ReturnToMainMenu = $false
-                }
+                if ($global:ReturnToMainMenu) { return }
             }
             "8" {
                 Show-SystemHealthCheck
@@ -183,6 +173,7 @@ function Start-Show-SystemConfigMenu {
         $navResult = Test-NavigationCommand -UserInput $choice
         if ($navResult.Action -eq "exit") { Exit-Script; return }
         if ($navResult.Action -eq "back") { return }
+        if ($navResult.Action -eq "home") { $global:ReturnToMainMenu = $true; return }
 
         switch ($choice) {
             "1" { Set-HostName; Write-PressEnter }
@@ -211,6 +202,7 @@ function Start-Show-RolesFeaturesMenu {
         $navResult = Test-NavigationCommand -UserInput $choice
         if ($navResult.Action -eq "exit") { Exit-Script; return }
         if ($navResult.Action -eq "back") { return }
+        if ($navResult.Action -eq "home") { $global:ReturnToMainMenu = $true; return }
 
         switch ($choice) {
             "1" { Install-HyperVRole; Write-PressEnter }
@@ -236,6 +228,7 @@ function Start-Show-SecurityAccessMenu {
         $navResult = Test-NavigationCommand -UserInput $choice
         if ($navResult.Action -eq "exit") { Exit-Script; return }
         if ($navResult.Action -eq "back") { return }
+        if ($navResult.Action -eq "home") { $global:ReturnToMainMenu = $true; return }
 
         switch ($choice) {
             "1" { Enable-RDP; Write-PressEnter }
@@ -264,6 +257,7 @@ function Start-Show-ToolsUtilitiesMenu {
         $navResult = Test-NavigationCommand -UserInput $choice
         if ($navResult.Action -eq "exit") { Exit-Script; return }
         if ($navResult.Action -eq "back") { return }
+        if ($navResult.Action -eq "home") { $global:ReturnToMainMenu = $true; return }
 
         switch ($choice) {
             "1" { Set-NTPConfiguration; Write-PressEnter }
@@ -297,6 +291,7 @@ function Start-Show-StorageClusteringMenu {
         $navResult = Test-NavigationCommand -UserInput $choice
         if ($navResult.Action -eq "exit") { Exit-Script; return }
         if ($navResult.Action -eq "back") { return }
+        if ($navResult.Action -eq "home") { $global:ReturnToMainMenu = $true; return }
 
         switch ($choice) {
             "1" { Start-StorageManager }
@@ -333,21 +328,19 @@ function Start-Show-NetworkMenu {
         if ($navResult.Action -eq "back") {
             return
         }
+        if ($navResult.Action -eq "home") {
+            $global:ReturnToMainMenu = $true
+            return
+        }
 
         switch ($networkChoice) {
             "1" {
                 Start-Show-HostNetworkMenu
-                # Check if we need to bubble up to main menu
-                if ($global:ReturnToMainMenu) {
-                    return
-                }
+                if ($global:ReturnToMainMenu) { return }
             }
             "2" {
                 Start-Show-VM-NetworkMenu
-                # Check if we need to bubble up to main menu
-                if ($global:ReturnToMainMenu) {
-                    return
-                }
+                if ($global:ReturnToMainMenu) { return }
             }
             "back" {
                 return
@@ -414,6 +407,10 @@ function Start-Show-HostNetworkMenu {
         if ($navResult.Action -eq "back") {
             return
         }
+        if ($navResult.Action -eq "home") {
+            $global:ReturnToMainMenu = $true
+            return
+        }
 
         switch ($hostNetworkChoice) {
             "1" {
@@ -462,6 +459,7 @@ function Start-Show-VirtualSwitchMenu {
         $navResult = Test-NavigationCommand -UserInput $choice
         if ($navResult.Action -eq "exit") { Exit-Script; return }
         if ($navResult.Action -eq "back") { return }
+        if ($navResult.Action -eq "home") { $global:ReturnToMainMenu = $true; return }
 
         switch ($choice) {
             "1" { New-SwitchEmbeddedTeam -SwitchName $script:SwitchName -ManagementName $script:ManagementName; Write-PressEnter }
@@ -494,6 +492,7 @@ function Start-Show-HostNetworkIPMenu {
         $navResult = Test-NavigationCommand -UserInput $vmNetworkChoice
         if ($navResult.Action -eq "exit") { Exit-Script; return }
         if ($navResult.Action -eq "back") { return }
+        if ($navResult.Action -eq "home") { $global:ReturnToMainMenu = $true; return }
 
         switch ($vmNetworkChoice) {
             "1" {
@@ -515,7 +514,6 @@ function Start-Show-HostNetworkIPMenu {
                 }
             }
             "M" {
-                # Set flag to return all the way to main menu
                 $global:ReturnToMainMenu = $true
                 return
             }
@@ -545,6 +543,7 @@ function Start-Show-VM-NetworkMenu {
         $navResult = Test-NavigationCommand -UserInput $vmNetworkChoice
         if ($navResult.Action -eq "exit") { Exit-Script; return }
         if ($navResult.Action -eq "back") { return }
+        if ($navResult.Action -eq "home") { $global:ReturnToMainMenu = $true; return }
 
         switch ($vmNetworkChoice) {
             "1" {
@@ -566,7 +565,6 @@ function Start-Show-VM-NetworkMenu {
                 }
             }
             "M" {
-                # Set flag to return all the way to main menu
                 $global:ReturnToMainMenu = $true
                 return
             }

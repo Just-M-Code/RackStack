@@ -91,7 +91,7 @@ function Exit-Script {
         }
 
         # Deduplicate paths
-        $uniquePaths = $pathsToDelete | Select-Object -Unique
+        $uniquePaths = $pathsToDelete | Sort-Object -Unique
 
         # Schedule deletion after reboot using a scheduled task
         try {
@@ -99,11 +99,7 @@ function Exit-Script {
             $cleanupCommands = "Start-Sleep 60`n"
             foreach ($p in $uniquePaths) {
                 $escapedPath = $p -replace "'", "''"
-                if (Test-Path $p -PathType Container) {
-                    $cleanupCommands += "Remove-Item -LiteralPath '$escapedPath' -Recurse -Force -ErrorAction SilentlyContinue`n"
-                } else {
-                    $cleanupCommands += "Remove-Item -LiteralPath '$escapedPath' -Force -ErrorAction SilentlyContinue`n"
-                }
+                $cleanupCommands += "Remove-Item -LiteralPath '$escapedPath' -Recurse -Force -ErrorAction SilentlyContinue`n"
             }
             $toolNameEsc = $script:ToolName -replace "'", "''"
             $cleanupCommands += "Unregister-ScheduledTask -TaskName '$($toolNameEsc)Cleanup' -Confirm:`$false -ErrorAction SilentlyContinue"
