@@ -52,7 +52,7 @@ function Show-DeduplicationManagement {
         Write-OutputColor "  │$("  DEDUPLICATION STATUS BY VOLUME".PadRight(72))│" -color "Info"
         Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
 
-        $volumes = Get-Volume | Where-Object { $_.DriveLetter -and $_.DriveType -eq "Fixed" }
+        $volumes = Get-Volume -ErrorAction SilentlyContinue | Where-Object { $_.DriveLetter -and $_.DriveType -eq "Fixed" }
         $idx = 1
         $volList = @()
         foreach ($vol in $volumes) {
@@ -170,7 +170,6 @@ function Show-DeduplicationManagement {
                 }
             }
             "b" { return }
-            "B" { return }
         }
 
         Write-PressEnter

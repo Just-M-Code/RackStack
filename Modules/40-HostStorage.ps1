@@ -110,11 +110,23 @@ function Move-OpticalDriveFromD {
             return $true
         }
         else {
-            # Fallback: use mountvol approach
+            # Fallback: use mountvol to get volume GUID from D:
             Write-OutputColor "  Attempting alternative method..." -color "Info"
 
-            # Get the volume GUID for D: (re-query since first attempt returned $null)
-            $volGuid = (Get-CimInstance -ClassName Win32_Volume -Filter "DriveLetter='D:'" -ErrorAction SilentlyContinue).DeviceID
+            $volGuid = $null
+            $mountvolOutput = mountvol D: /L 2>$null
+            if ($mountvolOutput -match '(\\\\\?\\Volume\{[a-f0-9-]+\}\\)') {
+                $volGuid = $Matches[1]
+            }
+
+            if (-not $volGuid) {
+                # Try Get-Partition as last resort
+                $part = Get-Partition -DriveLetter D -ErrorAction SilentlyContinue
+                if ($part) {
+                    $volObj = Get-Volume -Partition $part -ErrorAction SilentlyContinue
+                    $volGuid = $volObj.UniqueId
+                }
+            }
 
             if ($volGuid) {
                 # Remove D: mount point

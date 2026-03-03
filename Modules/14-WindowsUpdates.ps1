@@ -90,6 +90,7 @@ function Install-WindowsUpdates {
         Write-OutputColor "" -color "Info"
 
         # Install updates with progress
+        $installJob = $null
         $installJob = Start-Job -ScriptBlock {
             Import-Module PSWindowsUpdate
             Install-WindowsUpdate -AcceptAll -IgnoreReboot

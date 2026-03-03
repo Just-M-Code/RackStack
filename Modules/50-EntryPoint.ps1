@@ -382,7 +382,8 @@ function Start-BatchMode {
                 $global:RebootNeeded = $true
                 $changesApplied++
                 Add-SessionChange -Category "System" -Description "Set hostname to $($Config.Hostname)"
-                $script:BatchUndoStack.Add(@{ Step = $stepNum; Description = "Revert hostname to $oldHostname"; Reversible = $true; UndoScript = [scriptblock]::Create("Rename-Computer -NewName '$oldHostname' -Force") })
+                $oldHostnameEsc = $oldHostname -replace "'", "''"
+                $script:BatchUndoStack.Add(@{ Step = $stepNum; Description = "Revert hostname to $oldHostname"; Reversible = $true; UndoScript = [scriptblock]::Create("Rename-Computer -NewName '$oldHostnameEsc' -Force") })
             }
             catch {
                 Write-OutputColor "           Failed: $_" -color "Error"
@@ -485,7 +486,8 @@ function Start-BatchMode {
                 Write-OutputColor "           Timezone set." -color "Success"
                 $changesApplied++
                 Add-SessionChange -Category "System" -Description "Set timezone to $($Config.Timezone)"
-                $script:BatchUndoStack.Add(@{ Step = $stepNum; Description = "Revert timezone to $oldTimezone"; Reversible = $true; UndoScript = [scriptblock]::Create("Set-TimeZone -Id '$oldTimezone'") })
+                $oldTimezoneEsc = $oldTimezone -replace "'", "''"
+                $script:BatchUndoStack.Add(@{ Step = $stepNum; Description = "Revert timezone to $oldTimezone"; Reversible = $true; UndoScript = [scriptblock]::Create("Set-TimeZone -Id '$oldTimezoneEsc'") })
             }
             catch {
                 Write-OutputColor "           Failed: $_" -color "Error"
@@ -608,7 +610,8 @@ function Start-BatchMode {
                     Write-OutputColor "           Power plan set." -color "Success"
                     $changesApplied++
                     Add-SessionChange -Category "System" -Description "Set power plan to $($Config.SetPowerPlan)"
-                    $script:BatchUndoStack.Add(@{ Step = $stepNum; Description = "Revert power plan to $($currentPlan.Name)"; Reversible = $true; UndoScript = [scriptblock]::Create("powercfg /setactive '$oldPlanGuid' 2>&1 | Out-Null") })
+                    $oldPlanGuidEsc = $oldPlanGuid -replace "'", "''"
+                    $script:BatchUndoStack.Add(@{ Step = $stepNum; Description = "Revert power plan to $($currentPlan.Name)"; Reversible = $true; UndoScript = [scriptblock]::Create("powercfg /setactive '$oldPlanGuidEsc' 2>&1 | Out-Null") })
                 }
             }
         }
@@ -754,7 +757,7 @@ function Start-BatchMode {
     # Step 13: Join domain (prompts for credentials - do near end)
     $stepNum++
     $csInfo = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction SilentlyContinue
-    $isDomainJoined = if ($null -ne $csInfo) { $csInfo.PartOfDomain } else { $true }
+    $isDomainJoined = if ($null -ne $csInfo) { $csInfo.PartOfDomain } else { $false }
     if ($Config.DomainName -and -not $isDomainJoined) {
         Write-OutputColor "  [$stepNum/$totalSteps] Joining domain '$($Config.DomainName)'..." -color "Info"
         try {

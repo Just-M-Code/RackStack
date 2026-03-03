@@ -250,7 +250,7 @@ function Test-AllConnectivity {
     Write-OutputColor "Testing DNS resolution..." -color "Info"
     try {
         $dnsTest = Resolve-DnsName -Name "google.com" -Type A -ErrorAction Stop
-        Write-OutputColor "[OK ] DNS resolution working (google.com -> $($dnsTest.IPAddress -join ', '))" -color "Success"
+        Write-OutputColor "[OK ] DNS resolution working (google.com -> $(($dnsTest | Where-Object { $_.IPAddress } | ForEach-Object { $_.IPAddress }) -join ', '))" -color "Success"
     }
     catch {
         Write-OutputColor "[FAIL] DNS resolution failed" -color "Error"

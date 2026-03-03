@@ -13,7 +13,7 @@ function Convert-SubnetMaskToPrefix {
         $binary = ($octets | ForEach-Object { [convert]::ToString([int]$_, 2).PadLeft(8, '0') }) -join ''
 
         # Count the 1s
-        $prefix = ($binary.ToCharArray() | Where-Object { $_ -eq '1' }).Count
+        $prefix = @($binary.ToCharArray() | Where-Object { $_ -eq '1' }).Count
 
         # Verify it's a valid mask (contiguous 1s)
         if ($binary -notmatch '^1*0*$') {
@@ -394,8 +394,13 @@ function Disable-AllIPv6 {
 
     foreach ($adapter in $adapters) {
         $ipv6Binding = Get-NetAdapterBinding -Name $adapter.Name -ComponentID ms_tcpip6 -ErrorAction SilentlyContinue
-        $status = if ($ipv6Binding.Enabled) { "IPv6 Enabled" } else { "IPv6 Disabled" }
-        $color = if ($ipv6Binding.Enabled) { "Warning" } else { "Success" }
+        if ($null -eq $ipv6Binding) {
+            $status = "Unknown"
+            $color = "Warning"
+        } else {
+            $status = if ($ipv6Binding.Enabled) { "IPv6 Enabled" } else { "IPv6 Disabled" }
+            $color = if ($ipv6Binding.Enabled) { "Warning" } else { "Success" }
+        }
         Write-OutputColor "  - $($adapter.Name): $status" -color $color
     }
 

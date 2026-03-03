@@ -129,7 +129,7 @@ function Show-DiskPartitions {
     Write-OutputColor "Partition Style: $($disk.PartitionStyle)" -color "Info"
     Write-OutputColor "" -color "Info"
 
-    $partitions = Get-Partition -DiskNumber $DiskNumber -ErrorAction SilentlyContinue
+    $partitions = @(Get-Partition -DiskNumber $DiskNumber -ErrorAction SilentlyContinue)
 
     if (-not $partitions -or $partitions.Count -eq 0) {
         Write-OutputColor "No partitions found on this disk." -color "Warning"

@@ -6,7 +6,7 @@ function Show-SessionSummary {
 
     # Calculate runtime
     $runtime = (Get-Date) - $script:ScriptStartTime
-    $runtimeStr = "{0:D2}:{1:D2}:{2:D2}" -f $runtime.Hours, $runtime.Minutes, $runtime.Seconds
+    $runtimeStr = "{0:D2}:{1:D2}:{2:D2}" -f [int][math]::Floor($runtime.TotalHours), $runtime.Minutes, $runtime.Seconds
 
     Write-OutputColor "Session Runtime: $runtimeStr" -color "Info"
     Write-OutputColor "" -color "Info"

@@ -728,9 +728,17 @@ function Get-StoredCredential {
         $cmdkeyOutput = cmdkey /list:$Target 2>&1
 
         if ($cmdkeyOutput -match "Target: $Target") {
-            # Credential exists - prompt for it since we can't retrieve password directly
-            # In a real implementation, you'd use the CredentialManager module
-            return $null  # Return null to trigger re-prompt
+            # Credential found — extract username and prompt with it pre-populated
+            $storedUser = ""
+            foreach ($line in $cmdkeyOutput) {
+                if ($line -match "User:\s*(.+)$") {
+                    $storedUser = $Matches[1].Trim()
+                    break
+                }
+            }
+            if ($storedUser) {
+                return Get-Credential -UserName $storedUser -Message "Enter password for stored credential ($storedUser)"
+            }
         }
         return $null
     }

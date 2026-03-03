@@ -253,7 +253,6 @@ function Show-BitLockerManagement {
                 }
             }
             "b" { return }
-            "B" { return }
         }
 
         Write-PressEnter

@@ -30,10 +30,19 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.42
+    1.9.43
 
 .LAST UPDATED
-    02/25/2026
+    03/02/2026
+
+.CHANGELOG v1.9.43
+    HARDENING & DOCS PATCH:
+    - FIXED: 23 bugs across 21 modules (DNS CNAME nulls, PS 5.1 .Count issues, scriptblock injection, dead code, error handling gaps)
+    - FIXED: Get-StoredCredential now returns actual credentials instead of always returning $null
+    - FIXED: Session summary hours wrapping at 24, VM NIC deletion by reference equality, HTML report shallow comparison
+    - FIXED: Batch config template using unscoped variables, domain join fallback defaulting to $true
+    - Updated README/CONTRIBUTING test counts (1787→1854), added BOM encoding requirement
+    - Added batch_config*.json and .env* to .gitignore
 
 .CHANGELOG v1.9.42
     BUG FIXES:

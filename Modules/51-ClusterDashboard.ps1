@@ -452,7 +452,7 @@ function Test-ClusterReadiness {
     $checks += @{ Check = "CSVs Online"; Status = if ($csvOK) { "OK" } elseif ($csvRedirected) { "WARN" } else { "FAIL" }; Detail = $csvDetail }
 
     # 4. Cluster networks up
-    $networks = Get-ClusterNetwork -ErrorAction SilentlyContinue
+    $networks = @(Get-ClusterNetwork -ErrorAction SilentlyContinue)
     $networksUp = @($networks | Where-Object { $_.State -eq "Up" })
     $netOK = ($networksUp.Count -eq $networks.Count)
     $checks += @{ Check = "Cluster Networks"; Status = if ($netOK) { "OK" } else { "WARN" }; Detail = "$($networksUp.Count)/$($networks.Count) networks up" }

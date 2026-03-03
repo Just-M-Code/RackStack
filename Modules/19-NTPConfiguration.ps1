@@ -30,7 +30,7 @@ function Set-NTPConfiguration {
         Write-OutputColor "  │$($lineStr.PadRight(72))│" -color "Info"
         Write-OutputColor "  │$("  Current Time: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')".PadRight(72))│" -color "Info"
 
-        $isDomainJoined = (Get-CimInstance -ClassName Win32_ComputerSystem).PartOfDomain
+        $isDomainJoined = try { (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop).PartOfDomain } catch { $false }
         if ($isDomainJoined) {
             Write-OutputColor "  │$("  Domain Joined: Yes (typically syncs with DC)".PadRight(72))│" -color "Info"
         } else {

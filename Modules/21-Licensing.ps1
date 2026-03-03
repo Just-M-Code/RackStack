@@ -124,7 +124,12 @@ function Enable-ServerActivation {
 
     try {
         Write-OutputColor "Installing product key..." -color "Info"
-        $null = cscript.exe //NoLogo C:\Windows\System32\slmgr.vbs /ipk "$productKey" 2>&1
+        $ipkResult = cscript.exe //NoLogo C:\Windows\System32\slmgr.vbs /ipk "$productKey" 2>&1
+
+        if ($ipkResult -notmatch "successfully") {
+            Write-OutputColor "Product key installation failed: $($ipkResult -join ' ')" -color "Error"
+            return
+        }
 
         Write-OutputColor "Activating server..." -color "Info"
         Start-Sleep -Seconds 5

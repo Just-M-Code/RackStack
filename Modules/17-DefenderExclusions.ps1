@@ -85,7 +85,7 @@ function Set-DefenderExclusions {
             Write-OutputColor "" -color "Info"
             $customPath = Read-Host "  Enter path to exclude"
             $navResult = Test-NavigationCommand -UserInput $customPath
-            if ($navResult.ShouldReturn) { continue }
+            if ($navResult.ShouldReturn) { return }
             if ($customPath -and (Test-Path $customPath -IsValid)) {
                 try {
                     Add-MpPreference -ExclusionPath $customPath -ErrorAction Stop
@@ -103,7 +103,7 @@ function Set-DefenderExclusions {
             Write-OutputColor "" -color "Info"
             $customProc = Read-Host "  Enter process name to exclude (e.g., myapp.exe)"
             $navResult = Test-NavigationCommand -UserInput $customProc
-            if ($navResult.ShouldReturn) { continue }
+            if ($navResult.ShouldReturn) { return }
             if ($customProc) {
                 try {
                     Add-MpPreference -ExclusionProcess $customProc -ErrorAction Stop

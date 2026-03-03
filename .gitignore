@@ -3,12 +3,16 @@ defaults.json
 *.defaults.json
 !defaults.example.json
 
-# Build artifacts
+# Build artifacts (monolithic, exe, archives)
+builds/
 *.exe
 RackStack v*.ps1
 
 # Local development files (not for public repo)
 local/
+
+# Wiki (separate git repo, lives at wiki/)
+wiki/
 
 # Transcripts and logs
 *.transcript
@@ -22,6 +26,12 @@ local/
 # OS files
 Thumbs.db
 Desktop.ini
+
+# Batch config exports
+batch_config*.json
+
+# Environment files
+.env*
 
 # Temporary files
 *.tmp

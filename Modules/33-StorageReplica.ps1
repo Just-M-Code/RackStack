@@ -201,7 +201,6 @@ function Show-StorageReplicaManagement {
                 }
             }
             "b" { return }
-            "B" { return }
         }
 
         Write-PressEnter

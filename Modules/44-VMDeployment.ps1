@@ -1537,7 +1537,7 @@ function Set-VMConfigNICs {
                 if ($deleteIndex -match '^\d+$') {
                     $idx = [int]$deleteIndex - 1
                     if ($idx -ge 0 -and $idx -lt $Config.NICs.Count) {
-                        $Config.NICs = @($Config.NICs | Where-Object { $_ -ne $Config.NICs[$idx] })
+                        $Config.NICs = @(for ($j = 0; $j -lt $Config.NICs.Count; $j++) { if ($j -ne $idx) { $Config.NICs[$j] } })
                         Write-OutputColor "NIC deleted." -color "Success"
                         Start-Sleep -Seconds 1
                     }

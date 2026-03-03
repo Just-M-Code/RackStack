@@ -214,7 +214,7 @@ function Set-ColorTheme {
     Write-OutputColor "Available Themes:" -color "Info"
     $themeNum = 1
     $themeMap = @{}
-    foreach ($themeName in $script:ColorThemes.Keys) {
+    foreach ($themeName in ($script:ColorThemes.Keys | Sort-Object)) {
         $marker = if ($themeName -eq $script:ColorTheme) { " <-- Current" } else { "" }
         Write-OutputColor "  $themeNum. $themeName$marker" -color "Info"
         $themeMap["$themeNum"] = $themeName

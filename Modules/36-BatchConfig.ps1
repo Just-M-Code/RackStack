@@ -64,7 +64,7 @@ function New-BatchConfigTemplate {
     "DNS2": "8.8.4.4",
     "_DNS2_Help": "Secondary DNS server",
 
-    "DomainName": "$domain",
+    "DomainName": "$script:domain",
     "_DomainName_Help": "Active Directory domain to join. Set to null or empty to skip. Will prompt for credentials at runtime.",
 
     "Timezone": "Pacific Standard Time",
@@ -94,7 +94,7 @@ function New-BatchConfigTemplate {
     "CreateLocalAdmin": false,
     "_CreateLocalAdmin_Help": "Create local admin account (true/false). Will prompt for password at runtime.",
 
-    "LocalAdminName": "$localadminaccountname",
+    "LocalAdminName": "$script:localadminaccountname",
     "_LocalAdminName_Help": "Username for the local admin account. Only used if CreateLocalAdmin is true.",
 
     "DisableBuiltInAdmin": false,

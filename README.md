@@ -77,7 +77,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 
 ### Single-File Deployment (Production)
 
-For production use, generate a monolithic single-file script (~34K lines) that you can drop on any server:
+For production use, generate a monolithic single-file script (~35K lines) that you can drop on any server:
 
 ```powershell
 # Build the monolithic from all modules
@@ -285,7 +285,7 @@ RackStack/
 │   ├── ...                     # 61 more modules
 │   └── 62-HyperVReplica.ps1
 ├── Tests/
-│   ├── Run-Tests.ps1           # 1787 automated tests
+│   ├── Run-Tests.ps1           # 1854 automated tests
 │   ├── Validate-Release.ps1    # Pre-release validation suite
 │   └── ...
 └── docs/
@@ -311,7 +311,7 @@ RackStack/
 ## Testing
 
 ```powershell
-# Full test suite (~1,787 tests, ~2 minutes)
+# Full test suite (~1,854 tests, ~2 minutes)
 powershell -ExecutionPolicy Bypass -File Tests\Run-Tests.ps1
 
 # PSScriptAnalyzer (0 errors on all 63 modules + monolithic)

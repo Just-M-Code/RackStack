@@ -352,16 +352,16 @@ function Set-iSCSIAutoConfiguration {
     Write-OutputColor "" -color "Info"
 
     # Step 3: Find iSCSI candidate adapters
-    $adapters = Get-NetAdapter | Where-Object {
+    $adapters = @(Get-NetAdapter | Where-Object {
         $_.Name -notlike "vEthernet*" -and
         $_.InterfaceDescription -notlike "*Hyper-V*" -and
         $_.InterfaceDescription -notlike "*Virtual*"
-    }
+    })
 
     # Check if we have candidates from SET auto-detection
     if ($script:iSCSICandidateAdapters -and $script:iSCSICandidateAdapters.Count -gt 0) {
         Write-OutputColor "  Using adapters identified during SET configuration:" -color "Info"
-        $adapters = $script:iSCSICandidateAdapters | ForEach-Object { $_.Adapter }
+        $adapters = @($script:iSCSICandidateAdapters | ForEach-Object { $_.Adapter })
     }
 
     if ($adapters.Count -lt 2) {
@@ -747,7 +747,7 @@ function Find-ReachableSANTargets {
     Write-OutputColor "  Finding reachable SAN targets for Host #$HostNumber..." -color "Info"
 
     # Get all pairs in retry order
-    $allPairs = Get-SANTargetsForHost -HostNumber $HostNumber -AllPairsInRetryOrder
+    $allPairs = @(Get-SANTargetsForHost -HostNumber $HostNumber -AllPairsInRetryOrder)
 
     $attemptNum = 1
     foreach ($pair in $allPairs) {

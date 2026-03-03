@@ -67,7 +67,7 @@ function Show-SystemHealthCheck {
 
     # Network Adapters
     Write-OutputColor "=== NETWORK ADAPTERS ===" -color "Success"
-    $allAdapters = Get-NetAdapter
+    $allAdapters = Get-NetAdapter -ErrorAction SilentlyContinue
     foreach ($adapter in ($allAdapters | Where-Object { $_.Status -eq "Up" })) {
         $ip = Get-NetIPAddress -InterfaceAlias $adapter.Name -AddressFamily IPv4 -ErrorAction SilentlyContinue | Select-Object -First 1
         $ipStr = if ($ip) { $ip.IPAddress } else { "No IP" }
@@ -274,8 +274,8 @@ function Show-ServerReadiness {
     }
 
     $total++
-    $cs = Get-CimInstance -ClassName Win32_ComputerSystem
-    if ($cs.PartOfDomain) {
+    $cs = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction SilentlyContinue
+    if ($null -ne $cs -and $cs.PartOfDomain) {
         $ready++
         $items += @{ Category = "IDENTITY"; Name = "Domain"; Value = $cs.Domain; Color = "Success"; Symbol = "[OK]" }
     } else {
@@ -391,7 +391,6 @@ function Show-ServerReadiness {
     }
 
     $total++
-    $os = Get-CimInstance -ClassName Win32_OperatingSystem
     $activated = Test-WindowsActivated
     if ($activated) {
         $ready++

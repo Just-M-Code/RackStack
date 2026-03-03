@@ -171,6 +171,7 @@ function Show-ISODownloadMenu {
     Write-OutputColor "" -color "Info"
 
     $isoPath = Get-ISOStoragePath
+    if (-not $isoPath) { $isoPath = "(not configured)" }
 
     # Show status
     Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"

@@ -30,7 +30,7 @@ powershell -ExecutionPolicy Bypass -File Tests\pssa-check.ps1
 
 ## Pull Request Checklist
 
-- [ ] All 1,787+ tests pass (`Run-Tests.ps1` exits with code 0)
+- [ ] All 1,854+ tests pass (`Run-Tests.ps1` exits with code 0)
 - [ ] PSScriptAnalyzer reports 0 errors (`pssa-check.ps1`)
 - [ ] Monolithic synced (`sync-to-monolithic.ps1` shows 0 parse errors)
 - [ ] New functions follow PowerShell verb-noun naming (`Get-`, `Set-`, `Test-`, `Show-`)
@@ -47,6 +47,7 @@ powershell -ExecutionPolicy Bypass -File Tests\pssa-check.ps1
 - **Variables:** Avoid `$input`, `$profile`, `$matches` (all reserved by PowerShell)
 - **Menu width:** All menu boxes use 72-char inner width with `PadRight(72)`
 - **Strings:** Use `${var}:` not `$var:` when variable name is followed by colon (parse error)
+- **Encoding:** All `.ps1` files MUST be saved with UTF-8 BOM encoding (required for Unicode box-drawing characters)
 
 ## Adding a New Module
 

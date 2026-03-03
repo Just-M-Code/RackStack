@@ -1,5 +1,35 @@
 # Changelog
 
+## v1.9.43
+
+- **Bug Fix:** DNS resolution display crashed when CNAME records returned no IP address — filtered null values before joining results (05-SystemCheck).
+- **Bug Fix:** Subnet mask prefix calculation returned `$null` instead of a number when exactly one bit was set in PS 5.1 — single pipeline results don't have `.Count`. Wrapped in `@()` (07-IPConfiguration).
+- **Bug Fix:** IPv6 binding status display crashed when `Get-NetAdapterBinding` returned null for an adapter — added null check with "Unknown" fallback (07-IPConfiguration).
+- **Bug Fix:** iSCSI adapter discovery and SAN target pairing could return single objects without `.Count` in PS 5.1, causing silent failures in adapter counting and loop logic. Wrapped three pipelines in `@()` (10-iSCSI).
+- **Bug Fix:** Windows Update install job variable referenced in `finally` cleanup before being assigned — if an exception occurred between the check and install phases, `Remove-Job` threw on an uninitialized variable. Added `$null` initialization (14-WindowsUpdates).
+- **Bug Fix:** Defender exclusion menu used `continue` inside a `switch` block, which skipped the rest of the current `switch` case instead of returning to the menu loop. Changed to `return` (17-DefenderExclusions).
+- **Bug Fix:** NTP configuration domain-join check crashed if WMI was unavailable — wrapped `Get-CimInstance` in error handling with `$false` default (19-NTPConfiguration).
+- **Bug Fix:** Server activation proceeded to `/ato` even when `/ipk` (key install) failed — now checks the result and stops early with an error message (21-Licensing).
+- **Bug Fix:** Performance dashboard and deduplication status crashed when `Get-Volume` or `Get-NetAdapter` threw errors on systems with unusual storage/network configurations — added `-ErrorAction SilentlyContinue` (28-PerformanceDashboard, 32-Deduplication).
+- **Bug Fix:** Color theme list displayed in non-deterministic hashtable order — sorted theme names alphabetically for consistent display (34-Help).
+- **Bug Fix:** `Get-StoredCredential` always returned `$null` even when a matching credential existed — now extracts the stored username and prompts with it pre-populated via `Get-Credential` (35-Utilities).
+- **Bug Fix:** Batch config template used unscoped `$domain` and `$localadminaccountname` variables — these are script-scoped, so the template always showed empty values. Changed to `$script:domain` and `$script:localadminaccountname` (36-BatchConfig).
+- **Bug Fix:** Health check network adapter listing and domain detection crashed when `Get-NetAdapter` or `Get-CimInstance` failed — added `-ErrorAction SilentlyContinue` and null checks (37-HealthCheck).
+- **Bug Fix:** Health check contained a dead `$os` variable assignment that was never used — removed (37-HealthCheck).
+- **Bug Fix:** Storage manager partition listing returned incorrect `.Count` for single-partition disks in PS 5.1 — wrapped `Get-Partition` in `@()` (38-StorageManager).
+- **Bug Fix:** Optical drive remount fallback re-queried the same WMI filter that already returned `$null` — replaced with `mountvol /L` to get the volume GUID, with `Get-Partition` as a secondary fallback (40-HostStorage).
+- **Bug Fix:** ISO download menu crashed with `PadRight` error when ISO storage path was null — added null guard with "(not configured)" fallback (42-ISODownload).
+- **Bug Fix:** VM NIC deletion used reference equality (`-ne`) which could delete the wrong NIC if two NICs had identical properties — replaced with index-based rebuild matching the disk deletion pattern (44-VMDeployment).
+- **Bug Fix:** Session summary hours display wrapped at 24 — a 25-hour session showed "01:00:00" instead of "25:00:00". Changed `$runtime.Hours` to `[math]::Floor($runtime.TotalHours)` (46-SessionSummary).
+- **Bug Fix:** Batch config undo scriptblocks for hostname, timezone, and power plan were vulnerable to injection if the original values contained single quotes — added quote escaping (50-EntryPoint).
+- **Bug Fix:** Domain join detection defaulted to `$true` when WMI failed, preventing domain join even when the server wasn't domain-joined — changed fallback to `$false` (50-EntryPoint).
+- **Bug Fix:** Cluster network count returned scalar instead of array in PS 5.1 — wrapped `Get-ClusterNetwork` in `@()` (51-ClusterDashboard).
+- **Bug Fix:** HTML report profile comparison used shallow `-ne` which always showed nested objects (arrays, hashtables) as "Changed" even when identical — replaced with `ConvertTo-Json` deep comparison (54-HTMLReports).
+- **Cleanup:** Removed redundant uppercase `"B"` back-navigation cases in 4 modules — PowerShell `switch` is case-insensitive by default (29-EventLogViewer, 31-BitLocker, 32-Deduplication, 33-StorageReplica).
+- Updated README and CONTRIBUTING test counts (1,787 → 1,854), monolithic size (~34K → ~35K), added BOM encoding requirement to code style guide.
+- Added `batch_config*.json` and `.env*` patterns to `.gitignore`.
+- 63 modules, 1854 tests
+
 ## v1.9.42
 
 - **Bug Fix:** Firewall profile `.Enabled` property compared to string `"True"` instead of boolean `$true` — `GpoBoolean` enum comparison was fragile across PowerShell versions and inconsistent with other modules. Changed all four comparisons to use boolean (16-Firewall).

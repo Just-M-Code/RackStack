@@ -57,7 +57,6 @@ function Show-EventLogViewer {
                 $events = Get-WinEvent -LogName "Microsoft-Windows-FailoverClustering/Operational" -MaxEvents 30 -ErrorAction SilentlyContinue
             }
             "b" { return }
-            "B" { return }
             default { Write-OutputColor "  Invalid choice." -color "Error"; Start-Sleep -Seconds 1; continue }
         }
 

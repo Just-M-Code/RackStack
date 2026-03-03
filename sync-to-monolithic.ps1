@@ -23,7 +23,9 @@ if (Test-Path $initFile) {
         $scriptVersion = $Matches[1]
     }
 }
-$monoPath = Join-Path (Split-Path $PSScriptRoot) "$toolFullName v$scriptVersion.ps1"
+$buildsDir = Join-Path $PSScriptRoot "builds"
+if (-not (Test-Path $buildsDir)) { $null = New-Item -Path $buildsDir -ItemType Directory -Force }
+$monoPath = Join-Path $buildsDir "$toolFullName v$scriptVersion.ps1"
 
 # If monolithic doesn't exist, build from scratch (Header + modules)
 if (-not (Test-Path $monoPath)) {

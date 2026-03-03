@@ -394,7 +394,7 @@ function Export-ProfileComparisonHTML {
             $rowsHtml += "<tr class='added'><td>$prop</td><td><em>(none)</em></td><td>$val2</td><td>Added</td></tr>"
             $added++
         }
-        elseif ($val1 -ne $val2) {
+        elseif ((ConvertTo-Json $val1 -Compress -Depth 5) -ne (ConvertTo-Json $val2 -Compress -Depth 5)) {
             $rowsHtml += "<tr class='changed'><td>$prop</td><td>$val1</td><td>$val2</td><td>Changed</td></tr>"
             $changed++
         }
