@@ -107,7 +107,7 @@ if (Test-Path $_testInitFile) {
         $_testScriptVersion = $Matches[1]
     }
 }
-$monolithicPath = Join-Path (Split-Path $script:ModuleRoot) "$_testToolFullName v$_testScriptVersion.ps1"
+$monolithicPath = Join-Path (Join-Path $script:ModuleRoot "builds") "$_testToolFullName v$_testScriptVersion.ps1"
 $expectedModuleCount = 63  # 00-62 inclusive
 
 # ============================================================================
