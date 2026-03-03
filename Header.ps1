@@ -30,10 +30,19 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.46
+    1.9.47
 
 .LAST UPDATED
     03/02/2026
+
+.CHANGELOG v1.9.47
+    VALIDATION & SAFETY PATCH:
+    - NEW: VLAN reserved range warnings (VLAN 1 default/native, 1002-1005 legacy, 4094 GVRP) with confirmation prompts
+    - NEW: Hostname DNS collision check — warns if name already resolves in DNS before renaming
+    - NEW: BitLocker recovery key storage guidance — prominent warning banner after enabling with secure storage options
+    - NEW: BitLocker encryption progress check (option [5]) — shows per-volume encryption percentage
+    - IMPROVED: Licensing activation error parsing — user-friendly messages for common error codes (edition mismatch, KMS unreachable, key blocked)
+    - IMPROVED: Licensing pre-flight — automatically starts Software Protection service if stopped
 
 .CHANGELOG v1.9.46
     MONITORING & UX PATCH:

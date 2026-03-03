@@ -104,7 +104,12 @@ function Set-AdapterVLAN {
 
     switch ($choice) {
         "1" {
-            Write-OutputColor "Enter VLAN ID (1-4094):" -color "Info"
+            Write-OutputColor "" -color "Info"
+            Write-OutputColor "  Valid range: 1-4094" -color "Info"
+            Write-OutputColor "  Reserved: 0 (system), 1 (default/native), 4095 (system)" -color "Debug"
+            Write-OutputColor "  Legacy reserved: 1002-1005 (FDDI/Token Ring)" -color "Debug"
+            Write-OutputColor "" -color "Info"
+            Write-OutputColor "Enter VLAN ID:" -color "Info"
             $vlanIdInput = Read-Host
 
             # Check for navigation
@@ -119,6 +124,22 @@ function Set-AdapterVLAN {
             }
 
             $vlanId = [int]$vlanIdInput
+
+            # Warn about reserved/special ranges
+            if ($vlanId -eq 1) {
+                Write-OutputColor "  Note: VLAN 1 is the default/native VLAN on most switches." -color "Warning"
+                Write-OutputColor "  Traffic on VLAN 1 is often untagged. Verify with your switch config." -color "Warning"
+                if (-not (Confirm-UserAction -Message "Use VLAN 1?")) { return }
+            }
+            elseif ($vlanId -ge 1002 -and $vlanId -le 1005) {
+                Write-OutputColor "  Warning: VLANs 1002-1005 are reserved for legacy FDDI/Token Ring." -color "Warning"
+                Write-OutputColor "  Some switches may reject or ignore these VLANs." -color "Warning"
+                if (-not (Confirm-UserAction -Message "Use VLAN $vlanId anyway?")) { return }
+            }
+            elseif ($vlanId -eq 4094) {
+                Write-OutputColor "  Note: VLAN 4094 is commonly used for GVRP pruning." -color "Warning"
+                if (-not (Confirm-UserAction -Message "Use VLAN 4094?")) { return }
+            }
 
             try {
                 Set-VMNetworkAdapterVlan -ManagementOS -VMNetworkAdapterName $vmAdapterName -Access -VlanId $vlanId -ErrorAction Stop

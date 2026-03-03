@@ -123,27 +123,54 @@ function Enable-ServerActivation {
     param ([string]$productKey)
 
     try {
+        # Pre-flight: check Software Protection service
+        $sppsvc = Get-Service -Name sppsvc -ErrorAction SilentlyContinue
+        if ($null -ne $sppsvc -and $sppsvc.Status -ne "Running") {
+            Write-OutputColor "  Starting Software Protection service..." -color "Info"
+            Start-Service sppsvc -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 2
+        }
+
         Write-OutputColor "Installing product key..." -color "Info"
         $ipkResult = cscript.exe //NoLogo C:\Windows\System32\slmgr.vbs /ipk "$productKey" 2>&1
+        $ipkText = $ipkResult -join ' '
 
-        if ($ipkResult -notmatch "successfully") {
-            Write-OutputColor "Product key installation failed: $($ipkResult -join ' ')" -color "Error"
+        if ($ipkText -notmatch "successfully") {
+            Write-OutputColor "  Product key installation failed." -color "Error"
+            # Parse common error codes for user-friendly messages
+            if ($ipkText -match "0xC004F050") {
+                Write-OutputColor "  The key is not valid for this edition of Windows." -color "Error"
+                Write-OutputColor "  Verify the key matches your OS edition (Standard/Datacenter/etc.)." -color "Warning"
+            } elseif ($ipkText -match "0xC004F069") {
+                Write-OutputColor "  The Software Licensing Service reports that the product SKU is not found." -color "Error"
+            } elseif ($ipkText -match "0x80070005") {
+                Write-OutputColor "  Access denied. Ensure you are running as Administrator." -color "Error"
+            } else {
+                Write-OutputColor "  Detail: $ipkText" -color "Debug"
+            }
             return
         }
 
-        Write-OutputColor "Activating server..." -color "Info"
+        Write-OutputColor "  Key installed. Activating..." -color "Info"
         Start-Sleep -Seconds 5
         $activateResult = cscript.exe //NoLogo C:\Windows\System32\slmgr.vbs /ato 2>&1
+        $atoText = $activateResult -join ' '
 
-        if ($activateResult -match "successfully") {
-            Write-OutputColor "Server activated successfully!" -color "Success"
+        if ($atoText -match "successfully") {
+            Write-OutputColor "  Server activated successfully!" -color "Success"
         }
         else {
-            Write-OutputColor "Activation result: $($activateResult -join ' ')" -color "Warning"
+            if ($atoText -match "0xC004F074") {
+                Write-OutputColor "  KMS server not reachable. Check network/DNS or use a different activation method." -color "Warning"
+            } elseif ($atoText -match "0xC004C003") {
+                Write-OutputColor "  The activation server determined the key is blocked." -color "Error"
+            } else {
+                Write-OutputColor "  Activation result: $atoText" -color "Warning"
+            }
         }
     }
     catch {
-        Write-OutputColor "Activation failed: $_" -color "Error"
+        Write-OutputColor "  Activation failed: $_" -color "Error"
     }
 }
 

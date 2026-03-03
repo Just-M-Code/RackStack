@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.9.47
+
+- **New Feature:** VLAN reserved range warnings — when setting VLAN ID, shows valid range guidance and warns about reserved VLANs (1 default/native, 1002-1005 legacy FDDI/Token Ring, 4094 GVRP pruning) with confirmation prompts before proceeding (08-VLAN).
+- **New Feature:** Hostname DNS collision detection — before renaming, checks if the new hostname already resolves in DNS and warns about potential conflicts with stale records or active machines (11-Hostname).
+- **New Feature:** BitLocker recovery key storage guidance — after enabling encryption, shows prominent warning banner with secure storage options (AD backup, file save, vault). Adds confirmation that user has noted key storage method (31-BitLocker).
+- **New Feature:** BitLocker encryption progress check — new menu option [5] shows per-volume encryption status and percentage with color-coded progress (31-BitLocker).
+- **Enhancement:** Licensing activation error parsing — translates common slmgr error codes (0xC004F050 edition mismatch, 0xC004F074 KMS unreachable, 0xC004C003 key blocked) into actionable messages. Pre-flight check starts Software Protection service if stopped (21-Licensing).
+- 63 modules, 1854 tests
+
 ## v1.9.46
 
 - **Enhancement:** Service Manager now shows startup type (Auto/Manual/Disabled) alongside status with color-coded indicators — red for Stopped+Automatic (misconfigured), green for Running, gray for Disabled. New [C] option to change startup type. Search results also show startup type (30-ServiceManager).

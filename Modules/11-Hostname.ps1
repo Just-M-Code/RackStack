@@ -32,11 +32,30 @@ function Set-HostName {
     # Check if name exists in AD (informational, non-blocking)
     $adCheck = Test-ComputerNameInAD -ComputerName $newHostname
     if ($adCheck.Checked -and $adCheck.Exists) {
-        Write-OutputColor "  Note: '$newHostname' already exists in Active Directory." -color "Warning"
+        Write-OutputColor "  Warning: '$newHostname' already exists in Active Directory." -color "Warning"
         Write-OutputColor "  DN: $($adCheck.DN)" -color "Warning"
+        Write-OutputColor "  Renaming to a duplicate name may cause replication conflicts." -color "Warning"
         if (-not (Confirm-UserAction -Message "Continue with this name anyway?")) {
             return
         }
+    }
+
+    # Check DNS for name collision (informational, non-blocking)
+    try {
+        $dnsResult = Resolve-DnsName -Name $newHostname -ErrorAction SilentlyContinue -DnsOnly
+        if ($null -ne $dnsResult) {
+            $resolvedIPs = @($dnsResult | Where-Object { $_.QueryType -eq 'A' -or $_.QueryType -eq 'AAAA' } | ForEach-Object { $_.IPAddress }) -join ', '
+            if ($resolvedIPs) {
+                Write-OutputColor "  Warning: '$newHostname' resolves in DNS to: $resolvedIPs" -color "Warning"
+                Write-OutputColor "  This may be a stale DNS record or an active machine." -color "Warning"
+                if (-not (Confirm-UserAction -Message "Continue with this name?")) {
+                    return
+                }
+            }
+        }
+    }
+    catch {
+        # DNS check failed (non-fatal) — proceed normally
     }
 
     Write-OutputColor "" -color "Info"

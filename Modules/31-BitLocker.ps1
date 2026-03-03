@@ -111,6 +111,7 @@ function Show-BitLockerManagement {
             Write-MenuItem -Text "[3]  Save Recovery Key to File"
         }
         Write-MenuItem -Text "[4]  Show Recovery Key"
+        Write-MenuItem -Text "[5]  Check Encryption Progress"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
         Write-OutputColor "  [B] ◄ Back" -color "Info"
@@ -156,7 +157,26 @@ function Show-BitLockerManagement {
                             }
                             if ($method -in "1","2","3") {
                                 Write-OutputColor "  BitLocker enabled on $($vol.MountPoint). Encryption will begin." -color "Success"
-                                Write-OutputColor "  IMPORTANT: Save your recovery key!" -color "Warning"
+                                Write-OutputColor "" -color "Info"
+                                Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Warning"
+                                Write-OutputColor "  ║$("  RECOVERY KEY — SAVE NOW".PadRight(72))║" -color "Warning"
+                                Write-OutputColor "  ╠════════════════════════════════════════════════════════════════════════╣" -color "Warning"
+                                Write-OutputColor "  ║$("  Without this key, encrypted data is PERMANENTLY LOST if the".PadRight(72))║" -color "Warning"
+                                Write-OutputColor "  ║$("  TPM/password is unavailable (hardware change, motherboard swap).".PadRight(72))║" -color "Warning"
+                                Write-OutputColor "  ╠════════════════════════════════════════════════════════════════════════╣" -color "Warning"
+                                Write-OutputColor "  ║$("  Secure storage options:".PadRight(72))║" -color "Warning"
+                                if (Test-WindowsServer) {
+                                    Write-OutputColor "  ║$("    [3] from menu → Backup to Active Directory (recommended)".PadRight(72))║" -color "Warning"
+                                } else {
+                                    Write-OutputColor "  ║$("    [3] from menu → Save to file (store on separate drive/USB)".PadRight(72))║" -color "Warning"
+                                }
+                                Write-OutputColor "  ║$("    [4] from menu → Display key (write down, store in vault)".PadRight(72))║" -color "Warning"
+                                Write-OutputColor "  ║$("  DO NOT store recovery key on the encrypted volume itself.".PadRight(72))║" -color "Warning"
+                                Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Warning"
+                                Write-OutputColor "" -color "Info"
+                                if (-not (Confirm-UserAction -Message "Have you noted how to save the recovery key?" -DefaultYes)) {
+                                    Write-OutputColor "  Please use option [3] or [4] from the menu to save your key." -color "Warning"
+                                }
                                 Add-SessionChange -Category "Security" -Description "Enabled BitLocker on $($vol.MountPoint)"
                             }
                         }
@@ -251,6 +271,27 @@ function Show-BitLockerManagement {
                         Write-OutputColor "  No recovery password found." -color "Warning"
                     }
                 }
+            }
+            "5" {
+                Write-OutputColor "" -color "Info"
+                Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+                Write-OutputColor "  │$("  ENCRYPTION PROGRESS".PadRight(72))│" -color "Info"
+                Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+                foreach ($vol in $volumes) {
+                    $status = $vol.VolumeStatus.ToString()
+                    $pct = $vol.EncryptionPercentage
+                    $pctColor = if ($pct -eq 100) { "Success" } elseif ($pct -gt 0) { "Warning" } else { "Info" }
+                    $statusText = switch -Wildcard ($status) {
+                        "FullyEncrypted"     { "Encrypted (100%)" }
+                        "FullyDecrypted"     { "Not encrypted" }
+                        "EncryptionInProgress" { "Encrypting... $pct%" }
+                        "DecryptionInProgress" { "Decrypting... $pct%" }
+                        "*Paused*"           { "Paused at $pct%" }
+                        default              { "$status ($pct%)" }
+                    }
+                    Write-OutputColor "  │$("  $($vol.MountPoint)  $statusText".PadRight(72))│" -color $pctColor
+                }
+                Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
             }
             "b" { return }
         }
