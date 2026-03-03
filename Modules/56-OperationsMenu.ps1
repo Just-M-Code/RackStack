@@ -282,6 +282,14 @@ function Invoke-RemoteServiceManager {
     if ([string]::IsNullOrWhiteSpace($target)) { return }
 
     Write-OutputColor "" -color "Info"
+    Write-OutputColor "  Testing connectivity to $target ..." -color "Info"
+
+    if (-not (Test-Connection -ComputerName $target -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
+        Write-OutputColor "  Cannot reach $target — host is unreachable or offline." -color "Error"
+        Write-PressEnter
+        return
+    }
+
     Write-OutputColor "  Fetching services from $target ..." -color "Info"
     Write-OutputColor "" -color "Info"
 
@@ -315,32 +323,43 @@ function Invoke-RemoteServiceManager {
         if ([string]::IsNullOrWhiteSpace($svcAction) -or $svcAction -eq 'B' -or $svcAction -eq 'b') { return }
 
         $action = Read-Host "  Action: [S]tart, [T]op, [R]estart"
-        switch ($action) {
-            { $_ -eq 'S' -or $_ -eq 's' } {
-                try {
-                    Get-Service -ComputerName $target -Name $svcAction -ErrorAction Stop | Start-Service -ErrorAction Stop
-                    Write-OutputColor "  Service '$svcAction' started." -color "Success"
+        $actionName = switch ($action) {
+            { $_ -eq 'S' -or $_ -eq 's' } { "start" }
+            { $_ -eq 'T' -or $_ -eq 't' } { "stop" }
+            { $_ -eq 'R' -or $_ -eq 'r' } { "restart" }
+            default { $null }
+        }
+        if (-not $actionName) {
+            Write-OutputColor "  Invalid action." -color "Error"
+        }
+        elseif (Confirm-UserAction -Message "$($actionName.Substring(0,1).ToUpper() + $actionName.Substring(1)) service '$svcAction' on $target?") {
+            switch ($action) {
+                { $_ -eq 'S' -or $_ -eq 's' } {
+                    try {
+                        Get-Service -ComputerName $target -Name $svcAction -ErrorAction Stop | Start-Service -ErrorAction Stop
+                        Write-OutputColor "  Service '$svcAction' started." -color "Success"
+                    }
+                    catch {
+                        Write-OutputColor "  Failed to start service '$svcAction': $($_.Exception.Message)" -color "Error"
+                    }
                 }
-                catch {
-                    Write-OutputColor "  Failed to start service '$svcAction': $($_.Exception.Message)" -color "Error"
+                { $_ -eq 'T' -or $_ -eq 't' } {
+                    try {
+                        Get-Service -ComputerName $target -Name $svcAction -ErrorAction Stop | Stop-Service -Force -ErrorAction Stop
+                        Write-OutputColor "  Service '$svcAction' stopped." -color "Success"
+                    }
+                    catch {
+                        Write-OutputColor "  Failed to stop service '$svcAction': $($_.Exception.Message)" -color "Error"
+                    }
                 }
-            }
-            { $_ -eq 'T' -or $_ -eq 't' } {
-                try {
-                    Get-Service -ComputerName $target -Name $svcAction -ErrorAction Stop | Stop-Service -Force -ErrorAction Stop
-                    Write-OutputColor "  Service '$svcAction' stopped." -color "Success"
-                }
-                catch {
-                    Write-OutputColor "  Failed to stop service '$svcAction': $($_.Exception.Message)" -color "Error"
-                }
-            }
-            { $_ -eq 'R' -or $_ -eq 'r' } {
-                try {
-                    Get-Service -ComputerName $target -Name $svcAction -ErrorAction Stop | Restart-Service -Force -ErrorAction Stop
-                    Write-OutputColor "  Service '$svcAction' restarted." -color "Success"
-                }
-                catch {
-                    Write-OutputColor "  Failed to restart service '$svcAction': $($_.Exception.Message)" -color "Error"
+                { $_ -eq 'R' -or $_ -eq 'r' } {
+                    try {
+                        Get-Service -ComputerName $target -Name $svcAction -ErrorAction Stop | Restart-Service -Force -ErrorAction Stop
+                        Write-OutputColor "  Service '$svcAction' restarted." -color "Success"
+                    }
+                    catch {
+                        Write-OutputColor "  Failed to restart service '$svcAction': $($_.Exception.Message)" -color "Error"
+                    }
                 }
             }
         }

@@ -56,9 +56,9 @@ function Remove-OldTranscripts {
 
         # Age-based cleanup: remove logs older than DaysToKeep
         $cutoffDate = (Get-Date).AddDays(-$DaysToKeep)
-        $oldLogs = $allLogs | Where-Object { $_.LastWriteTime -lt $cutoffDate }
+        $oldLogs = @($allLogs | Where-Object { $_.LastWriteTime -lt $cutoffDate })
 
-        if ($oldLogs) {
+        if ($oldLogs.Count -gt 0) {
             $count = $oldLogs.Count
             $oldLogs | Remove-Item -Force -ErrorAction SilentlyContinue
             Write-OutputColor "Cleaned up $count old transcript(s) (older than $DaysToKeep days)" -color "Debug"
@@ -854,9 +854,11 @@ function Start-BatchMode {
             Write-OutputColor "  [$stepNum/$totalSteps] Installing role template: $($template.FullName)..." -color "Info"
             try {
                 $installCount = 0
+                # Pre-fetch all feature states once (avoids N+1 Get-WindowsFeature calls per feature)
+                $installedFeatures = @(Get-WindowsFeature -Name $template.Features -ErrorAction SilentlyContinue | Where-Object { $_.Installed })
+                $installedNames = @($installedFeatures | ForEach-Object { $_.Name })
                 foreach ($featureName in $template.Features) {
-                    $wf = Get-WindowsFeature -Name $featureName -ErrorAction SilentlyContinue
-                    if ($null -eq $wf -or -not $wf.Installed) {
+                    if ($featureName -notin $installedNames) {
                         $null = Install-WindowsFeature -Name $featureName -IncludeManagementTools -ErrorAction Stop
                         $installCount++
                     }

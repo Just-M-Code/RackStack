@@ -30,10 +30,18 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.55
+    1.9.56
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.56
+    OPERATIONS & SAFETY PATCH:
+    - IMPROVED: Batch role template install pre-fetches all feature states in one query instead of per-feature Get-WindowsFeature calls (N+1 optimization)
+    - FIX: Transcript cleanup .Count on single-object result now wrapped in @() for PS 5.1 safety
+    - IMPROVED: Remote service manager requires confirmation before start/stop/restart on remote servers
+    - IMPROVED: Remote service manager pre-checks connectivity before attempting RPC service query
+    - FIX: Storage backend detection no longer false-positives SMB3 on servers with unrelated mapped drives — now checks for cluster SMB resources specifically
 
 .CHANGELOG v1.9.55
     REPORTING & TEMPLATES PATCH:

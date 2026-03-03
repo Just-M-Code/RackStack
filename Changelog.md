@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.9.56
+
+- **Enhancement:** Batch role template installation pre-fetches all Windows Feature states in a single `Get-WindowsFeature` call instead of querying individually per feature — reduces WMI/DISM round-trips by up to 10x for large templates (50-EntryPoint).
+- **Bug Fix:** Transcript cleanup age-based removal now wraps filtered results in `@()` for PS 5.1 `.Count` safety — previously, cleaning up exactly one old transcript would report "Cleaned up  old transcript(s)" with a blank count (50-EntryPoint).
+- **Enhancement:** Remote service manager now requires `Confirm-UserAction` before starting, stopping, or restarting services on remote servers — prevents accidental service disruption on production systems (56-OperationsMenu).
+- **Enhancement:** Remote service manager pre-checks connectivity with `Test-Connection` before attempting RPC service query — fails fast with a clear message instead of hanging for 60+ seconds on unreachable targets (56-OperationsMenu).
+- **Bug Fix:** Storage backend auto-detection no longer false-positives SMB3 whenever any SMB mapped drive exists — now checks specifically for cluster File Server or Scale-Out File Server resources instead of generic `Get-SmbMapping` (59-StorageBackends).
+- 63 modules, 1854 tests
+
 ## v1.9.55
 
 - **Enhancement:** Server role templates now validate that the PostInstall function exists before attempting to invoke it — prevents confusing errors when custom templates reference functions that haven't been loaded or don't exist, with a clear warning message instead (60-ServerRoleTemplates).

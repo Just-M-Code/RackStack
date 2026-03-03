@@ -76,11 +76,12 @@ function Get-DetectedStorageBackend {
         if ($fcDisks) { return "FC" }
     }
 
-    # Check for SMB shares used by cluster
+    # Check for SMB shares used by cluster (File Share resource or CSVs backed by SMB)
     try {
-        $clusterResources = Get-ClusterResource -ErrorAction SilentlyContinue | Where-Object { $_.ResourceType -eq "File Share Witness" }
-        $smbDisks = Get-SmbMapping -ErrorAction SilentlyContinue
-        if ($smbDisks) { return "SMB3" }
+        $clusterSMBResources = Get-ClusterResource -ErrorAction SilentlyContinue | Where-Object {
+            $_.ResourceType -eq "File Server" -or $_.ResourceType -eq "Scale-Out File Server"
+        }
+        if ($clusterSMBResources) { return "SMB3" }
     }
     catch { }
 
