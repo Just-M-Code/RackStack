@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.53
+    1.9.54
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.54
+    FIREWALL & SECURITY PATCH:
+    - FIX: All 6 firewall template functions now use -ErrorAction Stop instead of SilentlyContinue — errors are reported per-group instead of silently swallowed
+    - IMPROVED: Firewall rule viewer shows "Not Found" for missing rule groups instead of hiding them
+    - NEW: Defender Hyper-V exclusions warn when Hyper-V is not installed before adding exclusions
+    - IMPROVED: Local admin account creation verifies group membership after adding to Administrators
 
 .CHANGELOG v1.9.53
     DIAGNOSTICS & SAFETY PATCH:

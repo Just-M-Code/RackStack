@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.9.54
+
+- **Bug Fix:** All 6 firewall template functions (Hyper-V, Cluster, Replica, Live Migration, iSCSI, SMB) now use `-ErrorAction Stop` instead of `-ErrorAction SilentlyContinue` — errors are caught and reported per-group with specific warning messages instead of being silently swallowed. Previously, if a firewall rule group didn't exist or couldn't be enabled, the function would report success anyway (18-FirewallTemplates).
+- **Enhancement:** Firewall rule viewer now shows "Not Found" for missing rule groups instead of hiding them — gives a complete picture of which rule groups are installed vs. available (18-FirewallTemplates).
+- **New Feature:** Defender Hyper-V exclusion wizard now warns when Hyper-V is not currently installed, informing the user that exclusions are only useful if Hyper-V will be installed later (17-DefenderExclusions).
+- **Enhancement:** Local admin account creation now verifies Administrators group membership after adding the account — confirms the account was actually granted admin rights instead of assuming success (23-LocalAdmin).
+- 63 modules, 1854 tests
+
 ## v1.9.53
 
 - **Enhancement:** Network diagnostics timed-out job cleanup — subnet ping sweep and quick port scan now detect timed-out background jobs, report how many timed out, and force-remove them instead of leaving orphaned jobs in the PowerShell job queue (58-NetworkDiagnostics).

@@ -48,116 +48,119 @@ function Set-FirewallRuleTemplates {
 function Enable-HyperVFirewallRules {
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Enabling Hyper-V firewall rules..." -color "Info"
-    try {
-        Enable-NetFirewallRule -DisplayGroup "Hyper-V" -ErrorAction SilentlyContinue
-        Enable-NetFirewallRule -DisplayGroup "Hyper-V Management Clients" -ErrorAction SilentlyContinue
-        Enable-NetFirewallRule -DisplayGroup "Hyper-V Replica HTTP" -ErrorAction SilentlyContinue
-        Enable-NetFirewallRule -DisplayGroup "Hyper-V Replica HTTPS" -ErrorAction SilentlyContinue
+    $fwErrors = 0
+    foreach ($group in @("Hyper-V", "Hyper-V Management Clients", "Hyper-V Replica HTTP", "Hyper-V Replica HTTPS")) {
+        try {
+            Enable-NetFirewallRule -DisplayGroup $group -ErrorAction Stop
+        }
+        catch {
+            Write-OutputColor "  Warning: Could not enable '$group' rules (may not exist on this system)" -color "Warning"
+            $fwErrors++
+        }
+    }
+    if ($fwErrors -eq 0) {
         Write-OutputColor "  Hyper-V firewall rules enabled." -color "Success"
-        Add-SessionChange -Category "Security" -Description "Enabled Hyper-V firewall rules"
+    } else {
+        Write-OutputColor "  Hyper-V rules partially enabled ($fwErrors group(s) unavailable)." -color "Warning"
     }
-    catch {
-        Write-OutputColor "  Error: $_" -color "Error"
-    }
+    Add-SessionChange -Category "Security" -Description "Enabled Hyper-V firewall rules"
 }
 
 function Enable-ClusterFirewallRules {
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Enabling Failover Cluster firewall rules..." -color "Info"
     try {
-        Enable-NetFirewallRule -DisplayGroup "Failover Clusters" -ErrorAction SilentlyContinue
-        # Cluster communication ports
-        $clusterRules = @(
-            @{ Name = "Cluster-RPC"; Port = 135; Protocol = "TCP" }
-            @{ Name = "Cluster-RPC-Dynamic"; Port = "49152-65535"; Protocol = "TCP" }
-            @{ Name = "Cluster-UDP"; Port = 3343; Protocol = "UDP" }
-        )
-        foreach ($rule in $clusterRules) {
-            $existingRule = Get-NetFirewallRule -DisplayName $rule.Name -ErrorAction SilentlyContinue
-            if (-not $existingRule) {
-                New-NetFirewallRule -DisplayName $rule.Name -Direction Inbound -Protocol $rule.Protocol -LocalPort $rule.Port -Action Allow -Profile Domain,Private -ErrorAction SilentlyContinue | Out-Null
-            }
-        }
-        Write-OutputColor "  Failover Cluster firewall rules enabled." -color "Success"
-        Add-SessionChange -Category "Security" -Description "Enabled Failover Cluster firewall rules"
+        Enable-NetFirewallRule -DisplayGroup "Failover Clusters" -ErrorAction Stop
     }
     catch {
-        Write-OutputColor "  Error: $_" -color "Error"
+        Write-OutputColor "  Warning: Could not enable 'Failover Clusters' rules (may not exist)" -color "Warning"
     }
+    # Cluster communication ports
+    $clusterRules = @(
+        @{ Name = "Cluster-RPC"; Port = 135; Protocol = "TCP" }
+        @{ Name = "Cluster-RPC-Dynamic"; Port = "49152-65535"; Protocol = "TCP" }
+        @{ Name = "Cluster-UDP"; Port = 3343; Protocol = "UDP" }
+    )
+    foreach ($rule in $clusterRules) {
+        $existingRule = Get-NetFirewallRule -DisplayName $rule.Name -ErrorAction SilentlyContinue
+        if (-not $existingRule) {
+            try {
+                New-NetFirewallRule -DisplayName $rule.Name -Direction Inbound -Protocol $rule.Protocol -LocalPort $rule.Port -Action Allow -Profile Domain,Private -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-OutputColor "  Warning: Failed to create rule '$($rule.Name)': $_" -color "Warning"
+            }
+        }
+    }
+    Write-OutputColor "  Failover Cluster firewall rules enabled." -color "Success"
+    Add-SessionChange -Category "Security" -Description "Enabled Failover Cluster firewall rules"
 }
 
 function Enable-ReplicaFirewallRules {
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Enabling Hyper-V Replica firewall rules..." -color "Info"
-    try {
-        Enable-NetFirewallRule -DisplayGroup "Hyper-V Replica HTTP" -ErrorAction SilentlyContinue
-        Enable-NetFirewallRule -DisplayGroup "Hyper-V Replica HTTPS" -ErrorAction SilentlyContinue
-        # Replica ports
-        $replicaRule80 = Get-NetFirewallRule -DisplayName "Hyper-V Replica HTTP 80" -ErrorAction SilentlyContinue
-        if (-not $replicaRule80) {
-            New-NetFirewallRule -DisplayName "Hyper-V Replica HTTP 80" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow -Profile Domain,Private -ErrorAction SilentlyContinue | Out-Null
-        }
-        $replicaRule443 = Get-NetFirewallRule -DisplayName "Hyper-V Replica HTTPS 443" -ErrorAction SilentlyContinue
-        if (-not $replicaRule443) {
-            New-NetFirewallRule -DisplayName "Hyper-V Replica HTTPS 443" -Direction Inbound -Protocol TCP -LocalPort 443 -Action Allow -Profile Domain,Private -ErrorAction SilentlyContinue | Out-Null
-        }
-        Write-OutputColor "  Hyper-V Replica firewall rules enabled." -color "Success"
-        Add-SessionChange -Category "Security" -Description "Enabled Hyper-V Replica firewall rules"
+    foreach ($group in @("Hyper-V Replica HTTP", "Hyper-V Replica HTTPS")) {
+        try { Enable-NetFirewallRule -DisplayGroup $group -ErrorAction Stop }
+        catch { Write-OutputColor "  Warning: Could not enable '$group' rules" -color "Warning" }
     }
-    catch {
-        Write-OutputColor "  Error: $_" -color "Error"
+    # Replica ports
+    foreach ($ruleInfo in @(@{Name="Hyper-V Replica HTTP 80"; Port=80}, @{Name="Hyper-V Replica HTTPS 443"; Port=443})) {
+        $existing = Get-NetFirewallRule -DisplayName $ruleInfo.Name -ErrorAction SilentlyContinue
+        if (-not $existing) {
+            try {
+                New-NetFirewallRule -DisplayName $ruleInfo.Name -Direction Inbound -Protocol TCP -LocalPort $ruleInfo.Port -Action Allow -Profile Domain,Private -ErrorAction Stop | Out-Null
+            }
+            catch { Write-OutputColor "  Warning: Failed to create rule '$($ruleInfo.Name)': $_" -color "Warning" }
+        }
     }
+    Write-OutputColor "  Hyper-V Replica firewall rules enabled." -color "Success"
+    Add-SessionChange -Category "Security" -Description "Enabled Hyper-V Replica firewall rules"
 }
 
 function Enable-LiveMigrationFirewallRules {
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Enabling Live Migration firewall rules..." -color "Info"
-    try {
-        Enable-NetFirewallRule -DisplayGroup "Hyper-V" -ErrorAction SilentlyContinue
-        # Live Migration port
-        $lmRule = Get-NetFirewallRule -DisplayName "Hyper-V Live Migration" -ErrorAction SilentlyContinue
-        if (-not $lmRule) {
-            New-NetFirewallRule -DisplayName "Hyper-V Live Migration" -Direction Inbound -Protocol TCP -LocalPort 6600 -Action Allow -Profile Domain,Private -ErrorAction SilentlyContinue | Out-Null
+    foreach ($group in @("Hyper-V", "File and Printer Sharing")) {
+        try { Enable-NetFirewallRule -DisplayGroup $group -ErrorAction Stop }
+        catch { Write-OutputColor "  Warning: Could not enable '$group' rules" -color "Warning" }
+    }
+    # Live Migration port
+    $lmRule = Get-NetFirewallRule -DisplayName "Hyper-V Live Migration" -ErrorAction SilentlyContinue
+    if (-not $lmRule) {
+        try {
+            New-NetFirewallRule -DisplayName "Hyper-V Live Migration" -Direction Inbound -Protocol TCP -LocalPort 6600 -Action Allow -Profile Domain,Private -ErrorAction Stop | Out-Null
         }
-        # SMB for shared-nothing live migration
-        Enable-NetFirewallRule -DisplayGroup "File and Printer Sharing" -ErrorAction SilentlyContinue
-        Write-OutputColor "  Live Migration firewall rules enabled." -color "Success"
-        Add-SessionChange -Category "Security" -Description "Enabled Live Migration firewall rules"
+        catch { Write-OutputColor "  Warning: Failed to create Live Migration rule: $_" -color "Warning" }
     }
-    catch {
-        Write-OutputColor "  Error: $_" -color "Error"
-    }
+    Write-OutputColor "  Live Migration firewall rules enabled." -color "Success"
+    Add-SessionChange -Category "Security" -Description "Enabled Live Migration firewall rules"
 }
 
 function Enable-iSCSIFirewallRules {
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Enabling iSCSI firewall rules..." -color "Info"
-    try {
-        Enable-NetFirewallRule -DisplayGroup "iSCSI Service" -ErrorAction SilentlyContinue
-        $iscsiRule = Get-NetFirewallRule -DisplayName "iSCSI Target" -ErrorAction SilentlyContinue
-        if (-not $iscsiRule) {
-            New-NetFirewallRule -DisplayName "iSCSI Target" -Direction Inbound -Protocol TCP -LocalPort 3260 -Action Allow -Profile Domain,Private -ErrorAction SilentlyContinue | Out-Null
+    try { Enable-NetFirewallRule -DisplayGroup "iSCSI Service" -ErrorAction Stop }
+    catch { Write-OutputColor "  Warning: Could not enable 'iSCSI Service' rules" -color "Warning" }
+    $iscsiRule = Get-NetFirewallRule -DisplayName "iSCSI Target" -ErrorAction SilentlyContinue
+    if (-not $iscsiRule) {
+        try {
+            New-NetFirewallRule -DisplayName "iSCSI Target" -Direction Inbound -Protocol TCP -LocalPort 3260 -Action Allow -Profile Domain,Private -ErrorAction Stop | Out-Null
         }
-        Write-OutputColor "  iSCSI firewall rules enabled." -color "Success"
-        Add-SessionChange -Category "Security" -Description "Enabled iSCSI firewall rules"
+        catch { Write-OutputColor "  Warning: Failed to create iSCSI Target rule: $_" -color "Warning" }
     }
-    catch {
-        Write-OutputColor "  Error: $_" -color "Error"
-    }
+    Write-OutputColor "  iSCSI firewall rules enabled." -color "Success"
+    Add-SessionChange -Category "Security" -Description "Enabled iSCSI firewall rules"
 }
 
 function Enable-SMBFirewallRules {
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Enabling SMB/File Sharing firewall rules..." -color "Info"
-    try {
-        Enable-NetFirewallRule -DisplayGroup "File and Printer Sharing" -ErrorAction SilentlyContinue
-        Enable-NetFirewallRule -DisplayGroup "Netlogon Service" -ErrorAction SilentlyContinue
-        Write-OutputColor "  SMB/File Sharing firewall rules enabled." -color "Success"
-        Add-SessionChange -Category "Security" -Description "Enabled SMB firewall rules"
+    foreach ($group in @("File and Printer Sharing", "Netlogon Service")) {
+        try { Enable-NetFirewallRule -DisplayGroup $group -ErrorAction Stop }
+        catch { Write-OutputColor "  Warning: Could not enable '$group' rules" -color "Warning" }
     }
-    catch {
-        Write-OutputColor "  Error: $_" -color "Error"
-    }
+    Write-OutputColor "  SMB/File Sharing firewall rules enabled." -color "Success"
+    Add-SessionChange -Category "Security" -Description "Enabled SMB firewall rules"
 }
 
 function Show-HyperVClusterFirewallRules {
@@ -177,6 +180,8 @@ function Show-HyperVClusterFirewallRules {
             $status = if ($enabledCount -eq $totalCount) { "All Enabled" } elseif ($enabledCount -gt 0) { "$enabledCount/$totalCount Enabled" } else { "Disabled" }
             $color = if ($enabledCount -eq $totalCount) { "Success" } elseif ($enabledCount -gt 0) { "Warning" } else { "Error" }
             Write-OutputColor "  │$("  $group : $status".PadRight(72))│" -color $color
+        } else {
+            Write-OutputColor "  │$("  $group : Not Found".PadRight(72))│" -color "Info"
         }
     }
 

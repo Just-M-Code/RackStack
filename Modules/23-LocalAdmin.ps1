@@ -54,7 +54,13 @@ function Add-LocalAdminAccount {
         # Add to Administrators group
         Add-LocalGroupMember -Group "Administrators" -Member $accountName -ErrorAction Stop
 
-        Write-OutputColor "Account '$accountName' created and added to Administrators group." -color "Success"
+        # Verify group membership
+        $isMember = Get-LocalGroupMember -Group "Administrators" -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*\$accountName" }
+        if ($null -ne $isMember) {
+            Write-OutputColor "Account '$accountName' created and verified in Administrators group." -color "Success"
+        } else {
+            Write-OutputColor "Account '$accountName' created, but group membership could not be verified." -color "Warning"
+        }
         Add-SessionChange -Category "Security" -Description "Created local admin account '$accountName'"
     }
     catch {

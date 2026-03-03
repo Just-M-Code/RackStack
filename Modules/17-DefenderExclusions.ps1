@@ -145,6 +145,13 @@ function Add-HyperVDefenderExclusions {
     Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
     Write-OutputColor "" -color "Info"
 
+    # Pre-check: warn if Hyper-V is not installed
+    if (-not (Test-HyperVInstalled)) {
+        Write-OutputColor "  Note: Hyper-V is not currently installed on this system." -color "Warning"
+        Write-OutputColor "  These exclusions are only useful if Hyper-V will be installed." -color "Warning"
+        Write-OutputColor "" -color "Info"
+    }
+
     if (-not (Confirm-UserAction -Message "Add all recommended Hyper-V exclusions?")) {
         return
     }
