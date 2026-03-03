@@ -24,6 +24,13 @@ function Export-HTMLHealthReport {
         }
     }
 
+    # Validate output directory exists
+    $outputDir = Split-Path -Parent $OutputPath
+    if ($outputDir -and -not (Test-Path -LiteralPath $outputDir)) {
+        Write-OutputColor "  Directory does not exist: $outputDir" -color "Error"
+        return
+    }
+
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Gathering system information..." -color "Info"
 
@@ -355,6 +362,13 @@ function Export-ProfileComparisonHTML {
         return
     }
 
+    # Validate output directory exists
+    $outputDir = Split-Path -Parent $OutputPath
+    if ($outputDir -and -not (Test-Path -LiteralPath $outputDir)) {
+        Write-OutputColor "  Output directory does not exist: $outputDir" -color "Error"
+        return
+    }
+
     try {
         $profile1 = Get-Content -LiteralPath $Profile1Path -Raw | ConvertFrom-Json
         $profile2 = Get-Content -LiteralPath $Profile2Path -Raw | ConvertFrom-Json
@@ -491,6 +505,13 @@ function Export-HTMLReadinessReport {
         if (-not [string]::IsNullOrWhiteSpace($customPath)) {
             $OutputPath = $customPath.Trim('"')
         }
+    }
+
+    # Validate output directory exists
+    $outputDir = Split-Path -Parent $OutputPath
+    if ($outputDir -and -not (Test-Path -LiteralPath $outputDir)) {
+        Write-OutputColor "  Directory does not exist: $outputDir" -color "Error"
+        return
     }
 
     Write-OutputColor "" -color "Info"

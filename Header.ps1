@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.54
+    1.9.55
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.55
+    REPORTING & TEMPLATES PATCH:
+    - IMPROVED: Server role templates validate PostInstall function exists before invocation — prevents confusing errors from custom templates referencing missing functions
+    - NEW: All 3 HTML report functions validate output directory exists before writing (health, readiness, profile comparison)
+    - IMPROVED: Hyper-V Replica Server firewall rules use per-group error reporting instead of SilentlyContinue
+    - IMPROVED: Cluster Dashboard pre-fetches VM groups once instead of querying per-node (N+1 optimization)
 
 .CHANGELOG v1.9.54
     FIREWALL & SECURITY PATCH:

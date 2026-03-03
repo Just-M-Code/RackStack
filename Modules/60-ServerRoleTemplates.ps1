@@ -311,7 +311,13 @@ function Install-ServerRoleTemplate {
 
     # Handle post-install function
     if ($null -ne $template.PostInstall -and $successCount -gt 0) {
-        if ($template.RequiresReboot) {
+        # Validate function exists before attempting to call it
+        $postInstallCmd = Get-Command $template.PostInstall -ErrorAction SilentlyContinue
+        if ($null -eq $postInstallCmd) {
+            Write-OutputColor "  Post-install function '$($template.PostInstall)' not found." -color "Warning"
+            Write-OutputColor "  This may be a custom template referencing a missing function." -color "Warning"
+        }
+        elseif ($template.RequiresReboot) {
             Write-OutputColor "  Post-install step: $($template.PostInstall)" -color "Info"
             Write-OutputColor "  Run this after rebooting to complete configuration." -color "Warning"
         }

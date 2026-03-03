@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.9.55
+
+- **Enhancement:** Server role templates now validate that the PostInstall function exists before attempting to invoke it — prevents confusing errors when custom templates reference functions that haven't been loaded or don't exist, with a clear warning message instead (60-ServerRoleTemplates).
+- **New Feature:** All 3 HTML report functions (health report, readiness report, profile comparison) now validate the output directory exists before writing — prevents silent failures or cryptic errors when the user enters a custom output path with a non-existent directory (54-HTMLReports).
+- **Enhancement:** Hyper-V Replica Server setup now uses per-group firewall rule enabling with error counting instead of `-ErrorAction SilentlyContinue` — consistent with the firewall template pattern from v1.9.54, reports which rule groups could not be enabled (62-HyperVReplica).
+- **Enhancement:** Cluster Dashboard pre-fetches all VM cluster groups in a single query instead of querying `Get-ClusterGroup` once per cluster node — reduces WMI/CIM round-trips on large clusters with many nodes (51-ClusterDashboard).
+- 63 modules, 1854 tests
+
 ## v1.9.54
 
 - **Bug Fix:** All 6 firewall template functions (Hyper-V, Cluster, Replica, Live Migration, iSCSI, SMB) now use `-ErrorAction Stop` instead of `-ErrorAction SilentlyContinue` — errors are caught and reported per-group with specific warning messages instead of being silently swallowed. Previously, if a firewall rule group didn't exist or couldn't be enabled, the function would report success anyway (18-FirewallTemplates).

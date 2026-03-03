@@ -241,11 +241,23 @@ function Enable-ReplicaServer {
             -ErrorAction Stop
 
         # Configure firewall rules
-        Enable-NetFirewallRule -DisplayName "Hyper-V Replica HTTP*" -ErrorAction SilentlyContinue
-        Enable-NetFirewallRule -DisplayName "Hyper-V Replica HTTPS*" -ErrorAction SilentlyContinue
+        $fwErrors = 0
+        foreach ($group in @("Hyper-V Replica HTTP", "Hyper-V Replica HTTPS")) {
+            try {
+                Enable-NetFirewallRule -DisplayGroup $group -ErrorAction Stop
+            }
+            catch {
+                Write-OutputColor "  Warning: Could not enable '$group' firewall rules" -color "Warning"
+                $fwErrors++
+            }
+        }
 
         Write-OutputColor "  Hyper-V Replica Server enabled successfully!" -color "Success"
-        Write-OutputColor "  Firewall rules for Hyper-V Replica have been enabled." -color "Info"
+        if ($fwErrors -eq 0) {
+            Write-OutputColor "  Firewall rules for Hyper-V Replica have been enabled." -color "Info"
+        } else {
+            Write-OutputColor "  Firewall rules partially enabled ($fwErrors group(s) unavailable)." -color "Warning"
+        }
         Add-SessionChange -Category "Hyper-V" -Description "Enabled Hyper-V Replica Server ($authType, storage: $storagePath)"
     }
     catch {

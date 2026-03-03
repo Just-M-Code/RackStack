@@ -26,14 +26,17 @@ function Show-ClusterDashboard {
     # Get cluster nodes
     $nodes = Get-ClusterNode -ErrorAction SilentlyContinue
 
+    # Pre-fetch all cluster VM groups once (avoids N+1 query per node)
+    $allVMGroups = @(Get-ClusterGroup -Cluster $cluster.Name -ErrorAction SilentlyContinue |
+        Where-Object { $_.GroupType -eq 'VirtualMachine' })
+
     # NODE STATUS section
     Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
     Write-OutputColor "  │$("  NODE STATUS".PadRight(72))│" -color "Info"
     Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
 
     foreach ($node in $nodes) {
-        $vmCount = @(Get-ClusterGroup -Cluster $cluster.Name -ErrorAction SilentlyContinue |
-            Where-Object { $_.GroupType -eq 'VirtualMachine' -and $_.OwnerNode -eq $node.Name }).Count
+        $vmCount = @($allVMGroups | Where-Object { $_.OwnerNode -eq $node.Name }).Count
 
         $statusSymbol = switch ($node.State) {
             "Up" { "[●]" }
