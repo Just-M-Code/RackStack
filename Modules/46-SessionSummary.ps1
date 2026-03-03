@@ -18,12 +18,19 @@ function Show-SessionSummary {
         Write-OutputColor "Changes made during this session:" -color "Info"
         Write-OutputColor ("-" * 60) -color "Info"
 
-        foreach ($change in $script:SessionChanges) {
-            Write-OutputColor "[$($change.Timestamp)] [$($change.Category)] $($change.Description)" -color "Success"
+        # Group by category for easier scanning
+        $categories = @($script:SessionChanges | Group-Object -Property Category)
+        foreach ($cat in $categories) {
+            Write-OutputColor "" -color "Info"
+            Write-OutputColor "  $($cat.Name) ($($cat.Count)):" -color "Info"
+            foreach ($change in $cat.Group) {
+                Write-OutputColor "    [$($change.Timestamp)] $($change.Description)" -color "Success"
+            }
         }
 
+        Write-OutputColor "" -color "Info"
         Write-OutputColor ("-" * 60) -color "Info"
-        Write-OutputColor "Total changes: $($script:SessionChanges.Count)" -color "Info"
+        Write-OutputColor "Total: $($script:SessionChanges.Count) change(s) across $($categories.Count) category(ies)" -color "Info"
     }
 
     # Show persistent log path
@@ -31,6 +38,25 @@ function Show-SessionSummary {
     if (Test-Path $logFile) {
         Write-OutputColor "" -color "Info"
         Write-OutputColor "Session log saved to: $logFile" -color "Info"
+    }
+
+    # Offer to export summary to Desktop
+    if ($script:SessionChanges.Count -gt 0) {
+        Write-OutputColor "" -color "Info"
+        if (Confirm-UserAction -Message "Export session summary to Desktop?") {
+            $summaryPath = "$env:USERPROFILE\Desktop\$($env:COMPUTERNAME)_Session_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
+            try {
+                $summaryLines = @("Session Summary - $(Get-Date)", "Runtime: $runtimeStr", "")
+                foreach ($change in $script:SessionChanges) {
+                    $summaryLines += "[$($change.Timestamp)] [$($change.Category)] $($change.Description)"
+                }
+                $summaryLines | Out-File -FilePath $summaryPath -Encoding UTF8 -Force
+                Write-OutputColor "  Summary exported to: $summaryPath" -color "Success"
+            }
+            catch {
+                Write-OutputColor "  Failed to export: $_" -color "Error"
+            }
+        }
     }
 
     Write-OutputColor "" -color "Info"

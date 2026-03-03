@@ -1723,21 +1723,33 @@ function New-VMShell {
     Write-OutputColor "  VM created successfully" -color "Success"
 
     Write-OutputColor "  Configuring CPU ($($Config.vCPU) vCPUs)..." -color "Info"
-    Set-VMProcessor -VM $vm -Count $Config.vCPU -ErrorAction SilentlyContinue
+    try {
+        Set-VMProcessor -VM $vm -Count $Config.vCPU -ErrorAction Stop
+    }
+    catch {
+        Write-OutputColor "  WARNING: Could not set vCPU count to $($Config.vCPU): $_" -color "Warning"
+        Write-OutputColor "  VM will use default CPU count (1 vCPU)." -color "Warning"
+    }
 
     Write-OutputColor "  Configuring memory ($($Config.MemoryGB) GB $($Config.MemoryType))..." -color "Info"
-    if ($Config.MemoryType -eq "Dynamic") {
-        $minMemoryMB = [math]::Max(512, [math]::Floor($Config.MemoryGB * 1024 * 0.25))
-        $startupMemoryMB = [math]::Floor($Config.MemoryGB * 1024 * 0.5)
-        Set-VMMemory -VM $vm -DynamicMemoryEnabled $true `
-            -MinimumBytes ($minMemoryMB * 1MB) `
-            -StartupBytes ($startupMemoryMB * 1MB) `
-            -MaximumBytes ($Config.MemoryGB * 1GB) `
-            -Buffer 20 `
-            -ErrorAction SilentlyContinue
+    try {
+        if ($Config.MemoryType -eq "Dynamic") {
+            $minMemoryMB = [math]::Max(512, [math]::Floor($Config.MemoryGB * 1024 * 0.25))
+            $startupMemoryMB = [math]::Floor($Config.MemoryGB * 1024 * 0.5)
+            Set-VMMemory -VM $vm -DynamicMemoryEnabled $true `
+                -MinimumBytes ($minMemoryMB * 1MB) `
+                -StartupBytes ($startupMemoryMB * 1MB) `
+                -MaximumBytes ($Config.MemoryGB * 1GB) `
+                -Buffer 20 `
+                -ErrorAction Stop
+        }
+        else {
+            Set-VMMemory -VM $vm -DynamicMemoryEnabled $false -StartupBytes ($Config.MemoryGB * 1GB) -ErrorAction Stop
+        }
     }
-    else {
-        Set-VMMemory -VM $vm -DynamicMemoryEnabled $false -StartupBytes ($Config.MemoryGB * 1GB) -ErrorAction SilentlyContinue
+    catch {
+        Write-OutputColor "  WARNING: Could not configure memory: $_" -color "Warning"
+        Write-OutputColor "  VM will use default memory settings." -color "Warning"
     }
 
     return $vm

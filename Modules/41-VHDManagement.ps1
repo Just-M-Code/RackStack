@@ -154,6 +154,20 @@ function Get-SyspreppedVHD {
         }
     }
 
+    # Pre-check: verify destination has enough free space
+    $destDriveLetter = $cachePath.Substring(0, 1)
+    $destVolume = Get-Volume -DriveLetter $destDriveLetter -ErrorAction SilentlyContinue
+    if ($destVolume) {
+        $freeGB = [math]::Round($destVolume.SizeRemaining / 1GB, 1)
+        if ($freeGB -lt 60) {
+            Write-OutputColor "  WARNING: Only $freeGB GB free on ${destDriveLetter}: drive." -color "Warning"
+            Write-OutputColor "  VHD downloads are typically 30-50 GB." -color "Warning"
+            if (-not (Confirm-UserAction -Message "Continue with download anyway?")) {
+                return $null
+            }
+        }
+    }
+
     # Download the VHD
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Downloading sysprepped Server $OSVersion VHD from FileServer..." -color "Info"

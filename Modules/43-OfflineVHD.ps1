@@ -262,11 +262,29 @@ Remove-Item -Path `$MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyCont
             [gc]::Collect()
             Start-Sleep -Seconds 1
             reg unload "HKLM\OFFLINE_SYSTEM" 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                Write-OutputColor "  Warning: SYSTEM hive unload failed. Retrying..." -color "Warning"
+                [gc]::Collect()
+                Start-Sleep -Seconds 3
+                reg unload "HKLM\OFFLINE_SYSTEM" 2>$null
+                if ($LASTEXITCODE -ne 0) {
+                    Write-OutputColor "  ERROR: SYSTEM hive still locked. Run 'reg unload HKLM\OFFLINE_SYSTEM' manually." -color "Error"
+                }
+            }
         }
         if ($softwareHiveLoaded) {
             [gc]::Collect()
             Start-Sleep -Seconds 1
             reg unload "HKLM\OFFLINE_SOFTWARE" 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                Write-OutputColor "  Warning: SOFTWARE hive unload failed. Retrying..." -color "Warning"
+                [gc]::Collect()
+                Start-Sleep -Seconds 3
+                reg unload "HKLM\OFFLINE_SOFTWARE" 2>$null
+                if ($LASTEXITCODE -ne 0) {
+                    Write-OutputColor "  ERROR: SOFTWARE hive still locked. Run 'reg unload HKLM\OFFLINE_SOFTWARE' manually." -color "Error"
+                }
+            }
         }
         if ($mountedVHD) {
             Start-Sleep -Seconds 2

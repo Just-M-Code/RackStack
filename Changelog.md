@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.9.52
+
+- **Enhancement:** Offline VHD registry hive unload with retry and verification — detects failed unloads, forces garbage collection, retries after delay, and shows manual fix command if hive remains locked. Prevents VHD lock that blocks VM boot (43-OfflineVHD).
+- **Enhancement:** VM deployment CPU and memory configuration errors now caught and reported with warnings instead of being silently swallowed by `-ErrorAction SilentlyContinue`. User sees what went wrong if vCPU count exceeds host capacity or memory settings are invalid (44-VMDeployment).
+- **New Feature:** VHD download disk space pre-check — warns when destination drive has less than 60 GB free before starting large sysprepped VHD download (41-VHDManagement).
+- **New Feature:** ISO download disk space pre-check — blocks download when destination drive has less than 10 GB free, preventing partial downloads that waste time and leave incomplete files (42-ISODownload).
+- **New Feature:** Host storage drive selection warns when selected drive has less than 50 GB free, since VM deployments typically require 100-300+ GB of storage (40-HostStorage).
+- **Enhancement:** Session summary now groups changes by category (Network, System, Security, etc.) with counts instead of a flat chronological list, and offers to export the summary as a text file to the Desktop (46-SessionSummary).
+- 63 modules, 1854 tests
+
 ## v1.9.51
 
 - **Enhancement:** Hyper-V Windows Client job error extraction now uses the same defensive pattern as `Install-WindowsFeatureWithTimeout` — guards `ChildJobs[0]` access, pipes through `Out-String`, checks job state, and provides fallback error message (25-HyperV).

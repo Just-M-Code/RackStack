@@ -134,6 +134,18 @@ function Get-ServerISO {
         }
     }
 
+    # Pre-check: verify destination has enough free space
+    $isoDriveLetter = $isoPath.Substring(0, 1)
+    $isoVolume = Get-Volume -DriveLetter $isoDriveLetter -ErrorAction SilentlyContinue
+    if ($isoVolume) {
+        $freeGB = [math]::Round($isoVolume.SizeRemaining / 1GB, 1)
+        if ($freeGB -lt 10) {
+            Write-OutputColor "  ERROR: Only $freeGB GB free on ${isoDriveLetter}: drive." -color "Error"
+            Write-OutputColor "  Not enough space for ISO download (4-6 GB typically needed)." -color "Warning"
+            return $null
+        }
+    }
+
     # Download the ISO
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Downloading Server $OSVersion ISO from FileServer..." -color "Info"

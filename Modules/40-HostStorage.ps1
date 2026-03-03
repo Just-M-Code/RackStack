@@ -300,6 +300,16 @@ function Initialize-HostStorage {
     $selectedDrive = $validDrives[$choiceNum - 1]
     $driveLetter = $selectedDrive.Letter
 
+    # Warn if selected drive has low free space
+    if ($selectedDrive.FreeGB -lt 50) {
+        Write-OutputColor "" -color "Info"
+        Write-OutputColor "  WARNING: $($driveLetter): only has $($selectedDrive.FreeGB) GB free." -color "Critical"
+        Write-OutputColor "  VM deployments typically require 100-300+ GB of storage." -color "Warning"
+        if (-not (Confirm-UserAction -Message "Continue with this drive anyway?")) {
+            return $false
+        }
+    }
+
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Selected drive: $($driveLetter):" -color "Success"
     Write-OutputColor "" -color "Info"

@@ -30,10 +30,19 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.51
+    1.9.52
 
 .LAST UPDATED
     03/02/2026
+
+.CHANGELOG v1.9.52
+    DEPLOYMENT SAFETY PATCH:
+    - IMPROVED: Offline VHD registry hive unload with retry — detects failed unloads, retries after GC, shows manual fix command if still locked
+    - IMPROVED: VM deployment CPU/memory configuration errors now reported instead of silently swallowed
+    - NEW: VHD download disk space pre-check — warns when destination has less than 60 GB free before downloading sysprepped VHDs
+    - NEW: ISO download disk space pre-check — blocks download when destination has less than 10 GB free
+    - NEW: Host storage drive selection warns on low free space (<50 GB) for VM storage paths
+    - IMPROVED: Session summary groups changes by category with counts, offers export to Desktop as text file
 
 .CHANGELOG v1.9.51
     DEFENSIVE HARDENING PATCH:
