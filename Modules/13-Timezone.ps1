@@ -311,15 +311,33 @@ function Set-SelectedTimezone {
         Write-OutputColor "  Timezone set to: $($newTz.DisplayName)" -color "Success"
         Add-SessionChange -Category "System" -Description "Set timezone to $($newTz.DisplayName)"
 
-        # Sync time
+        # Sync time (with pre-flight check)
+        $w32timeSvc = Get-Service -Name W32Time -ErrorAction SilentlyContinue
+        if ($null -ne $w32timeSvc -and $w32timeSvc.Status -ne "Running") {
+            Write-OutputColor "  Starting Windows Time service..." -color "Info"
+            Start-Service W32Time -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 2
+        }
+
         Write-OutputColor "  Synchronizing system time..." -color "Info"
-        $null = w32tm /resync 2>&1
+        $syncResult = w32tm /resync 2>&1
+        $syncText = $syncResult -join ' '
 
         if ($LASTEXITCODE -eq 0) {
             Write-OutputColor "  Time synchronized successfully." -color "Success"
         }
         else {
-            Write-OutputColor "  Time sync may have failed. Check network connectivity." -color "Warning"
+            if ($syncText -match "service has not been started|not running") {
+                Write-OutputColor "  Windows Time service is not running." -color "Warning"
+                Write-OutputColor "  Run: Start-Service W32Time" -color "Info"
+            } elseif ($syncText -match "no time data|peer not reachable") {
+                Write-OutputColor "  NTP server unreachable. Check:" -color "Warning"
+                Write-OutputColor "    1. Network connectivity" -color "Info"
+                Write-OutputColor "    2. Firewall allows UDP port 123 outbound" -color "Info"
+                Write-OutputColor "    3. NTP server is configured (use NTP Configuration menu)" -color "Info"
+            } else {
+                Write-OutputColor "  Time sync result: $syncText" -color "Warning"
+            }
         }
     }
     catch {

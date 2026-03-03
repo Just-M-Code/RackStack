@@ -154,6 +154,17 @@ function Join-Domain {
                 Write-OutputColor "  -> Computer account may already exist. Contact AD admin." -color "Warning"
             }
 
+            # Check if partial join occurred (domain state changed despite error)
+            $postCheck = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction SilentlyContinue
+            if ($null -ne $postCheck -and $postCheck.PartOfDomain) {
+                Write-OutputColor "" -color "Info"
+                Write-OutputColor "  Note: Server appears to be domain-joined (to $($postCheck.Domain))." -color "Warning"
+                Write-OutputColor "  A reboot may be required to complete the join." -color "Warning"
+                $global:RebootNeeded = $true
+                Add-SessionChange -Category "System" -Description "Joined domain '$($postCheck.Domain)' (completed after error)"
+                return
+            }
+
             if ($attempt -lt $maxAttempts) {
                 Write-OutputColor "  Retrying... ($($maxAttempts - $attempt) attempt(s) remaining)" -color "Info"
             }

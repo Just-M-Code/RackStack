@@ -30,10 +30,18 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.47
+    1.9.48
 
 .LAST UPDATED
     03/02/2026
+
+.CHANGELOG v1.9.48
+    SAFETY & FEEDBACK PATCH:
+    - NEW: Disable admin lockout prevention — verifies alternate admin account exists before allowing disable
+    - IMPROVED: Domain join detects partial join state after errors (prevents retry on already-joined servers)
+    - IMPROVED: Timezone sync pre-flight — starts W32Time service if stopped, specific error guidance for NTP failures
+    - NEW: Deduplication shows last optimization timestamp per volume
+    - NEW: Password complexity visual checklist — shows pass/fail per requirement after validation
 
 .CHANGELOG v1.9.47
     VALIDATION & SAFETY PATCH:

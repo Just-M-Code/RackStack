@@ -62,8 +62,15 @@ function Show-DeduplicationManagement {
                 $enabled = $dedupConfig.Enabled
                 $savedGB = if ($dedupStatus) { [math]::Round($dedupStatus.SavedSpace / 1GB, 2) } else { 0 }
                 $ratio = if ($dedupStatus) { "$([math]::Round($dedupStatus.SavingsRate, 1))%" } else { "N/A" }
+                $lastOpt = if ($dedupStatus -and $dedupStatus.LastOptimizationTime) {
+                    $delta = (Get-Date) - $dedupStatus.LastOptimizationTime
+                    if ($delta.TotalHours -lt 1) { "$([math]::Round($delta.TotalMinutes))m ago" }
+                    elseif ($delta.TotalDays -lt 1) { "$([math]::Round($delta.TotalHours, 1))h ago" }
+                    else { "$([math]::Round($delta.TotalDays, 1))d ago" }
+                } else { "Never" }
                 $color = if ($enabled) { "Success" } else { "Warning" }
                 Write-OutputColor "  │$("  [$idx] $($vol.DriveLetter): Enabled: $enabled | Saved: $savedGB GB ($ratio)".PadRight(72))│" -color $color
+                Write-OutputColor "  │$("      Last optimized: $lastOpt".PadRight(72))│" -color "Debug"
             }
             else {
                 Write-OutputColor "  │$("  [$idx] $($vol.DriveLetter): Not configured".PadRight(72))│" -color "Warning"

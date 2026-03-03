@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.9.48
+
+- **New Feature:** Disable admin lockout prevention — before disabling the built-in Administrator account, verifies that at least one other enabled local admin or domain admin group membership exists. Blocks the operation with clear guidance if no alternate access is available (24-DisableAdmin).
+- **Enhancement:** Domain join partial state detection — after a join error, checks if the server is actually domain-joined (common with timeout errors where the join succeeded). Prevents unnecessary retries and guides user to reboot (12-DomainJoin).
+- **Enhancement:** Timezone sync pre-flight — automatically starts the Windows Time service if stopped before attempting time sync. Provides specific error guidance for common NTP failures (service not running, NTP unreachable, firewall blocking UDP 123) (13-Timezone).
+- **Enhancement:** Deduplication status now shows last optimization timestamp per volume with human-readable time deltas (e.g., "2.3h ago", "1.5d ago") (32-Deduplication).
+- **Enhancement:** Password complexity validation now shows a visual checklist with pass/fail indicators per requirement (length, uppercase, lowercase, number, special character) instead of a generic error list (22-Password).
+- 63 modules, 1854 tests
+
 ## v1.9.47
 
 - **New Feature:** VLAN reserved range warnings — when setting VLAN ID, shows valid range guidance and warns about reserved VLANs (1 default/native, 1002-1005 legacy FDDI/Token Ring, 4094 GVRP pruning) with confirmation prompts before proceeding (08-VLAN).

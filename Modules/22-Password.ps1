@@ -60,11 +60,20 @@ function Test-PasswordComplexity {
         $errors += "At least one special character (!@#$%^&*...)"
     }
 
+    # Visual checklist showing pass/fail per requirement
+    $hasLength  = $InputString.Length -ge $minLength
+    $hasUpper   = $InputString -cmatch "[A-Z]"
+    $hasLower   = $InputString -cmatch "[a-z]"
+    $hasDigit   = $InputString -match "\d"
+    $hasSpecial = $InputString -match '[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]'
+
     if ($errors.Count -gt 0) {
-        Write-OutputColor "Password does not meet requirements:" -color "Error"
-        foreach ($err in $errors) {
-            Write-OutputColor "  - $err" -color "Warning"
-        }
+        Write-OutputColor "  Password check:" -color "Info"
+        Write-OutputColor "    $(if($hasLength){'[OK]'}else{'[  ]'}) Length ($($InputString.Length)/$minLength chars)" -color $(if($hasLength){"Success"}else{"Error"})
+        Write-OutputColor "    $(if($hasUpper){'[OK]'}else{'[  ]'}) Uppercase letter" -color $(if($hasUpper){"Success"}else{"Error"})
+        Write-OutputColor "    $(if($hasLower){'[OK]'}else{'[  ]'}) Lowercase letter" -color $(if($hasLower){"Success"}else{"Error"})
+        Write-OutputColor "    $(if($hasDigit){'[OK]'}else{'[  ]'}) Number" -color $(if($hasDigit){"Success"}else{"Error"})
+        Write-OutputColor "    $(if($hasSpecial){'[OK]'}else{'[  ]'}) Special character" -color $(if($hasSpecial){"Success"}else{"Error"})
         return $false
     }
     return $true

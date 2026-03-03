@@ -15,9 +15,38 @@ function Disable-BuiltInAdminAccount {
 
         Write-OutputColor "The built-in Administrator account is currently ENABLED." -color "Warning"
         Write-OutputColor "" -color "Info"
-        Write-OutputColor "WARNING: Before disabling, ensure you have:" -color "Critical"
-        Write-OutputColor "  1. Another local admin account to log in with" -color "Warning"
-        Write-OutputColor "  2. Or domain admin access if domain-joined" -color "Warning"
+
+        # Verify alternate admin access exists before allowing disable
+        $adminMembers = @(Get-LocalGroupMember -Group "Administrators" -ErrorAction SilentlyContinue)
+        $enabledLocalAdmins = @($adminMembers | Where-Object {
+            $_.ObjectClass -eq 'User' -and $_.PrincipalSource -eq 'Local'
+        } | ForEach-Object {
+            $userName = $_.Name -replace '^.*\\', ''
+            $localUser = Get-LocalUser -Name $userName -ErrorAction SilentlyContinue
+            if ($null -ne $localUser -and $localUser.Enabled -and $userName -ne 'Administrator') { $localUser }
+        })
+
+        $isDomainJoined = try { (Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue).PartOfDomain } catch { $false }
+        $hasDomainAdmins = @($adminMembers | Where-Object { $_.ObjectClass -eq 'Group' -or $_.PrincipalSource -eq 'ActiveDirectory' }).Count -gt 0
+
+        if ($enabledLocalAdmins.Count -eq 0 -and -not ($isDomainJoined -and $hasDomainAdmins)) {
+            Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Error"
+            Write-OutputColor "  ║$("  BLOCKED: No alternate admin account detected!".PadRight(72))║" -color "Error"
+            Write-OutputColor "  ╠════════════════════════════════════════════════════════════════════════╣" -color "Error"
+            Write-OutputColor "  ║$("  Disabling the only admin account will LOCK YOU OUT.".PadRight(72))║" -color "Error"
+            Write-OutputColor "  ║$("  Create another local admin account first, or join a domain.".PadRight(72))║" -color "Error"
+            Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Error"
+            Write-OutputColor "" -color "Info"
+            return
+        }
+
+        Write-OutputColor "  Alternate admin access verified:" -color "Success"
+        foreach ($admin in $enabledLocalAdmins) {
+            Write-OutputColor "    Local: $($admin.Name)" -color "Success"
+        }
+        if ($isDomainJoined -and $hasDomainAdmins) {
+            Write-OutputColor "    Domain admin group membership detected" -color "Success"
+        }
         Write-OutputColor "" -color "Info"
 
         if (-not (Confirm-UserAction -Message "Disable built-in Administrator account?")) {
