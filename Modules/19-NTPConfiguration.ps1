@@ -149,15 +149,48 @@ function Show-DetailedTimeStatus {
     Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
 
     $status = w32tm /query /status 2>&1
+    $offsetSeconds = $null
+
     foreach ($line in $status) {
         $lineStr = $line.ToString()
         if ($lineStr.Trim()) {
             $displayLine = if ($lineStr.Length -gt 68) { $lineStr.Substring(0,65) + "..." } else { $lineStr }
             Write-OutputColor "  │$("  $displayLine".PadRight(72))│" -color "Info"
+
+            # Parse phase offset (in seconds)
+            if ($lineStr -match 'Phase Offset:\s*([\-\d\.]+)s') {
+                $offsetSeconds = [double]$Matches[1]
+            }
         }
     }
 
     Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+
+    # Time skew analysis
+    if ($null -ne $offsetSeconds) {
+        $absOffset = [math]::Abs($offsetSeconds)
+        $offsetMs = [math]::Round($absOffset * 1000, 1)
+        $direction = if ($offsetSeconds -gt 0) { "ahead" } else { "behind" }
+        Write-OutputColor "" -color "Info"
+
+        if ($absOffset -gt 30) {
+            Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Error"
+            Write-OutputColor "  ║$("  CRITICAL: Clock is ${offsetSeconds}s $direction NTP source!".PadRight(72))║" -color "Error"
+            Write-OutputColor "  ║$("  Kerberos auth will FAIL at >5 min skew. iSCSI may corrupt data.".PadRight(72))║" -color "Error"
+            Write-OutputColor "  ║$("  Run 'Force Time Sync Now' immediately.".PadRight(72))║" -color "Error"
+            Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Error"
+        } elseif ($absOffset -gt 1) {
+            Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Warning"
+            Write-OutputColor "  ║$("  WARNING: Clock skew detected — ${offsetSeconds}s $direction NTP source".PadRight(72))║" -color "Warning"
+            Write-OutputColor "  ║$("  Consider running 'Force Time Sync Now' to correct.".PadRight(72))║" -color "Warning"
+            Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Warning"
+        } elseif ($absOffset -gt 0.1) {
+            Write-OutputColor "  Clock offset: ${offsetMs}ms $direction — within acceptable range" -color "Info"
+        } else {
+            Write-OutputColor "  Clock offset: ${offsetMs}ms — excellent synchronization" -color "Success"
+        }
+    }
+
     Write-PressEnter
 }
 #endregion

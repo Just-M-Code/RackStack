@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.9.46
+
+- **Enhancement:** Service Manager now shows startup type (Auto/Manual/Disabled) alongside status with color-coded indicators — red for Stopped+Automatic (misconfigured), green for Running, gray for Disabled. New [C] option to change startup type. Search results also show startup type (30-ServiceManager).
+- **New Feature:** NTP time skew detection — detailed time status now parses phase offset and shows threshold warnings: green <100ms, info 100ms-1s, warning >1s, critical >30s with Kerberos/iSCSI impact guidance (19-NTPConfiguration).
+- **Enhancement:** Health check disk I/O now groups read and write latency per disk with separate color-coded badges and an aggregate performance score (GOOD/FAIR/DEGRADED). Suggests mitigation when write latency is high (37-HealthCheck).
+- **Enhancement:** Disk cleanup quick clean shows real-time progress with file count and MB freed, updating every 500ms during deletion (20-DiskCleanup).
+- **New Feature:** AD DS Replication Health Monitor — standalone menu option showing per-partner replication status with time deltas, SYSVOL/NETLOGON share availability, DNS zone check, overall health score, and option to force replication sync (61-ActiveDirectory).
+- 63 modules, 1854 tests
+
 ## v1.9.45
 
 - **New Feature:** Enhanced ping diagnostics — sends 20 packets with min/max/average/P95/standard deviation/jitter/packet loss statistics, color-coded thresholds for live migration and iSCSI compatibility (58-NetworkDiagnostics).

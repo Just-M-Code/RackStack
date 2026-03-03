@@ -95,29 +95,34 @@ function Invoke-QuickClean {
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Running Quick Clean..." -color "Info"
     $cleaned = 0
+    $fileCount = 0
+    $lastUpdate = [DateTime]::Now
 
-    # User temp
-    if (Test-Path $env:TEMP) {
-        $files = Get-ChildItem $env:TEMP -Recurse -Force -File -ErrorAction SilentlyContinue
-        foreach ($file in $files) {
-            $fileSize = $file.Length
-            Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue
-            if (-not (Test-Path $file.FullName)) { $cleaned += $fileSize }
+    $tempPaths = @($env:TEMP, "C:\Windows\Temp")
+    foreach ($tempPath in $tempPaths) {
+        if (Test-Path $tempPath) {
+            $files = Get-ChildItem $tempPath -Recurse -Force -File -ErrorAction SilentlyContinue
+            foreach ($file in $files) {
+                $fileSize = $file.Length
+                Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue
+                if (-not (Test-Path $file.FullName)) {
+                    $cleaned += $fileSize
+                    $fileCount++
+                }
+                # Progress update every 500ms
+                if (([DateTime]::Now - $lastUpdate).TotalMilliseconds -gt 500) {
+                    $cleanedMB = [math]::Round($cleaned / 1MB, 1)
+                    Write-Host "`r  Cleaning: $fileCount files deleted ($cleanedMB MB freed)..." -NoNewline
+                    $lastUpdate = [DateTime]::Now
+                }
+            }
         }
     }
 
-    # Windows temp
-    if (Test-Path "C:\Windows\Temp") {
-        $files = Get-ChildItem "C:\Windows\Temp" -Recurse -Force -File -ErrorAction SilentlyContinue
-        foreach ($file in $files) {
-            $fileSize = $file.Length
-            Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue
-            if (-not (Test-Path $file.FullName)) { $cleaned += $fileSize }
-        }
-    }
-
-    Write-OutputColor "  Quick Clean complete. Freed approximately $([math]::Round($cleaned/1MB, 1)) MB" -color "Success"
-    Add-SessionChange -Category "System" -Description "Disk cleanup freed $([math]::Round($cleaned/1MB, 1)) MB"
+    Write-Host "`r$(' ' * 72)" -NoNewline
+    Write-Host "`r" -NoNewline
+    Write-OutputColor "  Quick Clean complete. Freed $([math]::Round($cleaned/1MB, 1)) MB ($fileCount files)" -color "Success"
+    Add-SessionChange -Category "System" -Description "Disk cleanup freed $([math]::Round($cleaned/1MB, 1)) MB ($fileCount files)"
 }
 
 function Invoke-StandardClean {

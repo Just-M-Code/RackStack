@@ -315,6 +315,140 @@ function Test-ADDSReplicationHealth {
     }
 }
 
+# Standalone replication health monitor (accessible from menu)
+function Show-ReplicationMonitor {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                    AD DS REPLICATION MONITOR").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    try {
+        Import-Module ActiveDirectory -ErrorAction Stop
+    }
+    catch {
+        Write-OutputColor "  Active Directory module not available." -color "Error"
+        Write-OutputColor "  This server may not be a Domain Controller." -color "Warning"
+        Write-PressEnter
+        return
+    }
+
+    Write-OutputColor "  Querying replication partners..." -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    try {
+        $replPartners = @(Get-ADReplicationPartnerMetadata -Target $env:COMPUTERNAME -ErrorAction Stop)
+
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  REPLICATION PARTNERS ($($replPartners.Count) found)".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+
+        if ($replPartners.Count -eq 0) {
+            Write-OutputColor "  │$("  No replication partners (first/only DC in forest)".PadRight(72))│" -color "Info"
+        } else {
+            $maxDelta = [TimeSpan]::Zero
+            $failCount = 0
+
+            foreach ($partner in $replPartners) {
+                $partnerName = $partner.Partner -replace '^CN=NTDS Settings,CN=', '' -replace ',.*$', ''
+                $lastRepl = if ($null -ne $partner.LastReplicationSuccess) {
+                    $partner.LastReplicationSuccess.ToString("yyyy-MM-dd HH:mm:ss")
+                } else { "Never" }
+
+                $delta = if ($null -ne $partner.LastReplicationSuccess) {
+                    (Get-Date) - $partner.LastReplicationSuccess
+                } else { [TimeSpan]::MaxValue }
+
+                if ($delta -gt $maxDelta -and $delta -ne [TimeSpan]::MaxValue) { $maxDelta = $delta }
+
+                $deltaStr = if ($delta -eq [TimeSpan]::MaxValue) { "Never" }
+                    elseif ($delta.TotalMinutes -lt 1) { "$([math]::Round($delta.TotalSeconds))s ago" }
+                    elseif ($delta.TotalHours -lt 1) { "$([math]::Round($delta.TotalMinutes))m ago" }
+                    elseif ($delta.TotalDays -lt 1) { "$([math]::Round($delta.TotalHours, 1))h ago" }
+                    else { "$([math]::Round($delta.TotalDays, 1))d ago" }
+
+                $lastResult = if ($partner.LastReplicationResult -eq 0) { "OK" } else { "ERROR ($($partner.LastReplicationResult))" }
+                if ($partner.LastReplicationResult -ne 0) { $failCount++ }
+
+                $resultColor = if ($partner.LastReplicationResult -ne 0) { "Error" }
+                    elseif ($delta.TotalMinutes -gt 30) { "Warning" }
+                    else { "Success" }
+
+                $lineStr = "  $partnerName"
+                if ($lineStr.Length -gt 69) { $lineStr = $lineStr.Substring(0, 69) + "..." }
+                Write-OutputColor "  │$($lineStr.PadRight(72))│" -color "Info"
+                Write-OutputColor "  │$("    Last: $lastRepl ($deltaStr)  Status: $lastResult".PadRight(72))│" -color $resultColor
+            }
+
+            Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+            $overallColor = if ($failCount -gt 0) { "Error" } elseif ($maxDelta.TotalMinutes -gt 30) { "Warning" } else { "Success" }
+            $overallStatus = if ($failCount -gt 0) { "ERRORS DETECTED ($failCount partner(s) failing)" }
+                elseif ($maxDelta.TotalMinutes -gt 30) { "STALE (replication >30 min old)" }
+                else { "HEALTHY" }
+            Write-OutputColor "  │$("  Overall: $overallStatus".PadRight(72))│" -color $overallColor
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+
+        # SYSVOL check
+        Write-OutputColor "" -color "Info"
+        $sysvolPath = "\\$env:COMPUTERNAME\SYSVOL"
+        $sysvolOk = Test-Path $sysvolPath -ErrorAction SilentlyContinue
+        if ($sysvolOk) {
+            Write-OutputColor "  SYSVOL share: Available" -color "Success"
+        } else {
+            Write-OutputColor "  SYSVOL share: NOT AVAILABLE" -color "Error"
+        }
+
+        # NETLOGON check
+        $netlogonPath = "\\$env:COMPUTERNAME\NETLOGON"
+        $netlogonOk = Test-Path $netlogonPath -ErrorAction SilentlyContinue
+        if ($netlogonOk) {
+            Write-OutputColor "  NETLOGON share: Available" -color "Success"
+        } else {
+            Write-OutputColor "  NETLOGON share: NOT AVAILABLE" -color "Error"
+        }
+
+        # DNS zone check
+        try {
+            $domain = (Get-ADDomain -ErrorAction SilentlyContinue).DNSRoot
+            if ($domain) {
+                $dnsZone = Get-DnsServerZone -Name $domain -ErrorAction SilentlyContinue
+                if ($null -ne $dnsZone) {
+                    Write-OutputColor "  DNS zone ($domain): Active" -color "Success"
+                } else {
+                    Write-OutputColor "  DNS zone ($domain): NOT FOUND" -color "Error"
+                }
+            }
+        }
+        catch {
+            Write-OutputColor "  DNS zone check: unavailable" -color "Warning"
+        }
+
+        # Offer force replication
+        if ($replPartners.Count -gt 0) {
+            Write-OutputColor "" -color "Info"
+            if (Confirm-UserAction -Message "Force replication sync with all partners?") {
+                Write-OutputColor "  Forcing replication..." -color "Info"
+                try {
+                    $null = repadmin /syncall /AdeP 2>&1
+                    Write-OutputColor "  Replication sync initiated." -color "Success"
+                    Add-SessionChange -Category "AD DS" -Description "Forced AD replication sync"
+                }
+                catch {
+                    Write-OutputColor "  Replication sync failed: $_" -color "Error"
+                }
+            }
+        }
+    }
+    catch {
+        Write-OutputColor "  Replication data unavailable: $($_.Exception.Message)" -color "Error"
+        Write-OutputColor "  Ensure this server is a promoted Domain Controller." -color "Warning"
+    }
+
+    Write-PressEnter
+}
+
 # Main AD DS Promotion menu
 function Show-ADDSPromotionMenu {
     Clear-Host
@@ -331,6 +465,7 @@ function Show-ADDSPromotionMenu {
     Write-MenuItem -Text "[2]  Additional Domain Controller (Join existing domain)"
     Write-MenuItem -Text "[3]  Read-Only Domain Controller (RODC)"
     Write-MenuItem -Text "[4]  Check AD DS Status"
+    Write-MenuItem -Text "[5]  Replication Health Monitor"
     Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  [B] ◄ Back" -color "Info"
@@ -345,6 +480,7 @@ function Show-ADDSPromotionMenu {
         "2" { Install-AdditionalDC }
         "3" { Install-ReadOnlyDC }
         "4" { Show-ADDSStatus }
+        "5" { Show-ReplicationMonitor }
     }
 }
 

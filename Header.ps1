@@ -30,10 +30,19 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.45
+    1.9.46
 
 .LAST UPDATED
     03/02/2026
+
+.CHANGELOG v1.9.46
+    MONITORING & UX PATCH:
+    - NEW: Service Manager shows startup type (Auto/Manual/Disabled) with color-coded status
+    - NEW: Service Manager option to change startup type (Automatic/Manual/Disabled)
+    - NEW: NTP time skew detection with threshold warnings (>1s warning, >30s critical)
+    - NEW: Health check disk I/O shows separate read/write latency with aggregate score
+    - NEW: Disk cleanup shows real-time progress (file count + MB freed)
+    - NEW: AD DS standalone replication health monitor with force-sync option
 
 .CHANGELOG v1.9.45
     RELIABILITY & DIAGNOSTICS PATCH:

@@ -43,9 +43,25 @@ function Show-ServiceManager {
             $service = Get-Service -Name $svc.Name -ErrorAction SilentlyContinue
             if ($service) {
                 $status = $service.Status
-                $color = if ($status -eq "Running") { "Success" } elseif ($status -eq "Stopped") { "Warning" } else { "Info" }
-                $displayName = if ($svc.DisplayName.Length -gt 45) { $svc.DisplayName.Substring(0,42) + "..." } else { $svc.DisplayName }
-                Write-OutputColor "  │$("  [$idx] $displayName : $status".PadRight(72))│" -color $color
+                $startType = $service.StartType
+                $startTag = switch ($startType) {
+                    "Automatic" { "Auto" }
+                    "Manual"    { "Manual" }
+                    "Disabled"  { "Disabled" }
+                    default     { $startType }
+                }
+                # Color logic: Running+Auto=green, Stopped+Auto=red (misconfigured), Stopped+Manual=yellow, Disabled=gray
+                $color = if ($status -eq "Running") {
+                    "Success"
+                } elseif ($status -eq "Stopped" -and $startType -eq "Automatic") {
+                    "Error"
+                } elseif ($startType -eq "Disabled") {
+                    "Info"
+                } else {
+                    "Warning"
+                }
+                $displayName = if ($svc.DisplayName.Length -gt 35) { $svc.DisplayName.Substring(0,32) + "..." } else { $svc.DisplayName }
+                Write-OutputColor "  │$("  [$idx] $displayName : $status [$startTag]".PadRight(72))│" -color $color
                 $serviceList += $service
                 $idx++
             }
@@ -59,6 +75,7 @@ function Show-ServiceManager {
         Write-MenuItem -Text "[S]  Start a Service (enter number)"
         Write-MenuItem -Text "[T]  Stop a Service (enter number)"
         Write-MenuItem -Text "[R]  Restart a Service (enter number)"
+        Write-MenuItem -Text "[C]  Change Startup Type (enter number)"
         Write-MenuItem -Text "[A]  Search All Services"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
@@ -114,6 +131,38 @@ function Show-ServiceManager {
                     }
                 }
             }
+            "^[Cc]$" {
+                $num = Read-Host "  Enter service number to change startup type"
+                if ($num -match '^\d+$' -and [int]$num -ge 1 -and [int]$num -le $serviceList.Count) {
+                    $svc = $serviceList[[int]$num - 1]
+                    Write-OutputColor "" -color "Info"
+                    Write-OutputColor "  Service: $($svc.DisplayName)" -color "Info"
+                    Write-OutputColor "  Current Startup: $($svc.StartType)" -color "Info"
+                    Write-OutputColor "" -color "Info"
+                    Write-OutputColor "  [1] Automatic" -color "Info"
+                    Write-OutputColor "  [2] Manual" -color "Info"
+                    Write-OutputColor "  [3] Disabled" -color "Info"
+                    Write-OutputColor "" -color "Info"
+                    $typeChoice = Read-Host "  Select new startup type"
+                    $newType = switch ($typeChoice) {
+                        "1" { "Automatic" }
+                        "2" { "Manual" }
+                        "3" { "Disabled" }
+                        default { $null }
+                    }
+                    if ($null -ne $newType) {
+                        if (-not (Confirm-UserAction -Message "Set '$($svc.DisplayName)' startup to $newType`?")) { continue }
+                        try {
+                            Set-Service -Name $svc.Name -StartupType $newType -ErrorAction Stop
+                            Write-OutputColor "  Set $($svc.DisplayName) startup type to $newType" -color "Success"
+                            Add-SessionChange -Category "System" -Description "Changed service startup: $($svc.Name) -> $newType"
+                        }
+                        catch {
+                            Write-OutputColor "  Failed: $_" -color "Error"
+                        }
+                    }
+                }
+            }
             "^[Aa]$" {
                 $search = Read-Host "  Enter service name to search"
                 if ($search) {
@@ -121,8 +170,9 @@ function Show-ServiceManager {
                     if ($found) {
                         Write-OutputColor "" -color "Info"
                         foreach ($s in $found) {
-                            $color = if ($s.Status -eq "Running") { "Success" } else { "Warning" }
-                            Write-OutputColor "  $($s.Name) - $($s.DisplayName) : $($s.Status)" -color $color
+                            $startTag = switch ($s.StartType) { "Automatic" { "Auto" } "Manual" { "Manual" } "Disabled" { "Disabled" } default { $s.StartType } }
+                            $color = if ($s.Status -eq "Running") { "Success" } elseif ($s.Status -eq "Stopped" -and $s.StartType -eq "Automatic") { "Error" } else { "Warning" }
+                            Write-OutputColor "  $($s.Name) - $($s.DisplayName) : $($s.Status) [$startTag]" -color $color
                         }
                     }
                     else {

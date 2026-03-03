@@ -143,18 +143,42 @@ function Show-SystemHealthCheck {
         }
     }
 
-    # Disk I/O Latency (v1.7.0)
+    # Disk I/O Latency (v1.7.0, enhanced v1.9.46)
     Write-OutputColor "=== DISK I/O LATENCY ===" -color "Success"
     try {
         $diskCounters = Get-Counter '\PhysicalDisk(*)\Avg. Disk sec/Read', '\PhysicalDisk(*)\Avg. Disk sec/Write' -ErrorAction SilentlyContinue
         if ($diskCounters) {
+            # Group by disk instance
+            $diskData = @{}
             foreach ($sample in $diskCounters.CounterSamples) {
                 $instanceName = $sample.InstanceName
                 if ($instanceName -eq '_total') { continue }
-                $latencyMs = [math]::Round($sample.CookedValue * 1000, 2)
+                if (-not $diskData.ContainsKey($instanceName)) { $diskData[$instanceName] = @{} }
                 $metricName = if ($sample.Path -match 'Read') { "Read" } else { "Write" }
-                $latColor = if ($latencyMs -gt 20) { "Error" } elseif ($latencyMs -gt 10) { "Warning" } else { "Success" }
-                Write-OutputColor "  Disk $instanceName $metricName Latency: ${latencyMs}ms" -color $latColor
+                $diskData[$instanceName][$metricName] = [math]::Round($sample.CookedValue * 1000, 2)
+            }
+
+            $degradedDisks = @()
+            foreach ($diskName in $diskData.Keys) {
+                $readMs = if ($diskData[$diskName].ContainsKey("Read")) { $diskData[$diskName]["Read"] } else { 0 }
+                $writeMs = if ($diskData[$diskName].ContainsKey("Write")) { $diskData[$diskName]["Write"] } else { 0 }
+                $readColor = if ($readMs -gt 20) { "Error" } elseif ($readMs -gt 10) { "Warning" } else { "Success" }
+                $writeColor = if ($writeMs -gt 20) { "Error" } elseif ($writeMs -gt 10) { "Warning" } else { "Success" }
+                Write-OutputColor "  Disk $diskName  Read: ${readMs}ms ($readColor)  Write: ${writeMs}ms ($writeColor)" -color "Info"
+                if ($readMs -gt 20 -or $writeMs -gt 20) {
+                    $degradedDisks += $diskName
+                    if ($writeMs -gt 20 -and $readMs -le 20) {
+                        Write-OutputColor "    ^ Write latency high — check for background scans or disk utilities" -color "Warning"
+                    }
+                }
+            }
+
+            if ($degradedDisks.Count -gt 0) {
+                Write-OutputColor "  Disk Performance: DEGRADED ($($degradedDisks.Count) disk(s) above threshold)" -color "Error"
+            } elseif (($diskData.Values | ForEach-Object { $_.Values } | Where-Object { $_ -gt 10 }).Count -gt 0) {
+                Write-OutputColor "  Disk Performance: FAIR (some latency above 10ms)" -color "Warning"
+            } else {
+                Write-OutputColor "  Disk Performance: GOOD (all latencies under 10ms)" -color "Success"
             }
         }
         else {
