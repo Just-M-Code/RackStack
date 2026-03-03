@@ -24,6 +24,13 @@ function Export-ServerConfiguration {
         }
     }
 
+    # Validate export path directory
+    $exportDir = Split-Path -Parent $exportPath
+    if ($exportDir -and -not (Test-Path -LiteralPath $exportDir)) {
+        Write-OutputColor "  Directory does not exist: $exportDir" -color "Error"
+        return
+    }
+
     Write-OutputColor "`nGathering configuration..." -color "Info"
 
     try {

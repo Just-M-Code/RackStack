@@ -284,8 +284,13 @@ function Invoke-SubnetSweep {
         } -ArgumentList $ip))
     }
 
-    Write-OutputColor "  Waiting for $($jobs.Count) pings to complete..." -color "Info"
-    $results = $jobs | Wait-Job -Timeout 30 | Receive-Job
+    Write-OutputColor "  Waiting for $(@($jobs).Count) pings to complete..." -color "Info"
+    $completedJobs = @($jobs | Wait-Job -Timeout 30)
+    $results = $completedJobs | Receive-Job
+    $timedOutJobs = @($jobs | Where-Object { $_.State -eq 'Running' })
+    if ($timedOutJobs.Count -gt 0) {
+        Write-OutputColor "  Warning: $($timedOutJobs.Count) ping(s) timed out" -color "Warning"
+    }
     $jobs | Remove-Job -Force
 
     $alive = @($results | Where-Object { $_.Alive } | Sort-Object { ($_.IP -split '\.') | ForEach-Object { [int]$_ } })
@@ -368,17 +373,22 @@ function Show-ActiveConnections {
     Write-OutputColor "" -color "Info"
 
     try {
-        $connections = Get-NetTCPConnection -State Established -ErrorAction SilentlyContinue |
+        $connections = @(Get-NetTCPConnection -State Established -ErrorAction SilentlyContinue |
             Where-Object { $_.RemoteAddress -ne '127.0.0.1' -and $_.RemoteAddress -ne '::1' } |
             Sort-Object RemoteAddress |
-            Select-Object -First 40
+            Select-Object -First 40)
 
         Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
         Write-OutputColor "  │$("  ACTIVE TCP CONNECTIONS (Established)".PadRight(72))│" -color "Info"
         Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
-        $header = "  Local".PadRight(26) + "Remote".PadRight(26) + "PID"
-        Write-MenuItem -Text $header -Color "Warning"
-        Write-OutputColor "  │$("  $('─' * 70)".PadRight(72))│" -color "Info"
+
+        if ($connections.Count -eq 0) {
+            Write-OutputColor "  │$("  No active remote connections found.".PadRight(72))│" -color "Warning"
+        } else {
+            $header = "  Local".PadRight(26) + "Remote".PadRight(26) + "PID"
+            Write-MenuItem -Text $header -Color "Warning"
+            Write-OutputColor "  │$("  $('─' * 70)".PadRight(72))│" -color "Info"
+        }
 
         foreach ($c in $connections) {
             $local = "$($c.LocalAddress):$($c.LocalPort)"
@@ -497,7 +507,12 @@ function Invoke-QuickPortScan {
         } -ArgumentList $target, $p.Port))
     }
 
-    $jobResults = $jobs | Wait-Job -Timeout 15 | Receive-Job
+    $completedJobs = @($jobs | Wait-Job -Timeout 15)
+    $jobResults = $completedJobs | Receive-Job
+    $timedOutJobs = @($jobs | Where-Object { $_.State -eq 'Running' })
+    if ($timedOutJobs.Count -gt 0) {
+        Write-OutputColor "  Warning: $($timedOutJobs.Count) port scan(s) timed out" -color "Warning"
+    }
     $jobs | Remove-Job -Force
 
     # Display results
@@ -531,16 +546,21 @@ function Show-ArpTable {
     Write-OutputColor "" -color "Info"
 
     try {
-        $arpEntries = Get-NetNeighbor -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+        $arpEntries = @(Get-NetNeighbor -AddressFamily IPv4 -ErrorAction SilentlyContinue |
             Where-Object { $_.State -ne 'Unreachable' -and $_.IPAddress -ne '255.255.255.255' } |
-            Sort-Object IPAddress
+            Sort-Object IPAddress)
 
         Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
         Write-OutputColor "  │$("  ARP TABLE (IPv4)".PadRight(72))│" -color "Info"
         Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
-        $header = "  IP Address".PadRight(22) + "MAC Address".PadRight(22) + "State".PadRight(14) + "IF"
-        Write-MenuItem -Text $header -Color "Warning"
-        Write-OutputColor "  │$("  $('─' * 70)".PadRight(72))│" -color "Info"
+
+        if ($arpEntries.Count -eq 0) {
+            Write-OutputColor "  │$("  No ARP entries found.".PadRight(72))│" -color "Warning"
+        } else {
+            $header = "  IP Address".PadRight(22) + "MAC Address".PadRight(22) + "State".PadRight(14) + "IF"
+            Write-MenuItem -Text $header -Color "Warning"
+            Write-OutputColor "  │$("  $('─' * 70)".PadRight(72))│" -color "Info"
+        }
 
         foreach ($entry in $arpEntries) {
             $mac = if ($entry.LinkLayerAddress) { $entry.LinkLayerAddress } else { "N/A" }

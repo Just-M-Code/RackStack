@@ -30,10 +30,19 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.52
+    1.9.53
 
 .LAST UPDATED
-    03/02/2026
+    03/03/2026
+
+.CHANGELOG v1.9.53
+    DIAGNOSTICS & SAFETY PATCH:
+    - IMPROVED: Network diagnostics timed-out job cleanup — subnet sweep and port scan now detect and report timed-out background jobs instead of leaving orphans
+    - IMPROVED: Active connections and ARP table wrapped in @() for PS 5.1 .Count safety, empty result fallback messages added
+    - NEW: Service Manager warns about dependent services before stop/restart — shows list of running dependents that will be affected
+    - NEW: Config export validates destination directory exists before gathering data
+    - NEW: VM Export disk space pre-check — warns when export destination has less free space than estimated VHD sizes
+    - NEW: VM Checkpoint and Export/Import menus pre-check Hyper-V installation before entering management screens
 
 .CHANGELOG v1.9.52
     DEPLOYMENT SAFETY PATCH:

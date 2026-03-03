@@ -105,6 +105,17 @@ function Show-ServiceManager {
                 $num = Read-Host "  Enter service number to stop"
                 if ($num -match '^\d+$' -and [int]$num -ge 1 -and [int]$num -le $serviceList.Count) {
                     $svc = $serviceList[[int]$num - 1]
+                    # Warn about dependent services
+                    $dependents = @(Get-Service -Name $svc.Name -DependentServices -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Running' })
+                    if ($dependents.Count -gt 0) {
+                        Write-OutputColor "" -color "Info"
+                        Write-OutputColor "  WARNING: $($dependents.Count) running service(s) depend on $($svc.DisplayName):" -color "Warning"
+                        foreach ($dep in $dependents) {
+                            Write-OutputColor "    - $($dep.DisplayName) ($($dep.Name))" -color "Warning"
+                        }
+                        Write-OutputColor "  These will also be stopped." -color "Warning"
+                        Write-OutputColor "" -color "Info"
+                    }
                     if (-not (Confirm-UserAction -Message "Stop service '$($svc.DisplayName)'?")) { continue }
                     try {
                         Stop-Service -Name $svc.Name -Force -ErrorAction Stop
@@ -120,6 +131,17 @@ function Show-ServiceManager {
                 $num = Read-Host "  Enter service number to restart"
                 if ($num -match '^\d+$' -and [int]$num -ge 1 -and [int]$num -le $serviceList.Count) {
                     $svc = $serviceList[[int]$num - 1]
+                    # Warn about dependent services
+                    $dependents = @(Get-Service -Name $svc.Name -DependentServices -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Running' })
+                    if ($dependents.Count -gt 0) {
+                        Write-OutputColor "" -color "Info"
+                        Write-OutputColor "  WARNING: $($dependents.Count) running service(s) depend on $($svc.DisplayName):" -color "Warning"
+                        foreach ($dep in $dependents) {
+                            Write-OutputColor "    - $($dep.DisplayName) ($($dep.Name))" -color "Warning"
+                        }
+                        Write-OutputColor "  These will also be restarted." -color "Warning"
+                        Write-OutputColor "" -color "Info"
+                    }
                     if (-not (Confirm-UserAction -Message "Restart service '$($svc.DisplayName)'?")) { continue }
                     try {
                         Restart-Service -Name $svc.Name -Force -ErrorAction Stop

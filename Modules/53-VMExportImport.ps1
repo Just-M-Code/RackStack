@@ -83,6 +83,23 @@ function Export-VMWizard {
         }
     }
 
+    # Disk space pre-check on export destination
+    try {
+        $exportDriveLetter = $exportPath.Substring(0, 1)
+        $exportVolume = Get-Volume -DriveLetter $exportDriveLetter -ErrorAction SilentlyContinue
+        if ($null -ne $exportVolume) {
+            $freeGB = [math]::Round($exportVolume.SizeRemaining / 1GB, 1)
+            # Estimate needed: sum of VHD file sizes
+            $vhdSizes = @($selectedVM.HardDrives | ForEach-Object { (Get-VHD $_.Path @vmParams -ErrorAction SilentlyContinue).FileSize })
+            $neededGB = if ($null -ne ($vhdSizes | Measure-Object -Sum).Sum) { [math]::Round(($vhdSizes | Measure-Object -Sum).Sum / 1GB, 1) } else { 0 }
+            if ($neededGB -gt 0 -and $freeGB -lt ($neededGB * 1.2)) {
+                Write-OutputColor "" -color "Info"
+                Write-OutputColor "  WARNING: Low disk space on ${exportDriveLetter}: drive!" -color "Warning"
+                Write-OutputColor "  Free: ${freeGB} GB | Estimated need: ~${neededGB} GB" -color "Warning"
+            }
+        }
+    } catch {}
+
     # Warning if VM is running
     if ($selectedVM.State -eq 'Running') {
         Write-OutputColor "" -color "Info"
@@ -290,6 +307,14 @@ function Show-VMExportImportMenu {
         [string]$ComputerName = $null,
         [System.Management.Automation.PSCredential]$Credential = $null
     )
+
+    # Pre-check: Hyper-V must be installed
+    if (-not $ComputerName -and -not (Test-HyperVInstalled)) {
+        Write-OutputColor "" -color "Info"
+        Write-OutputColor "  Hyper-V is not installed on this host." -color "Error"
+        Write-OutputColor "  Install Hyper-V from Roles & Features before exporting/importing VMs." -color "Warning"
+        return
+    }
 
     while ($true) {
         Clear-Host

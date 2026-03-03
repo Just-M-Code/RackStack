@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.9.53
+
+- **Enhancement:** Network diagnostics timed-out job cleanup — subnet ping sweep and quick port scan now detect timed-out background jobs, report how many timed out, and force-remove them instead of leaving orphaned jobs in the PowerShell job queue (58-NetworkDiagnostics).
+- **Enhancement:** Active connections and ARP table results wrapped in `@()` for PS 5.1 `.Count` safety, with empty-result fallback messages when no connections or ARP entries are found (58-NetworkDiagnostics).
+- **New Feature:** Service Manager warns about dependent services before stop or restart — displays a list of running services that depend on the target service and will also be affected by the operation (30-ServiceManager).
+- **New Feature:** Configuration export validates that the destination directory exists before spending time gathering system information — prevents silent failure or export to wrong location (45-ConfigExport).
+- **New Feature:** VM Export disk space pre-check — estimates required space from VHD file sizes and warns when the export destination drive has insufficient free space (53-VMExportImport).
+- **New Feature:** VM Checkpoint Management and VM Export/Import menus pre-check Hyper-V installation before entering management screens — shows clear error instead of cryptic cmdlet failures (52-VMCheckpoints, 53-VMExportImport).
+- 63 modules, 1854 tests
+
 ## v1.9.52
 
 - **Enhancement:** Offline VHD registry hive unload with retry and verification — detects failed unloads, forces garbage collection, retries after delay, and shows manual fix command if hive remains locked. Prevents VHD lock that blocks VM boot (43-OfflineVHD).

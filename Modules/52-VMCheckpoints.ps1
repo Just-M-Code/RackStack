@@ -397,6 +397,14 @@ function Show-VMCheckpointManagement {
         [System.Management.Automation.PSCredential]$Credential = $null
     )
 
+    # Pre-check: Hyper-V must be installed
+    if (-not $ComputerName -and -not (Test-HyperVInstalled)) {
+        Write-OutputColor "" -color "Info"
+        Write-OutputColor "  Hyper-V is not installed on this host." -color "Error"
+        Write-OutputColor "  Install Hyper-V from Roles & Features before managing checkpoints." -color "Warning"
+        return
+    }
+
     while ($true) {
         Clear-Host
         Write-OutputColor "" -color "Info"
