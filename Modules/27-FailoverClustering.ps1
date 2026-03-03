@@ -212,6 +212,28 @@ function New-ClusterWizard {
         return
     }
 
+    # Pre-check: verify node reachability
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  Validating node connectivity..." -color "Info"
+    $unreachableNodes = @()
+    foreach ($node in $nodes) {
+        $reachable = Test-Connection -ComputerName $node -Count 1 -Quiet -ErrorAction SilentlyContinue
+        if ($reachable) {
+            Write-OutputColor "    $node - reachable" -color "Success"
+        }
+        else {
+            Write-OutputColor "    $node - NOT reachable" -color "Error"
+            $unreachableNodes += $node
+        }
+    }
+    if ($unreachableNodes.Count -gt 0) {
+        Write-OutputColor "" -color "Info"
+        Write-OutputColor "  Warning: $($unreachableNodes.Count) node(s) unreachable. Cluster creation will likely fail." -color "Critical"
+        if (-not (Confirm-UserAction -Message "Continue anyway?")) {
+            return
+        }
+    }
+
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
     Write-OutputColor "  │$("  CLUSTER SUMMARY".PadRight(72))│" -color "Info"
@@ -738,6 +760,16 @@ function Set-ClusterQuorum {
         "3" {
             Write-OutputColor "" -color "Info"
             $sharePath = Read-Host "  Enter file share path (e.g., \\server\witness)"
+            $navResult = Test-NavigationCommand -UserInput $sharePath
+            if ($navResult.ShouldReturn) { break }
+            if ([string]::IsNullOrWhiteSpace($sharePath)) {
+                Write-OutputColor "  No path entered." -color "Error"
+                break
+            }
+            if ($sharePath -notmatch '^\\\\[^\\]+\\[^\\]+') {
+                Write-OutputColor "  Invalid UNC path. Must be in format: \\server\share" -color "Error"
+                break
+            }
             if ($sharePath) {
                 try {
                     Set-ClusterQuorum -NodeAndFileShareMajority $sharePath -ErrorAction Stop

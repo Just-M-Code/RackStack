@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.9.50
+
+- **Enhancement:** Storage Replica installation now uses `Install-WindowsFeatureWithTimeout` for progress feedback, timeout protection, and detailed error reporting — matching the pattern used by Hyper-V, MPIO, and Failover Clustering installs (33-StorageReplica).
+- **Enhancement:** Storage Replica partnership creation validates all required fields (server names, volumes, replication group) and enforces drive letter format (e.g., `E:`) before attempting to create the partnership (33-StorageReplica).
+- **New Feature:** IP configuration gateway subnet validation — calculates and compares network addresses to warn when the gateway is in a different subnet than the configured IP address, catching the most common IP misconfiguration (07-IPConfiguration).
+- **Enhancement:** DNS configuration detects duplicate primary/secondary DNS entries and skips the duplicate with a warning instead of setting both (07-IPConfiguration).
+- **Enhancement:** Adapter rename now trims leading/trailing whitespace and enforces a 64-character name length limit to prevent truncation issues (07-IPConfiguration).
+- **New Feature:** Cluster creation pre-checks node reachability via single-ping test before attempting `New-Cluster`, giving immediate feedback on unreachable nodes (27-FailoverClustering).
+- **Enhancement:** Cluster quorum file share witness path validates UNC format (`\\server\share`) and adds navigation command support (27-FailoverClustering).
+- 63 modules, 1854 tests
+
 ## v1.9.49
 
 - **Enhancement:** Feature install job error extraction — `Install-WindowsFeatureWithTimeout` now captures child job errors and displays specific failure details instead of generic "may not have completed successfully" messages. Affects Hyper-V, MPIO, and Failover Clustering installs (05-SystemCheck).

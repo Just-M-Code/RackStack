@@ -37,11 +37,23 @@ function Show-StorageReplicaManagement {
             { $_ -eq "I" -or $_ -eq "i" } {
                 if (-not (Confirm-UserAction -Message "Install Storage Replica feature?")) { return }
                 try {
-                    Write-OutputColor "  Installing Storage Replica..." -color "Info"
-                    Install-WindowsFeature -Name Storage-Replica -IncludeManagementTools -ErrorAction Stop
-                    Write-OutputColor "  Storage Replica installed. Reboot required." -color "Success"
-                    $global:RebootNeeded = $true
-                    Add-SessionChange -Category "System" -Description "Installed Storage Replica"
+                    Write-OutputColor "  Installing Storage Replica... This may take several minutes." -color "Info"
+                    $installResult = Install-WindowsFeatureWithTimeout -FeatureName "Storage-Replica" -DisplayName "Storage Replica" -IncludeManagementTools
+                    if ($installResult.TimedOut) {
+                        Write-OutputColor "  Installation timed out." -color "Error"
+                        Add-SessionChange -Category "System" -Description "Storage Replica installation timed out"
+                    }
+                    elseif ($installResult.Success) {
+                        Write-OutputColor "  Storage Replica installed. Reboot required." -color "Success"
+                        $global:RebootNeeded = $true
+                        Add-SessionChange -Category "System" -Description "Installed Storage Replica"
+                        Clear-MenuCache
+                    }
+                    else {
+                        Write-OutputColor "  Storage Replica installation may not have completed successfully." -color "Error"
+                        if ($installResult.Error) { Write-OutputColor "  Details: $($installResult.Error.Trim())" -color "Error" }
+                        Add-SessionChange -Category "System" -Description "Storage Replica installation failed"
+                    }
                 }
                 catch {
                     Write-OutputColor "  Failed: $_" -color "Error"
@@ -113,6 +125,23 @@ function Show-StorageReplicaManagement {
                 $destVol = Read-Host "  Destination data volume (e.g., E:)"
                 $destLog = Read-Host "  Destination log volume (e.g., F:)"
                 $rgName = Read-Host "  Replication group name"
+
+                # Validate all required fields
+                if ([string]::IsNullOrWhiteSpace($srcServer) -or [string]::IsNullOrWhiteSpace($destServer) -or
+                    [string]::IsNullOrWhiteSpace($srcVol) -or [string]::IsNullOrWhiteSpace($destVol) -or
+                    [string]::IsNullOrWhiteSpace($srcLog) -or [string]::IsNullOrWhiteSpace($destLog) -or
+                    [string]::IsNullOrWhiteSpace($rgName)) {
+                    Write-OutputColor "  All fields are required. Partnership creation cancelled." -color "Error"
+                    break
+                }
+
+                # Validate volume format (drive letter with colon)
+                foreach ($vol in @($srcVol, $destVol, $srcLog, $destLog)) {
+                    if ($vol -notmatch '^[A-Za-z]:$') {
+                        Write-OutputColor "  Invalid volume format '$vol'. Expected format: E:" -color "Error"
+                        break
+                    }
+                }
 
                 Write-OutputColor "" -color "Info"
                 Write-OutputColor "  [1] Synchronous (zero data loss)" -color "Info"

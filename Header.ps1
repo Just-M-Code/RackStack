@@ -30,10 +30,20 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.49
+    1.9.50
 
 .LAST UPDATED
     03/02/2026
+
+.CHANGELOG v1.9.50
+    VALIDATION & RELIABILITY PATCH:
+    - IMPROVED: Storage Replica uses Install-WindowsFeatureWithTimeout for progress feedback, timeout protection, and error details
+    - IMPROVED: Storage Replica partnership creation validates all required fields and volume format (drive letter with colon)
+    - NEW: IP configuration gateway subnet validation — warns when gateway is in a different subnet than the configured IP
+    - IMPROVED: DNS configuration detects and skips duplicate primary/secondary entries
+    - IMPROVED: Adapter rename trims whitespace and enforces 64-character name length limit
+    - NEW: Cluster creation pre-checks node reachability before attempting New-Cluster
+    - IMPROVED: Cluster quorum file share witness validates UNC path format and adds navigation support
 
 .CHANGELOG v1.9.49
     INFRASTRUCTURE HARDENING PATCH:

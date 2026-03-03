@@ -165,6 +165,27 @@ function Set-VMIPAddress {
         return
     }
 
+    # Validate gateway is in the same subnet as the configured IP
+    try {
+        $ipBytes = ([System.Net.IPAddress]::Parse($ipAddress)).GetAddressBytes()
+        $gwBytes = ([System.Net.IPAddress]::Parse($gateway)).GetAddressBytes()
+        # Build subnet mask from CIDR
+        $maskInt = [uint32]([math]::Pow(2, 32) - [math]::Pow(2, 32 - $cidr))
+        $maskBytes = [System.BitConverter]::GetBytes($maskInt)
+        [Array]::Reverse($maskBytes)
+        $ipSubnet = for ($idx = 0; $idx -lt 4; $idx++) { $ipBytes[$idx] -band $maskBytes[$idx] }
+        $gwSubnet = for ($idx = 0; $idx -lt 4; $idx++) { $gwBytes[$idx] -band $maskBytes[$idx] }
+        $subnetMatch = ($ipSubnet[0] -eq $gwSubnet[0]) -and ($ipSubnet[1] -eq $gwSubnet[1]) -and ($ipSubnet[2] -eq $gwSubnet[2]) -and ($ipSubnet[3] -eq $gwSubnet[3])
+        if (-not $subnetMatch) {
+            Write-OutputColor "Warning: Gateway $gateway is not in the same subnet as $ipAddress/$cidr" -color "Critical"
+            Write-OutputColor "  IP network:      $($ipSubnet -join '.')" -color "Warning"
+            Write-OutputColor "  Gateway network:  $($gwSubnet -join '.')" -color "Warning"
+            if (-not (Confirm-UserAction -Message "Continue with this gateway anyway?")) {
+                return
+            }
+        }
+    } catch {}
+
     # Confirm before applying
     Write-OutputColor "`nConfiguration to apply:" -color "Info"
     Write-OutputColor "  Adapter: $selectedAdapterName" -color "Info"
@@ -344,7 +365,12 @@ function Set-VMDNSAddress {
 
                 if (-not [string]::IsNullOrWhiteSpace($dns2)) {
                     if (Test-ValidIPAddress -IPAddress $dns2) {
-                        $dnsServers += $dns2
+                        if ($dns2 -eq $dns1) {
+                            Write-OutputColor "Secondary DNS is the same as primary. Skipping duplicate." -color "Warning"
+                        }
+                        else {
+                            $dnsServers += $dns2
+                        }
                     }
                     else {
                         Write-OutputColor "Invalid secondary DNS. Continuing with primary only." -color "Warning"
@@ -485,8 +511,15 @@ function Rename-NetworkAdapter {
         return
     }
 
+    $newName = $newName.Trim()
     if ([string]::IsNullOrWhiteSpace($newName)) {
         Write-OutputColor "No name entered. Operation cancelled." -color "Warning"
+        return
+    }
+
+    # Validate name length
+    if ($newName.Length -gt 64) {
+        Write-OutputColor "Adapter name is too long (max 64 characters, entered $($newName.Length))." -color "Error"
         return
     }
 
