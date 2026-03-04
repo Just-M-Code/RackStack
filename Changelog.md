@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.16.2
+
+- **Bug Fix:** Drift detection baseline comparison validates user input before integer cast — previously, non-numeric input to the baseline number prompts was cast via `-as [int]` which returns `$null`, then subtracted by 1 producing `-1`, silently failing the range check without user feedback. Now validates with regex and shows an error message (45-ConfigExport).
+- 63 modules, 1854 tests
+
 ## v1.16.1
 
 - **Bug Fix:** Driver Health Check initializes `$allDevices` before `try/catch` — if `Get-CimInstance` failed, references outside the try block would hit an uninitialized variable (35-Utilities).

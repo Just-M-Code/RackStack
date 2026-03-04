@@ -30,10 +30,14 @@
     7h3 4b1d3r
 
 .VERSION
-    1.16.1
+    1.16.2
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.16.2
+    DRIFT BASELINE INPUT VALIDATION:
+    - FIX: Drift detection baseline comparison validates user input before integer cast — previously, non-numeric input to the baseline number prompts was cast via -as [int] which returns $null, then subtracted by 1 producing -1, silently failing the range check without user feedback. Now validates with regex and shows an error message (45-ConfigExport)
 
 .CHANGELOG v1.16.1
     VARIABLE INITIALIZATION FIXES:

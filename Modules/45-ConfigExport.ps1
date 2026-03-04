@@ -1421,8 +1421,13 @@ function Show-DriftDetectionMenu {
                 Write-OutputColor "" -color "Info"
                 $first = Read-Host "  First baseline number"
                 $second = Read-Host "  Second baseline number"
-                $fi = ($first -as [int]) - 1
-                $si = ($second -as [int]) - 1
+                if ($first -notmatch '^\d+$' -or $second -notmatch '^\d+$') {
+                    Write-OutputColor "  Invalid input — enter numeric baseline numbers." -color "Error"
+                    Write-PressEnter
+                    continue
+                }
+                $fi = [int]$first - 1
+                $si = [int]$second - 1
                 if ($fi -ge 0 -and $fi -lt $baselines.Count -and $si -ge 0 -and $si -lt $baselines.Count) {
                     $comparison = Compare-DriftHistory -Baseline1Path $baselines[$fi].Path -Baseline2Path $baselines[$si].Path
                     if ($comparison) {
