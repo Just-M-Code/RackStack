@@ -58,6 +58,8 @@ function Show-OperationsMenu {
         Write-MenuItem "[20] VSS Writer Status"
         Write-MenuItem "[21] Event Log Alerts (24h)"
         Write-MenuItem "[22] Uptime & Reboot History"
+        Write-MenuItem "[23] Driver Health Check"
+        Write-MenuItem "[24] Disk Space Analyzer"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
 
@@ -167,6 +169,14 @@ function Show-OperationsMenu {
             }
             "22" {
                 Show-UptimeRebootHistory
+                Write-PressEnter
+            }
+            "23" {
+                Show-DriverHealthCheck
+                Write-PressEnter
+            }
+            "24" {
+                Show-DiskSpaceAnalyzer
                 Write-PressEnter
             }
             "b" { return }

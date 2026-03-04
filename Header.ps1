@@ -30,10 +30,15 @@
     7h3 4b1d3r
 
 .VERSION
-    1.14.0
+    1.15.0
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.15.0
+    DRIVER HEALTH & DISK SPACE ANALYZER:
+    - NEW: Driver Health Check — scans all PnP devices, flags problem devices with error descriptions, lists unsigned drivers, shows oldest third-party drivers sorted by date with version info. Accessible from Operations menu option [23] (35-Utilities, 56-OperationsMenu)
+    - NEW: Disk Space Analyzer — shows all volumes with visual usage bars and color-coded thresholds (85%/95%), scans 8 common space consumers on the system drive (Windows Temp, Update Cache, Installer Cache, WinSxS, IIS Logs, etc.) sorted by size. Accessible from Operations menu option [24] (35-Utilities, 56-OperationsMenu)
 
 .CHANGELOG v1.14.0
     EVENT LOG ALERTS & UPTIME DASHBOARD:

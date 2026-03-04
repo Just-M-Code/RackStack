@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.15.0
+
+- **New Feature:** Driver Health Check — scans all PnP devices for problem devices with error descriptions (not configured, driver corrupt, cannot start, disabled, driver missing, etc.), lists unsigned drivers, shows oldest third-party drivers sorted by date with version info. Color-coded warnings for drivers older than 3 years. Accessible from Operations > option [23] (35-Utilities, 56-OperationsMenu).
+- **New Feature:** Disk Space Analyzer — displays all fixed volumes with visual usage bars and color-coded thresholds (85% yellow, 95% red), then scans 8 common space consumers on the system drive (Windows Temp, Windows Update Cache, Installer Cache, Windows Logs, WinSxS, User Temp, IIS Logs, Error Reports) sorted by size. Accessible from Operations > option [24] (35-Utilities, 56-OperationsMenu).
+- 63 modules, 1854 tests
+
 ## v1.14.0
 
 - **New Feature:** Event Log Alert Summary — scans System and Application event logs for critical, error, and warning events in the last 24 hours. Shows summary counts, groups events by source with counts and age, and lists the 10 most recent critical/error events with timestamps. Accessible from Operations > option [21] (35-Utilities, 56-OperationsMenu).

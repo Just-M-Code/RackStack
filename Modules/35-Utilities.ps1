@@ -1524,4 +1524,192 @@ function Show-UptimeRebootHistory {
 
     Add-SessionChange -Category "System" -Description "Uptime check: $uptimeStr, $($reboots.Count) reboots in history ($unexpectedCount unexpected)"
 }
+
+# Driver Health Check
+function Show-DriverHealthCheck {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                       DRIVER HEALTH CHECK").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    Write-OutputColor "  Scanning device drivers..." -color "Info"
+
+    # Get problem devices (status != OK)
+    $problemDevices = @()
+    try {
+        $allDevices = @(Get-CimInstance Win32_PnPEntity -ErrorAction Stop)
+        $problemDevices = @($allDevices | Where-Object { $_.ConfigManagerErrorCode -ne 0 })
+    } catch {
+        Write-OutputColor "  Could not query device manager: $_" -color "Error"
+        return
+    }
+
+    # Get third-party drivers (non-Microsoft)
+    $thirdPartyDrivers = @()
+    try {
+        $thirdPartyDrivers = @(Get-CimInstance Win32_PnPSignedDriver -ErrorAction Stop |
+            Where-Object { $null -ne $_.DriverProviderName -and $_.DriverProviderName -ne "Microsoft" -and $_.DriverProviderName -ne "" })
+    } catch {
+        Write-OutputColor "  Could not query signed drivers: $_" -color "Warning"
+    }
+
+    # Get unsigned drivers
+    $unsignedDrivers = @()
+    try {
+        $unsignedDrivers = @(Get-CimInstance Win32_PnPSignedDriver -ErrorAction Stop |
+            Where-Object { $_.IsSigned -eq $false })
+    } catch {
+        Write-OutputColor "  Could not check driver signatures: $_" -color "Warning"
+    }
+
+    # Summary
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  SUMMARY".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  Total Devices:         $($allDevices.Count)".PadRight(72))│" -color "Info"
+    $probColor = if ($problemDevices.Count -gt 0) { "Error" } else { "Success" }
+    Write-OutputColor "  │$("  Problem Devices:       $($problemDevices.Count)".PadRight(72))│" -color $probColor
+    Write-OutputColor "  │$("  Third-Party Drivers:   $($thirdPartyDrivers.Count)".PadRight(72))│" -color "Info"
+    $unsignedColor = if ($unsignedDrivers.Count -gt 0) { "Warning" } else { "Success" }
+    Write-OutputColor "  │$("  Unsigned Drivers:      $($unsignedDrivers.Count)".PadRight(72))│" -color $unsignedColor
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Problem devices
+    if ($problemDevices.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Error"
+        Write-OutputColor "  │$("  PROBLEM DEVICES ($($problemDevices.Count))".PadRight(72))│" -color "Error"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Error"
+        foreach ($d in $problemDevices) {
+            $devName = if ($d.Name) { $d.Name } else { "Unknown Device" }
+            if ($devName.Length -gt 50) { $devName = $devName.Substring(0, 47) + "..." }
+            $errDesc = switch ($d.ConfigManagerErrorCode) {
+                1 { "Not configured" } 3 { "Driver corrupt" } 10 { "Cannot start" }
+                12 { "Resource conflict" } 22 { "Disabled" } 28 { "Driver missing" }
+                31 { "Not working" } default { "Error $($d.ConfigManagerErrorCode)" }
+            }
+            $lineText = "  $($devName.PadRight(52)) $errDesc"
+            if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+            Write-OutputColor "  │$($lineText.PadRight(72))│" -color "Error"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Error"
+        Write-OutputColor "" -color "Info"
+    }
+
+    # Third-party drivers (oldest first, top 15)
+    if ($thirdPartyDrivers.Count -gt 0) {
+        $sorted = @($thirdPartyDrivers | Where-Object { $null -ne $_.DriverDate } | Sort-Object DriverDate | Select-Object -First 15)
+        if ($sorted.Count -gt 0) {
+            Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+            Write-OutputColor "  │$("  OLDEST THIRD-PARTY DRIVERS (by date)".PadRight(72))│" -color "Info"
+            Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+            foreach ($drv in $sorted) {
+                $drvName = if ($drv.DeviceName) { $drv.DeviceName } else { $drv.FriendlyName }
+                if ([string]::IsNullOrEmpty($drvName)) { $drvName = "Unknown" }
+                if ($drvName.Length -gt 35) { $drvName = $drvName.Substring(0, 32) + "..." }
+                $dateStr = if ($drv.DriverDate) { $drv.DriverDate.ToString("yyyy-MM-dd") } else { "Unknown" }
+                $ver = if ($drv.DriverVersion) { $drv.DriverVersion } else { "N/A" }
+                if ($ver.Length -gt 18) { $ver = $ver.Substring(0, 15) + "..." }
+                $lineText = "  $($drvName.PadRight(37)) $dateStr  $ver"
+                if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+                $ageYears = ((Get-Date) - $drv.DriverDate).TotalDays / 365
+                $color = if ($ageYears -gt 3) { "Warning" } else { "Info" }
+                Write-OutputColor "  │$($lineText.PadRight(72))│" -color $color
+            }
+            Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+        }
+    }
+
+    Add-SessionChange -Category "System" -Description "Driver health check: $($problemDevices.Count) problems, $($thirdPartyDrivers.Count) third-party, $($unsignedDrivers.Count) unsigned of $($allDevices.Count) devices"
+}
+
+# Disk Space Analyzer
+function Show-DiskSpaceAnalyzer {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                      DISK SPACE ANALYZER").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Show all volumes
+    try {
+        $volumes = @(Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction Stop)
+    } catch {
+        Write-OutputColor "  Could not query disk volumes: $_" -color "Error"
+        return
+    }
+
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  VOLUME OVERVIEW".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    foreach ($vol in $volumes) {
+        $totalGB = [math]::Round($vol.Size / 1GB, 1)
+        $freeGB = [math]::Round($vol.FreeSpace / 1GB, 1)
+        $usedGB = [math]::Round(($vol.Size - $vol.FreeSpace) / 1GB, 1)
+        $pctUsed = if ($vol.Size -gt 0) { [math]::Round(($vol.Size - $vol.FreeSpace) / $vol.Size * 100, 0) } else { 0 }
+        $label = if ($vol.VolumeName) { $vol.VolumeName } else { "Local Disk" }
+        if ($label.Length -gt 15) { $label = $label.Substring(0, 12) + "..." }
+        $barLen = [math]::Min([math]::Round($pctUsed / 5), 20)
+        $bar = ("█" * $barLen) + ("░" * (20 - $barLen))
+        $lineText = "  $($vol.DeviceID) $($label.PadRight(15)) $bar ${pctUsed}% (${freeGB}GB free/${totalGB}GB)"
+        if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+        $color = if ($pctUsed -ge 95) { "Error" } elseif ($pctUsed -ge 85) { "Warning" } else { "Success" }
+        Write-OutputColor "  │$($lineText.PadRight(72))│" -color $color
+    }
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Scan common space hogs on system drive
+    $sysDrive = $env:SystemDrive
+    Write-OutputColor "  Scanning common space consumers on $sysDrive ..." -color "Info"
+
+    $knownPaths = @(
+        @{ Path = "$sysDrive\Windows\Temp"; Label = "Windows Temp" }
+        @{ Path = "$sysDrive\Windows\SoftwareDistribution"; Label = "Windows Update Cache" }
+        @{ Path = "$sysDrive\Windows\Installer"; Label = "Windows Installer Cache" }
+        @{ Path = "$sysDrive\Windows\Logs"; Label = "Windows Logs" }
+        @{ Path = "$sysDrive\Windows\WinSxS"; Label = "WinSxS (Component Store)" }
+        @{ Path = "$env:TEMP"; Label = "User Temp" }
+        @{ Path = "$sysDrive\inetpub\logs"; Label = "IIS Logs" }
+        @{ Path = "$sysDrive\ProgramData\Microsoft\Windows\WER"; Label = "Error Reports" }
+    )
+
+    $results = @()
+    foreach ($item in $knownPaths) {
+        if (Test-Path $item.Path) {
+            try {
+                $sizeBytes = (Get-ChildItem -Path $item.Path -Recurse -Force -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+                if ($null -eq $sizeBytes) { $sizeBytes = 0 }
+                $results += [PSCustomObject]@{ Label = $item.Label; Path = $item.Path; SizeGB = [math]::Round($sizeBytes / 1GB, 2) }
+            } catch {
+                $results += [PSCustomObject]@{ Label = $item.Label; Path = $item.Path; SizeGB = 0 }
+            }
+        }
+    }
+
+    $results = @($results | Sort-Object SizeGB -Descending)
+
+    if ($results.Count -gt 0) {
+        Write-OutputColor "" -color "Info"
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  SPACE CONSUMERS ON $sysDrive".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        foreach ($r in $results) {
+            $sizeStr = if ($r.SizeGB -ge 1) { "$($r.SizeGB) GB" } else { "$([math]::Round($r.SizeGB * 1024, 0)) MB" }
+            $lineText = "  $($r.Label.PadRight(30)) $($sizeStr.PadLeft(10))   $($r.Path)"
+            if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+            $color = if ($r.SizeGB -ge 5) { "Warning" } else { "Info" }
+            Write-OutputColor "  │$($lineText.PadRight(72))│" -color $color
+        }
+        $totalScanGB = [math]::Round(($results | Measure-Object -Property SizeGB -Sum).Sum, 2)
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        Write-OutputColor "  │$("  Total scanned:                    $totalScanGB GB".PadRight(72))│" -color "Info"
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    }
+
+    Add-SessionChange -Category "System" -Description "Disk space analysis: $($volumes.Count) volumes scanned, ${totalScanGB}GB in known consumers on $sysDrive"
+}
 #endregion
