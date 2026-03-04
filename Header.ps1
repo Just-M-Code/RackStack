@@ -30,10 +30,19 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.64
+    1.9.65
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.65
+    EXPORTS, SESSION & LICENSING:
+    - NEW: Config export includes key services section (WinRM, Defender, Cluster, DNS, etc.) with status and startup type
+    - NEW: Config export includes security baseline (Secure Boot, UAC, Defender status, signature date)
+    - NEW: Config export shows RDP port number in remote access section
+    - NEW: Session summary offers JSON export for automation — hostname, runtime, and all changes in structured format
+    - FIX: Session summary reboot logic now correctly distinguishes between session-only, Windows-only, and combined pending reboots
+    - FIX: License activation detection uses case-insensitive regex — locale variations of slmgr output (e.g., "Successfully" vs "successfully") no longer cause false failures
 
 .CHANGELOG v1.9.64
     ACCOUNT AUDIT, DEPENDENCIES & ERROR HANDLING:

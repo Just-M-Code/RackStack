@@ -135,7 +135,7 @@ function Enable-ServerActivation {
         $ipkResult = cscript.exe //NoLogo C:\Windows\System32\slmgr.vbs /ipk "$productKey" 2>&1
         $ipkText = $ipkResult -join ' '
 
-        if ($ipkText -notmatch "successfully") {
+        if ($ipkText -notmatch "(?i)success") {
             Write-OutputColor "  Product key installation failed." -color "Error"
             # Parse common error codes for user-friendly messages
             if ($ipkText -match "0xC004F050") {
@@ -156,7 +156,7 @@ function Enable-ServerActivation {
         $activateResult = cscript.exe //NoLogo C:\Windows\System32\slmgr.vbs /ato 2>&1
         $atoText = $activateResult -join ' '
 
-        if ($atoText -match "successfully") {
+        if ($atoText -match "(?i)success") {
             Write-OutputColor "  Server activated successfully!" -color "Success"
         }
         else {

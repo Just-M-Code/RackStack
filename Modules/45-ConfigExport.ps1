@@ -130,7 +130,23 @@ function Export-ServerConfiguration {
         # Remote Access
         $config += "### REMOTE ACCESS ###"
         $config += "RDP Status:    $(Get-RDPState)"
+        try {
+            $rdpPort = (Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name PortNumber -ErrorAction Stop).PortNumber
+            $config += "RDP Port:      $rdpPort"
+        } catch {}
         $config += "WinRM Status:  $(Get-WinRMState)"
+        $config += ""
+
+        # Key Services
+        $config += "### KEY SERVICES ###"
+        $servicesToCheck = @('wuauserv', 'WinRM', 'vmms', 'ClusSvc', 'MSiSCSI', 'W32Time', 'WinDefend', 'Spooler', 'DNS', 'NTDS')
+        foreach ($svcName in $servicesToCheck) {
+            $svc = Get-Service -Name $svcName -ErrorAction SilentlyContinue
+            if ($svc) {
+                $startTag = switch ($svc.StartType) { "Automatic" { "Auto" } "Manual" { "Manual" } "Disabled" { "Disabled" } default { $svc.StartType } }
+                $config += "  $($svc.DisplayName): $($svc.Status) [$startTag]"
+            }
+        }
         $config += ""
 
         # Firewall Status
@@ -188,6 +204,32 @@ function Export-ServerConfiguration {
         $builtInAdmin = Get-LocalUser -Name "Administrator" -ErrorAction SilentlyContinue
         if ($builtInAdmin) {
             $config += "  Built-in Administrator: $(if ($builtInAdmin.Enabled) { 'Enabled' } else { 'Disabled' })"
+        }
+        $config += ""
+
+        # Security Baseline
+        $config += "### SECURITY BASELINE ###"
+        try {
+            $secureBoot = Confirm-SecureBootUEFI -ErrorAction Stop
+            $config += "Secure Boot:   $(if ($secureBoot) { 'Enabled' } else { 'Disabled' })"
+        } catch {
+            $config += "Secure Boot:   N/A (BIOS or check unavailable)"
+        }
+        try {
+            $uacKey = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name EnableLUA -ErrorAction Stop
+            $config += "UAC:           $(if ($uacKey.EnableLUA -eq 1) { 'Enabled' } else { 'Disabled' })"
+        } catch {
+            $config += "UAC:           Unknown"
+        }
+        try {
+            $defender = Get-MpComputerStatus -ErrorAction Stop
+            $config += "Defender:      $(if ($defender.AntivirusEnabled) { 'Enabled' } else { 'Disabled' })"
+            $config += "Real-time:     $(if ($defender.RealTimeProtectionEnabled) { 'Enabled' } else { 'Disabled' })"
+            if ($null -ne $defender.AntivirusSignatureLastUpdated) {
+                $config += "Signatures:    $($defender.AntivirusSignatureLastUpdated.ToString('yyyy-MM-dd HH:mm'))"
+            }
+        } catch {
+            $config += "Defender:      Unavailable"
         }
         $config += ""
 

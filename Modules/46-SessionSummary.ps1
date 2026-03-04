@@ -56,6 +56,26 @@ function Show-SessionSummary {
             catch {
                 Write-OutputColor "  Failed to export: $_" -color "Error"
             }
+
+            # Offer JSON export for automation
+            if (Confirm-UserAction -Message "Also export as JSON (for automation)?") {
+                $jsonPath = "$env:USERPROFILE\Desktop\$($env:COMPUTERNAME)_Session_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
+                try {
+                    @{
+                        Hostname = $env:COMPUTERNAME
+                        SessionStart = $script:ScriptStartTime.ToString("yyyy-MM-ddTHH:mm:ss")
+                        Runtime = $runtimeStr
+                        ChangeCount = $script:SessionChanges.Count
+                        Changes = @($script:SessionChanges | ForEach-Object {
+                            @{ Timestamp = $_.Timestamp; Category = $_.Category; Description = $_.Description }
+                        })
+                    } | ConvertTo-Json -Depth 5 | Out-File -FilePath $jsonPath -Encoding UTF8 -Force
+                    Write-OutputColor "  JSON export: $jsonPath" -color "Success"
+                }
+                catch {
+                    Write-OutputColor "  Failed to export JSON: $_" -color "Error"
+                }
+            }
         }
     }
 
@@ -64,11 +84,12 @@ function Show-SessionSummary {
     # Check both our flag AND Windows pending reboot
     $windowsRebootPending = Test-RebootPending
     if ($global:RebootNeeded -or $windowsRebootPending) {
-        if ($windowsRebootPending -and -not $global:RebootNeeded) {
+        if ($global:RebootNeeded -and $windowsRebootPending) {
+            Write-OutputColor "[!] Reboot required (this session + Windows pending reboot)." -color "Warning"
+        } elseif ($windowsRebootPending) {
             Write-OutputColor "[!] Windows has a pending reboot (from previous changes)." -color "Warning"
-        }
-        else {
-            Write-OutputColor "[!] A reboot is required to apply changes." -color "Warning"
+        } else {
+            Write-OutputColor "[!] A reboot is required to apply changes from this session." -color "Warning"
         }
     }
 }

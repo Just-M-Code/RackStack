@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.9.65
+
+- **New Feature:** Config export now includes a key services section — shows status and startup type for WinRM, Defender, Cluster Service, DNS, iSCSI Initiator, Windows Update, and other critical services (45-ConfigExport).
+- **New Feature:** Config export now includes a security baseline section — reports Secure Boot, UAC, Windows Defender status, real-time protection, and signature update date (45-ConfigExport).
+- **New Feature:** Config export now includes the RDP listening port in the remote access section — catches non-standard port configurations (45-ConfigExport).
+- **New Feature:** Session summary now offers a JSON export option after the text export — produces a structured file with hostname, runtime, change count, and all changes with timestamps for automation and scripting (46-SessionSummary).
+- **Bug Fix:** Session summary reboot notification now correctly distinguishes three states — "this session only" (from RackStack changes), "Windows pending" (from previous changes), and "both" (combined). Previously, when both flags were true, only the generic "reboot required" message was shown (46-SessionSummary).
+- **Bug Fix:** License activation success detection uses case-insensitive regex `(?i)success` — previously, the literal string match `"successfully"` failed on non-English locales or Windows versions that output different casing from `slmgr.vbs`, causing valid activations to be reported as failed (21-Licensing).
+- 63 modules, 1854 tests
+
 ## v1.9.64
 
 - **New Feature:** Local Account Audit — scans all local user accounts and displays password age, last login, password expiry status, and enabled/disabled state. Flags accounts with passwords older than 365 days, expired passwords, and accounts with no login activity in 90+ days. Accessible from Security & Access > option [8] (22-Password, 48-MenuDisplay, 49-MenuRunner).
