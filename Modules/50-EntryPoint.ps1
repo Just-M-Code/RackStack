@@ -1297,7 +1297,7 @@ function Start-BatchMode {
     if ($Config.ConfigureDefenderExclusions -and $configType -eq "HOST") {
         # Idempotency: check if exclusion paths are already configured
         $currentExclusions = @()
-        try { $currentExclusions = @((Get-MpPreference -ErrorAction SilentlyContinue).ExclusionPath) } catch {}
+        try { $currentExclusions = @((Get-MpPreference -ErrorAction Stop).ExclusionPath) } catch { $currentExclusions = @() }
         $allPaths = @($script:DefenderExclusionPaths) + @($script:DefenderCommonVMPaths) | Where-Object { $_ }
         $missingPaths = @($allPaths | Where-Object { $_ -notin $currentExclusions })
 

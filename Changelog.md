@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.9.64
+
+- **New Feature:** Local Account Audit — scans all local user accounts and displays password age, last login, password expiry status, and enabled/disabled state. Flags accounts with passwords older than 365 days, expired passwords, and accounts with no login activity in 90+ days. Accessible from Security & Access > option [8] (22-Password, 48-MenuDisplay, 49-MenuRunner).
+- **New Feature:** Service Dependency Viewer — shows the full dependency tree for any service in Service Manager. Displays both "depends on" (required services) and "depended on by" (dependent services) with live status indicators. Accessible via option [D] in Service Manager (30-ServiceManager).
+- **Bug Fix:** VM RAM validation pre-check uses `-ErrorAction Stop` on `Get-VM` — previously, `-ErrorAction SilentlyContinue` inside a `try/catch` made the catch block unreachable dead code, meaning Hyper-V failures would silently produce an empty VM list instead of being caught (44-VMDeployment).
+- **Bug Fix:** Batch config Defender exclusion idempotency check uses `-ErrorAction Stop` on `Get-MpPreference` — previously, `-ErrorAction SilentlyContinue` prevented error detection when Windows Defender is unavailable or the module fails to load (50-EntryPoint).
+- **Bug Fix:** HTML report NIC statistics collection uses `-ErrorAction Stop` on `Get-NetAdapterStatistics` — previously, `-ErrorAction SilentlyContinue` inside `try/catch` swallowed all errors silently, producing a report with missing NIC data and no indication of the failure (54-HTMLReports).
+- **Bug Fix:** Storage backend auto-detection uses `-ErrorAction Stop` on `Get-ClusterS2D` and `Get-ClusterResource` in 3 locations — previously, `-ErrorAction SilentlyContinue` defeated the `try/catch` error handling, making it impossible to distinguish "cmdlet not available" from "S2D/SMB3 not configured" (59-StorageBackends).
+- 63 modules, 1854 tests
+
 ## v1.9.63
 
 - **New Feature:** Server readiness dashboard now includes a certificate expiration check — scans `LocalMachine\My` store for expired and soon-to-expire certificates (within 30 days), reports count and soonest expiry date, and counts toward the readiness score (37-HealthCheck).

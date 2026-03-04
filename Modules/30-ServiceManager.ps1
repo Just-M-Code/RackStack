@@ -77,6 +77,7 @@ function Show-ServiceManager {
         Write-MenuItem -Text "[R]  Restart a Service (enter number)"
         Write-MenuItem -Text "[C]  Change Startup Type (enter number)"
         Write-MenuItem -Text "[A]  Search All Services"
+        Write-MenuItem -Text "[D]  View Service Dependencies"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
         Write-OutputColor "  [B] ◄ Back" -color "Info"
@@ -200,6 +201,51 @@ function Show-ServiceManager {
                     else {
                         Write-OutputColor "  No services found matching '$search'" -color "Warning"
                     }
+                }
+            }
+            "^[Dd]$" {
+                $num = Read-Host "  Enter service number to view dependencies"
+                if ($num -match '^\d+$' -and [int]$num -ge 1 -and [int]$num -le $serviceList.Count) {
+                    $svc = $serviceList[[int]$num - 1]
+                    Write-OutputColor "" -color "Info"
+                    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+                    $treeHeader = "  DEPENDENCY TREE: $($svc.DisplayName)"
+                    Write-OutputColor "  │$($treeHeader.PadRight(72))│" -color "Info"
+                    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+
+                    # Services this one depends on (required by)
+                    $requires = @(Get-Service -Name $svc.Name -RequiredServices -ErrorAction SilentlyContinue)
+                    if ($requires.Count -gt 0) {
+                        $reqHeader = "  DEPENDS ON ($($requires.Count)):"
+                        Write-OutputColor "  │$($reqHeader.PadRight(72))│" -color "Info"
+                        foreach ($req in $requires) {
+                            $reqColor = if ($req.Status -eq "Running") { "Success" } else { "Warning" }
+                            $reqLine = "    $($req.DisplayName) ($($req.Name)) - $($req.Status)"
+                            if ($reqLine.Length -gt 70) { $reqLine = $reqLine.Substring(0, 67) + "..." }
+                            Write-OutputColor "  │$($reqLine.PadRight(72))│" -color $reqColor
+                        }
+                    } else {
+                        Write-OutputColor "  │$("  DEPENDS ON: (none)".PadRight(72))│" -color "Info"
+                    }
+
+                    Write-OutputColor "  │$(' '.PadRight(72))│" -color "Info"
+
+                    # Services that depend on this one
+                    $dependents = @(Get-Service -Name $svc.Name -DependentServices -ErrorAction SilentlyContinue)
+                    if ($dependents.Count -gt 0) {
+                        $depHeader = "  DEPENDED ON BY ($($dependents.Count)):"
+                        Write-OutputColor "  │$($depHeader.PadRight(72))│" -color "Info"
+                        foreach ($dep in $dependents) {
+                            $depColor = if ($dep.Status -eq "Running") { "Success" } else { "Warning" }
+                            $depLine = "    $($dep.DisplayName) ($($dep.Name)) - $($dep.Status)"
+                            if ($depLine.Length -gt 70) { $depLine = $depLine.Substring(0, 67) + "..." }
+                            Write-OutputColor "  │$($depLine.PadRight(72))│" -color $depColor
+                        }
+                    } else {
+                        Write-OutputColor "  │$("  DEPENDED ON BY: (none)".PadRight(72))│" -color "Info"
+                    }
+
+                    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
                 }
             }
             "^[Bb]$" { return }

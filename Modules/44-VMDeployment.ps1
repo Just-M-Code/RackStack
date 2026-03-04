@@ -2990,7 +2990,7 @@ function Test-VMDeploymentPreFlight {
         if ($vm.MemoryGB) { $requiredRAMGB += $vm.MemoryGB }
     }
     $runningVMs = @()
-    try { $runningVMs = @(Get-VM -ErrorAction SilentlyContinue | Where-Object { $_.State -eq "Running" }) } catch {}
+    try { $runningVMs = @(Get-VM -ErrorAction Stop | Where-Object { $_.State -eq "Running" }) } catch { $runningVMs = @() }
     $existingRAMGB = 0
     foreach ($rv in $runningVMs) { $existingRAMGB += [math]::Round($rv.MemoryAssigned / 1GB, 1) }
     $ramStatus = if (($requiredRAMGB + $existingRAMGB) -gt ($totalRAMGB * 0.95)) { "FAIL" }

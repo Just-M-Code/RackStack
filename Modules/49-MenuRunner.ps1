@@ -238,9 +238,10 @@ function Start-Show-SecurityAccessMenu {
             "5" { Set-DefenderExclusions; Write-PressEnter }
             "6" { Add-LocalAdminAccount; Write-PressEnter }
             "7" { Disable-BuiltInAdminAccount; Write-PressEnter }
+            "8" { Show-LocalAccountAudit; Write-PressEnter }
             "back" { return }
             default {
-                Write-OutputColor "Invalid choice. Please enter 1-7 or B." -color "Error"
+                Write-OutputColor "Invalid choice. Please enter 1-8 or B." -color "Error"
                 Start-Sleep -Seconds 2
             }
         }

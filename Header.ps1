@@ -30,10 +30,19 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.63
+    1.9.64
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.64
+    ACCOUNT AUDIT, DEPENDENCIES & ERROR HANDLING:
+    - NEW: Local Account Audit — scans all local users showing password age, last login, expiry status, and flags stale/expired accounts (Security & Access menu option 8)
+    - NEW: Service Dependency Viewer — shows full dependency tree (depends on + depended on by) for any service in Service Manager (option D)
+    - FIX: VM RAM validation uses -ErrorAction Stop on Get-VM — previously, SilentlyContinue inside try/catch made the catch block unreachable dead code
+    - FIX: Batch config Defender exclusion check uses -ErrorAction Stop on Get-MpPreference — previously, SilentlyContinue prevented error detection when Defender is unavailable
+    - FIX: HTML report NIC statistics uses -ErrorAction Stop — previously, SilentlyContinue inside try/catch swallowed errors silently
+    - FIX: Storage backend auto-detection uses -ErrorAction Stop on Get-ClusterS2D and Get-ClusterResource — 3 instances where SilentlyContinue defeated try/catch error handling
 
 .CHANGELOG v1.9.63
     CERTIFICATE CHECKS, READINESS & SAFETY:

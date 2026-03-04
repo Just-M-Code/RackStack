@@ -162,4 +162,98 @@ function Get-SecurePassword {
     Write-OutputColor "Maximum attempts reached." -color "Critical"
     return $null
 }
+# Function to audit local user accounts for password and login status
+function Show-LocalAccountAudit {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                     LOCAL ACCOUNT AUDIT").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    try {
+        $users = @(Get-LocalUser -ErrorAction Stop)
+    }
+    catch {
+        Write-OutputColor "  Error retrieving local accounts: $_" -color "Error"
+        return
+    }
+
+    if ($users.Count -eq 0) {
+        Write-OutputColor "  No local user accounts found." -color "Warning"
+        return
+    }
+
+    $now = Get-Date
+    $issues = 0
+
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    $acctHeader = "  LOCAL USER ACCOUNTS ($($users.Count))"
+    Write-OutputColor "  │$($acctHeader.PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+
+    foreach ($user in ($users | Sort-Object Name)) {
+        $enabled = $user.Enabled
+        $statusTag = if ($enabled) { "Enabled " } else { "Disabled" }
+
+        # Password age
+        $pwdAge = if ($null -ne $user.PasswordLastSet) {
+            $days = [math]::Floor(($now - $user.PasswordLastSet).TotalDays)
+            "${days}d ago"
+        } else { "Never set" }
+
+        # Last logon
+        $lastLogon = if ($null -ne $user.LastLogon) {
+            $logonDays = [math]::Floor(($now - $user.LastLogon).TotalDays)
+            if ($logonDays -eq 0) { "Today" } else { "${logonDays}d ago" }
+        } else { "Never" }
+
+        # Password expiry
+        $pwdExpires = if ($user.PasswordNeverExpires) {
+            "Never"
+        } elseif ($null -ne $user.PasswordLastSet) {
+            try {
+                $maxPwdAge = (Get-LocalUser $user.Name -ErrorAction SilentlyContinue).PasswordExpires
+                if ($null -ne $maxPwdAge) {
+                    $expiryDays = [math]::Floor(($maxPwdAge - $now).TotalDays)
+                    if ($expiryDays -lt 0) { "EXPIRED" } else { "${expiryDays}d" }
+                } else { "N/A" }
+            } catch { "N/A" }
+        } else { "N/A" }
+
+        # Determine color based on issues
+        $color = "Success"
+        $flags = @()
+        if (-not $enabled) { $color = "Info" }
+        if ($null -ne $user.PasswordLastSet) {
+            $pwdDays = [math]::Floor(($now - $user.PasswordLastSet).TotalDays)
+            if ($pwdDays -gt 365) { $color = "Error"; $flags += "OLD PWD"; $issues++ }
+            elseif ($pwdDays -gt 90) { $color = "Warning"; $flags += "AGING" }
+        }
+        if ($pwdExpires -eq "EXPIRED") { $color = "Error"; $flags += "EXPIRED"; $issues++ }
+        if ($lastLogon -eq "Never" -and $enabled) { $flags += "NO LOGIN" }
+        if ($null -ne $user.LastLogon) {
+            $logonDays = [math]::Floor(($now - $user.LastLogon).TotalDays)
+            if ($logonDays -gt 90 -and $enabled) { $flags += "STALE"; $issues++ }
+        }
+
+        $flagStr = if ($flags.Count -gt 0) { " [" + ($flags -join ", ") + "]" } else { "" }
+        $nameStr = $user.Name
+        if ($nameStr.Length -gt 20) { $nameStr = $nameStr.Substring(0, 17) + "..." }
+        $line = "  $($statusTag) $($nameStr.PadRight(20)) Pwd: $($pwdAge.PadRight(10)) Login: $($lastLogon.PadRight(8))$flagStr"
+        if ($line.Length -gt 72) { $line = $line.Substring(0, 72) }
+        Write-OutputColor "  │$($line.PadRight(72))│" -color $color
+    }
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+
+    # Summary
+    Write-OutputColor "" -color "Info"
+    if ($issues -gt 0) {
+        Write-OutputColor "  $issues issue(s) found — review flagged accounts above." -color "Warning"
+    } else {
+        Write-OutputColor "  All accounts look healthy." -color "Success"
+    }
+
+    Add-SessionChange -Category "Security" -Description "Ran local account audit ($($users.Count) accounts, $issues issues)"
+}
 #endregion

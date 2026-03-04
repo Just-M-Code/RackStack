@@ -743,11 +743,11 @@ function Save-PerformanceSnapshot {
         # Network bytes
         $netInfo = @()
         try {
-            $netStats = Get-NetAdapterStatistics -ErrorAction SilentlyContinue
+            $netStats = Get-NetAdapterStatistics -ErrorAction Stop
             foreach ($ns in $netStats) {
                 $netInfo += @{ Name = $ns.Name; BytesSent = $ns.SentBytes; BytesReceived = $ns.ReceivedBytes; InErrors = $ns.InErrors; OutErrors = $ns.OutErrors }
             }
-        } catch {}
+        } catch { $netInfo = @() }
 
         $snapshot = [ordered]@{
             Hostname = $hostname

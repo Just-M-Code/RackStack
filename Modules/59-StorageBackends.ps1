@@ -63,7 +63,7 @@ function Get-DetectedStorageBackend {
 
     # Check for S2D cluster
     try {
-        $s2dEnabled = Get-ClusterS2D -ErrorAction SilentlyContinue
+        $s2dEnabled = Get-ClusterS2D -ErrorAction Stop
         if ($s2dEnabled -and $s2dEnabled.State -eq "Enabled") { return "S2D" }
     }
     catch { }
@@ -78,7 +78,7 @@ function Get-DetectedStorageBackend {
 
     # Check for SMB shares used by cluster (File Share resource or CSVs backed by SMB)
     try {
-        $clusterSMBResources = Get-ClusterResource -ErrorAction SilentlyContinue | Where-Object {
+        $clusterSMBResources = Get-ClusterResource -ErrorAction Stop | Where-Object {
             $_.ResourceType -eq "File Server" -or $_.ResourceType -eq "Scale-Out File Server"
         }
         if ($clusterSMBResources) { return "SMB3" }
@@ -386,7 +386,7 @@ function Enable-S2DOnCluster {
 
     # Check if already enabled
     try {
-        $s2d = Get-ClusterS2D -ErrorAction SilentlyContinue
+        $s2d = Get-ClusterS2D -ErrorAction Stop
         if ($s2d -and $s2d.State -eq "Enabled") {
             Write-OutputColor "" -color "Info"
             Write-OutputColor "  S2D is already enabled on cluster $($cluster.Name)." -color "Success"
