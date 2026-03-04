@@ -237,12 +237,13 @@ function Start-Show-SecurityAccessMenu {
             "4" { Set-FirewallRuleTemplates; Write-PressEnter }
             "5" { Show-FirewallRuleSearch }
             "6" { Set-DefenderExclusions; Write-PressEnter }
-            "7" { Add-LocalAdminAccount; Write-PressEnter }
-            "8" { Disable-BuiltInAdminAccount; Write-PressEnter }
-            "9" { Show-LocalAccountAudit; Write-PressEnter }
+            "7" { Show-DefenderStatus; Write-PressEnter }
+            "8" { Add-LocalAdminAccount; Write-PressEnter }
+            "9" { Disable-BuiltInAdminAccount; Write-PressEnter }
+            "10" { Show-LocalAccountAudit; Write-PressEnter }
             "back" { return }
             default {
-                Write-OutputColor "Invalid choice. Please enter 1-9 or B." -color "Error"
+                Write-OutputColor "Invalid choice. Please enter 1-10 or B." -color "Error"
                 Start-Sleep -Seconds 2
             }
         }

@@ -30,10 +30,15 @@
     7h3 4b1d3r
 
 .VERSION
-    1.11.0
+    1.12.0
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.12.0
+    DEFENDER STATUS DASHBOARD & SECURITY MENU EXPANSION:
+    - NEW: Windows Defender Status Dashboard — shows real-time protection status (RT, behavior monitor, download scanning, network inspection, antispyware), signature version/age/update date, engine version, scan history (last full/quick scan), and recent threat detections. Color-coded warnings for disabled protections and stale signatures. Accessible from Security & Access menu option [7] (17-DefenderExclusions, 48-MenuDisplay, 49-MenuRunner)
+    - Security & Access menu expanded from 9 to 10 items with Defender Status at [7], admin accounts renumbered to [8]-[10]
 
 .CHANGELOG v1.11.0
     CERTIFICATE CHECK & ERROR HANDLING:

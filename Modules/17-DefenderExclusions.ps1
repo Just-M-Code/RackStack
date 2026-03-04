@@ -367,4 +367,102 @@ function Remove-DefenderExclusion {
         }
     }
 }
+
+# Windows Defender Status Dashboard
+function Show-DefenderStatus {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                    WINDOWS DEFENDER STATUS").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Get Defender status
+    try {
+        $mpStatus = Get-MpComputerStatus -ErrorAction Stop
+    } catch {
+        Write-OutputColor "  Windows Defender is not available: $_" -color "Error"
+        return
+    }
+
+    # Protection status
+    $rtColor = if ($mpStatus.RealTimeProtectionEnabled) { "Success" } else { "Error" }
+    $bhColor = if ($mpStatus.BehaviorMonitorEnabled) { "Success" } else { "Warning" }
+    $ioColor = if ($mpStatus.IoavProtectionEnabled) { "Success" } else { "Warning" }
+    $niColor = if ($mpStatus.NISEnabled) { "Success" } else { "Warning" }
+    $amColor = if ($mpStatus.AntispywareEnabled) { "Success" } else { "Warning" }
+
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  PROTECTION STATUS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    $rtText = if ($mpStatus.RealTimeProtectionEnabled) { "Enabled" } else { "DISABLED" }
+    $bhText = if ($mpStatus.BehaviorMonitorEnabled) { "Enabled" } else { "Disabled" }
+    $ioText = if ($mpStatus.IoavProtectionEnabled) { "Enabled" } else { "Disabled" }
+    $niText = if ($mpStatus.NISEnabled) { "Enabled" } else { "Disabled" }
+    $amText = if ($mpStatus.AntispywareEnabled) { "Enabled" } else { "Disabled" }
+    Write-OutputColor "  │$("  Real-time Protection:  $rtText".PadRight(72))│" -color $rtColor
+    Write-OutputColor "  │$("  Behavior Monitor:      $bhText".PadRight(72))│" -color $bhColor
+    Write-OutputColor "  │$("  Download Scanning:     $ioText".PadRight(72))│" -color $ioColor
+    Write-OutputColor "  │$("  Network Inspection:    $niText".PadRight(72))│" -color $niColor
+    Write-OutputColor "  │$("  Antispyware:           $amText".PadRight(72))│" -color $amColor
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Signature info
+    $sigAge = if ($null -ne $mpStatus.AntivirusSignatureAge) { $mpStatus.AntivirusSignatureAge } else { "Unknown" }
+    $sigColor = if ($sigAge -is [int] -and $sigAge -le 1) { "Success" } elseif ($sigAge -is [int] -and $sigAge -le 7) { "Warning" } else { "Error" }
+    $sigDate = if ($null -ne $mpStatus.AntivirusSignatureLastUpdated) { $mpStatus.AntivirusSignatureLastUpdated.ToString("MM/dd/yyyy HH:mm") } else { "Unknown" }
+    $sigVer = if ($mpStatus.AntivirusSignatureVersion) { $mpStatus.AntivirusSignatureVersion } else { "Unknown" }
+
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  SIGNATURE STATUS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  Signature Version:     $sigVer".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Last Updated:          $sigDate".PadRight(72))│" -color $sigColor
+    Write-OutputColor "  │$("  Signature Age:         $sigAge day(s)".PadRight(72))│" -color $sigColor
+    Write-OutputColor "  │$("  Engine Version:        $($mpStatus.AMEngineVersion)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Scan history
+    $lastFull = if ($null -ne $mpStatus.FullScanEndTime -and $mpStatus.FullScanEndTime.Year -gt 2000) { $mpStatus.FullScanEndTime.ToString("MM/dd/yyyy HH:mm") } else { "Never" }
+    $lastQuick = if ($null -ne $mpStatus.QuickScanEndTime -and $mpStatus.QuickScanEndTime.Year -gt 2000) { $mpStatus.QuickScanEndTime.ToString("MM/dd/yyyy HH:mm") } else { "Never" }
+    $fullAge = if ($null -ne $mpStatus.FullScanAge) { $mpStatus.FullScanAge } else { "Unknown" }
+    $quickAge = if ($null -ne $mpStatus.QuickScanAge) { $mpStatus.QuickScanAge } else { "Unknown" }
+
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  SCAN HISTORY".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  Last Full Scan:        $lastFull ($fullAge day(s) ago)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Last Quick Scan:       $lastQuick ($quickAge day(s) ago)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Threat detection history
+    try {
+        $threats = @(Get-MpThreatDetection -ErrorAction Stop)
+        if ($threats.Count -gt 0) {
+            $recent = @($threats | Sort-Object InitialDetectionTime -Descending | Select-Object -First 10)
+            Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Warning"
+            Write-OutputColor "  │$("  RECENT THREAT DETECTIONS ($($threats.Count) total)".PadRight(72))│" -color "Warning"
+            Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Warning"
+            foreach ($threat in $recent) {
+                $tName = if ($threat.ThreatName) { $threat.ThreatName } else { "Unknown" }
+                if ($tName.Length -gt 42) { $tName = $tName.Substring(0, 39) + "..." }
+                $tDate = if ($null -ne $threat.InitialDetectionTime) { $threat.InitialDetectionTime.ToString("MM/dd HH:mm") } else { "N/A" }
+                $line = "  $($tName.PadRight(44)) $tDate"
+                Write-OutputColor "  │$($line.PadRight(72))│" -color "Warning"
+            }
+            Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Warning"
+        } else {
+            Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Success"
+            Write-OutputColor "  │$("  No threat detections found.".PadRight(72))│" -color "Success"
+            Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Success"
+        }
+    } catch {
+        Write-OutputColor "  Could not query threat history: $_" -color "Warning"
+    }
+
+    Add-SessionChange -Category "Security" -Description "Viewed Defender status: RT=$rtText, Sig age=$sigAge days, Threats=$(@($threats).Count)"
+}
 #endregion

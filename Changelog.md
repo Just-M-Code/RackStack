@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.12.0
+
+- **New Feature:** Windows Defender Status Dashboard — shows real-time protection status for all 5 protection layers (real-time, behavior monitor, download scanning, network inspection, antispyware), signature version/age/last update date, engine version, scan history (last full and quick scan with age), and recent threat detections (last 10). Color-coded warnings for disabled protections and stale signatures (>1 day yellow, >7 days red). Accessible from Security & Access > option [7] (17-DefenderExclusions, 48-MenuDisplay, 49-MenuRunner).
+- Security & Access menu expanded from 9 to 10 items — Defender Status Dashboard inserted as [7], admin account options renumbered to [8]-[10] (48-MenuDisplay, 49-MenuRunner).
+- 63 modules, 1854 tests
+
 ## v1.11.0
 
 - **New Feature:** Certificate Expiry Check — scans Local Machine certificate stores (Personal, Trusted Root CA, Intermediate CA, Web Hosting, Remote Desktop) and categorizes certificates as expired, expiring soon (within 90 days), or valid. Color-coded output with per-store grouping. Accessible from Operations > option [19] (35-Utilities, 56-OperationsMenu).
