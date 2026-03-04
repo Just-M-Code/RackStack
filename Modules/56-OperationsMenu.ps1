@@ -60,6 +60,8 @@ function Show-OperationsMenu {
         Write-MenuItem "[22] Uptime & Reboot History"
         Write-MenuItem "[23] Driver Health Check"
         Write-MenuItem "[24] Disk Space Analyzer"
+        Write-MenuItem "[25] Windows Update Status"
+        Write-MenuItem "[26] Listening Ports & Services"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
 
@@ -177,6 +179,14 @@ function Show-OperationsMenu {
             }
             "24" {
                 Show-DiskSpaceAnalyzer
+                Write-PressEnter
+            }
+            "25" {
+                Show-WindowsUpdateStatus
+                Write-PressEnter
+            }
+            "26" {
+                Show-ListeningPorts
                 Write-PressEnter
             }
             "b" { return }

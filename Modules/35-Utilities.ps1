@@ -1712,4 +1712,166 @@ function Show-DiskSpaceAnalyzer {
 
     Add-SessionChange -Category "System" -Description "Disk space analysis: $($volumes.Count) volumes scanned, ${totalScanGB}GB in known consumers on $sysDrive"
 }
+
+# Windows Update Status Dashboard
+function Show-WindowsUpdateStatus {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                   WINDOWS UPDATE STATUS").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Last update install date
+    try {
+        $lastHotfix = Get-HotFix -ErrorAction Stop | Sort-Object InstalledOn -Descending -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($null -ne $lastHotfix -and $null -ne $lastHotfix.InstalledOn) {
+            $daysSince = [math]::Round(((Get-Date) - $lastHotfix.InstalledOn).TotalDays, 0)
+            $color = if ($daysSince -ge 60) { "Error" } elseif ($daysSince -ge 30) { "Warning" } else { "Success" }
+            Write-OutputColor "  Last update installed: $($lastHotfix.InstalledOn.ToString('yyyy-MM-dd')) ($daysSince days ago) - $($lastHotfix.HotFixID)" -color $color
+        }
+    } catch {
+        Write-OutputColor "  Could not query hotfix history: $_" -color "Warning"
+    }
+
+    Write-OutputColor "" -color "Info"
+
+    # Recently installed updates (last 15)
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  RECENTLY INSTALLED UPDATES".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    try {
+        $hotfixes = @(Get-HotFix -ErrorAction Stop | Where-Object { $null -ne $_.InstalledOn } | Sort-Object InstalledOn -Descending | Select-Object -First 15)
+        if ($hotfixes.Count -eq 0) {
+            Write-OutputColor "  │$("  No hotfix records found".PadRight(72))│" -color "Warning"
+        } else {
+            foreach ($hf in $hotfixes) {
+                $date = $hf.InstalledOn.ToString("yyyy-MM-dd")
+                $desc = if ($hf.Description) { $hf.Description } else { "Update" }
+                if ($desc.Length -gt 28) { $desc = $desc.Substring(0, 25) + "..." }
+                $lineText = "  $($hf.HotFixID.PadRight(14)) $date  $desc"
+                if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+                Write-OutputColor "  │$($lineText.PadRight(72))│" -color "Info"
+            }
+        }
+    } catch {
+        Write-OutputColor "  │$("  Could not query hotfixes: $_".PadRight(72))│" -color "Error"
+    }
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Windows Update service status
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  UPDATE SERVICE STATUS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    $services = @("wuauserv", "BITS", "CryptSvc", "TrustedInstaller")
+    foreach ($svcName in $services) {
+        try {
+            $svc = Get-Service -Name $svcName -ErrorAction Stop
+            $statusColor = switch ($svc.Status) { "Running" { "Success" } "Stopped" { "Warning" } default { "Info" } }
+            $lineText = "  $($svc.DisplayName.PadRight(40)) $($svc.Status)"
+            if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+            Write-OutputColor "  │$($lineText.PadRight(72))│" -color $statusColor
+        } catch {
+            Write-OutputColor "  │$("  $svcName - Not found".PadRight(72))│" -color "Warning"
+        }
+    }
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+
+    $updateCount = if ($hotfixes) { $hotfixes.Count } else { 0 }
+    Add-SessionChange -Category "System" -Description "Windows Update status check: $updateCount recent updates, last installed $daysSince days ago"
+}
+
+# Open Ports & Listening Services
+function Show-ListeningPorts {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                 OPEN PORTS & LISTENING SERVICES").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    Write-OutputColor "  Scanning listening ports..." -color "Info"
+
+    try {
+        $listeners = @(Get-NetTCPConnection -State Listen -ErrorAction Stop | Sort-Object LocalPort)
+    } catch {
+        Write-OutputColor "  Could not query TCP connections: $_" -color "Error"
+        return
+    }
+
+    # Group by port and get process info
+    $portInfo = @()
+    $seenPorts = @{}
+    foreach ($conn in $listeners) {
+        $port = $conn.LocalPort
+        $addr = $conn.LocalAddress
+        $key = "$addr`:$port"
+        if ($seenPorts.ContainsKey($key)) { continue }
+        $seenPorts[$key] = $true
+
+        $processName = "Unknown"
+        try {
+            $proc = Get-Process -Id $conn.OwningProcess -ErrorAction Stop
+            $processName = $proc.ProcessName
+        } catch {
+            $processName = "PID $($conn.OwningProcess)"
+        }
+
+        $portInfo += [PSCustomObject]@{
+            Port = $port
+            Address = $addr
+            Process = $processName
+            PID = $conn.OwningProcess
+        }
+    }
+
+    # Summary
+    $uniquePorts = @($portInfo | Select-Object -Property Port -Unique)
+    Write-OutputColor "  Total listening endpoints: $($portInfo.Count) ($($uniquePorts.Count) unique ports)" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Well-known ports (0-1023)
+    $wellKnown = @($portInfo | Where-Object { $_.Port -le 1023 })
+    if ($wellKnown.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  WELL-KNOWN PORTS (0-1023)".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        foreach ($p in $wellKnown) {
+            $svcLabel = switch ($p.Port) {
+                22 { "SSH" } 53 { "DNS" } 80 { "HTTP" } 135 { "RPC" } 139 { "NetBIOS" }
+                389 { "LDAP" } 443 { "HTTPS" } 445 { "SMB" } 636 { "LDAPS" } 993 { "IMAPS" }
+                default { "" }
+            }
+            $procName = $p.Process
+            if ($procName.Length -gt 20) { $procName = $procName.Substring(0, 17) + "..." }
+            $lineText = "  $($p.Port.ToString().PadRight(7)) $($p.Address.PadRight(17)) $($procName.PadRight(22)) $svcLabel"
+            if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+            Write-OutputColor "  │$($lineText.PadRight(72))│" -color "Info"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+        Write-OutputColor "" -color "Info"
+    }
+
+    # Registered/dynamic ports (1024+)
+    $highPorts = @($portInfo | Where-Object { $_.Port -gt 1023 } | Sort-Object Port)
+    if ($highPorts.Count -gt 0) {
+        $displayPorts = @($highPorts | Select-Object -First 25)
+        $header = "HIGH PORTS (1024+)"
+        if ($highPorts.Count -gt 25) { $header += " — showing first 25 of $($highPorts.Count)" }
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  $header".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        foreach ($p in $displayPorts) {
+            $procName = $p.Process
+            if ($procName.Length -gt 20) { $procName = $procName.Substring(0, 17) + "..." }
+            $lineText = "  $($p.Port.ToString().PadRight(7)) $($p.Address.PadRight(17)) $procName"
+            if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+            Write-OutputColor "  │$($lineText.PadRight(72))│" -color "Info"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    }
+
+    Add-SessionChange -Category "Network" -Description "Listening ports scan: $($portInfo.Count) endpoints on $($uniquePorts.Count) unique ports"
+}
 #endregion

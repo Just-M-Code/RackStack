@@ -30,10 +30,15 @@
     7h3 4b1d3r
 
 .VERSION
-    1.15.0
+    1.16.0
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.16.0
+    WINDOWS UPDATE STATUS & LISTENING PORTS:
+    - NEW: Windows Update Status — shows last installed hotfix with age, lists 15 most recent updates with KB IDs and dates, checks Windows Update service status (wuauserv, BITS, CryptSvc, TrustedInstaller). Color-coded warnings for stale patches (30+ days yellow, 60+ days red). Accessible from Operations menu option [25] (35-Utilities, 56-OperationsMenu)
+    - NEW: Listening Ports & Services — scans all TCP listening endpoints, shows well-known ports (0-1023) with service labels (SSH, DNS, HTTP, SMB, LDAP, etc.) and owning process, lists high ports (1024+). Accessible from Operations menu option [26] (35-Utilities, 56-OperationsMenu)
 
 .CHANGELOG v1.15.0
     DRIVER HEALTH & DISK SPACE ANALYZER:

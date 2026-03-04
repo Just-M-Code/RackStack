@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.16.0
+
+- **New Feature:** Windows Update Status — shows the most recently installed hotfix with age warning (30+ days yellow, 60+ days red), lists the 15 most recent hotfixes with KB IDs and install dates, and checks the status of Windows Update services (wuauserv, BITS, CryptSvc, TrustedInstaller). Accessible from Operations > option [25] (35-Utilities, 56-OperationsMenu).
+- **New Feature:** Listening Ports & Services — scans all TCP listening endpoints, displays well-known ports (0-1023) with service labels (SSH, DNS, HTTP, RPC, NetBIOS, LDAP, HTTPS, SMB, LDAPS) and owning process names, then lists high ports (1024+) with process info. Accessible from Operations > option [26] (35-Utilities, 56-OperationsMenu).
+- 63 modules, 1854 tests
+
 ## v1.15.0
 
 - **New Feature:** Driver Health Check — scans all PnP devices for problem devices with error descriptions (not configured, driver corrupt, cannot start, disabled, driver missing, etc.), lists unsigned drivers, shows oldest third-party drivers sorted by date with version info. Color-coded warnings for drivers older than 3 years. Accessible from Operations > option [23] (35-Utilities, 56-OperationsMenu).
