@@ -260,7 +260,7 @@ function Install-ScriptUpdate {
     }
 
     # Verify the download is not empty
-    if (-not (Test-Path $tempPath) -or (Get-Item $tempPath).Length -lt 1000) {
+    if (-not (Test-Path -LiteralPath $tempPath) -or (Get-Item -LiteralPath $tempPath).Length -lt 1000) {
         Write-OutputColor "  Downloaded file appears invalid." -color "Error"
         Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
         return
@@ -548,7 +548,7 @@ function Invoke-RemoteProfileApply {
         # Copy profile to remote - use remote machine's temp path, not local
         Write-OutputColor "Copying profile to remote server..." -color "Info"
         $remoteTempDir = Invoke-Command -Session $session -ScriptBlock { $env:TEMP } -ErrorAction SilentlyContinue
-        if ([string]::IsNullOrWhiteSpace($remoteTempDir)) { $remoteTempDir = "C:\Windows\Temp" }
+        if ([string]::IsNullOrWhiteSpace($remoteTempDir)) { $remoteTempDir = "$env:SystemRoot\Temp" }
         $remotePath = "$remoteTempDir\$($script:ToolName)ConfigProfile_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
 
         Invoke-Command -Session $session -ScriptBlock {
@@ -903,7 +903,7 @@ function Show-ScheduledTaskViewer {
                 default { "Info" }
             }
             $info = $null
-            try { $info = $task | Get-ScheduledTaskInfo -ErrorAction SilentlyContinue } catch {}
+            try { $info = $task | Get-ScheduledTaskInfo -ErrorAction SilentlyContinue } catch { $info = $null }
             $lastRun = if ($null -ne $info -and $null -ne $info.LastRunTime -and $info.LastRunTime.Year -gt 1999) { $info.LastRunTime.ToString("MM/dd HH:mm") } else { "Never" }
             $nameStr = "$($task.TaskPath)$($task.TaskName)"
             if ($nameStr.Length -gt 44) { $nameStr = $nameStr.Substring(0, 41) + "..." }

@@ -484,6 +484,7 @@ function Edit-ClusterSharedVolume {
                         try {
                             Remove-ClusterSharedVolume -Name $selectedCSV.Name -ErrorAction Stop
                             Write-OutputColor "  Removed $($selectedCSV.Name) from CSV." -color "Success"
+                            Add-SessionChange -Category "Cluster" -Description "Removed $($selectedCSV.Name) from Cluster Shared Volumes"
                         }
                         catch {
                             Write-OutputColor "  Failed: $_" -color "Error"
@@ -493,7 +494,7 @@ function Edit-ClusterSharedVolume {
             }
         }
         "3" {
-            $allDisks = Get-ClusterResource | Where-Object { $_.ResourceType -eq "Physical Disk" }
+            $allDisks = Get-ClusterResource -ErrorAction SilentlyContinue | Where-Object { $_.ResourceType -eq "Physical Disk" }
             if ($allDisks) {
                 Write-OutputColor "" -color "Info"
                 foreach ($disk in $allDisks) {
@@ -653,6 +654,7 @@ function Set-LiveMigrationSettings {
                 try {
                     Add-VMMigrationNetwork -Subnet $newNet -ErrorAction Stop
                     Write-OutputColor "  Added $newNet to allowed networks." -color "Success"
+                    Add-SessionChange -Category "Cluster" -Description "Added Live Migration network: $newNet"
                 }
                 catch {
                     Write-OutputColor "  Failed: $_" -color "Error"

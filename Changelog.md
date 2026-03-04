@@ -1,5 +1,16 @@
 ﻿# Changelog
 
+## v1.20.2
+
+- **Bug Fix:** Disk space checks in FileServer and VHD downloads guard against UNC/CSV paths — prevents silent failures when destination is a network share (39-FileServer, 41-VHDManagement).
+- **Bug Fix:** `Stop-Job` called before `Remove-Job` in VHD copy/convert `finally` block — prevents orphaned background processes on failure (41-VHDManagement).
+- **Bug Fix:** `Test-Path` calls use `-LiteralPath` across 5 more modules for constructed/config-derived paths (41-VHDManagement, 42-ISODownload, 43-OfflineVHD, 35-Utilities, 40-HostStorage).
+- **Bug Fix:** `Get-ClusterResource` includes `-ErrorAction SilentlyContinue` to prevent crashes when Cluster service is unavailable (27-FailoverClustering).
+- **Bug Fix:** CSV removal and Live Migration network changes now track session changes via `Add-SessionChange` (27-FailoverClustering).
+- **Bug Fix:** Silent `catch {}` block in scheduled task info retrieval explicitly sets `$null` (35-Utilities).
+- **Bug Fix:** Remote temp path fallback uses `$env:SystemRoot` instead of hardcoded `C:\Windows` (35-Utilities).
+- 64 modules, 1873 tests
+
 ## v1.20.1
 
 - **Bug Fix:** `Test-Path` calls use `-LiteralPath` across 15 modules for all constructed, user-input, and config-derived paths — prevents wildcard interpretation on paths containing bracket characters.

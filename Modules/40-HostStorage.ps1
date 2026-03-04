@@ -331,7 +331,7 @@ function Initialize-HostStorage {
     )
 
     foreach ($folder in $foldersToCreate) {
-        if (-not (Test-Path $folder)) {
+        if (-not (Test-Path -LiteralPath $folder)) {
             try {
                 New-Item -Path $folder -ItemType Directory -Force | Out-Null
                 Write-OutputColor "  Created: $folder" -color "Success"

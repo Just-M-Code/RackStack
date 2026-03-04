@@ -53,7 +53,7 @@ function Test-CachedVHD {
     $cachePath = Get-VHDCachePath
 
     # Search local disk for any VHDX matching the OS version
-    if (Test-Path $cachePath) {
+    if (Test-Path -LiteralPath $cachePath) {
         $found = Get-ChildItem -Path $cachePath -Filter "*$OSVersion*.vhdx" -File -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($found) {
             return @{
@@ -159,15 +159,17 @@ function Get-SyspreppedVHD {
         Write-OutputColor "  VHD cache path not configured. Run Host Storage Setup first." -color "Error"
         return $null
     }
-    $destDriveLetter = $cachePath.Substring(0, 1)
-    $destVolume = Get-Volume -DriveLetter $destDriveLetter -ErrorAction SilentlyContinue
-    if ($destVolume) {
-        $freeGB = [math]::Round($destVolume.SizeRemaining / 1GB, 1)
-        if ($freeGB -lt 60) {
-            Write-OutputColor "  WARNING: Only $freeGB GB free on ${destDriveLetter}: drive." -color "Warning"
-            Write-OutputColor "  VHD downloads are typically 30-50 GB." -color "Warning"
-            if (-not (Confirm-UserAction -Message "Continue with download anyway?")) {
-                return $null
+    if ($cachePath -match '^[A-Za-z]:') {
+        $destDriveLetter = $cachePath.Substring(0, 1)
+        $destVolume = Get-Volume -DriveLetter $destDriveLetter -ErrorAction SilentlyContinue
+        if ($destVolume) {
+            $freeGB = [math]::Round($destVolume.SizeRemaining / 1GB, 1)
+            if ($freeGB -lt 60) {
+                Write-OutputColor "  WARNING: Only $freeGB GB free on ${destDriveLetter}: drive." -color "Warning"
+                Write-OutputColor "  VHD downloads are typically 30-50 GB." -color "Warning"
+                if (-not (Confirm-UserAction -Message "Continue with download anyway?")) {
+                    return $null
+                }
             }
         }
     }
@@ -217,7 +219,7 @@ function Copy-VHDForVM {
     $destPath = Join-Path $DestinationFolder $destFileName
 
     # Ensure destination directory exists
-    if (-not (Test-Path $DestinationFolder)) {
+    if (-not (Test-Path -LiteralPath $DestinationFolder)) {
         try {
             New-Item -Path $DestinationFolder -ItemType Directory -Force -ErrorAction Stop | Out-Null
         }
@@ -248,7 +250,7 @@ function Copy-VHDForVM {
 
         while ($copyJob.State -eq "Running") {
             $currentSize = 0
-            if (Test-Path $destPath) {
+            if (Test-Path -LiteralPath $destPath) {
                 try { $currentSize = (Get-Item $destPath -ErrorAction SilentlyContinue).Length } catch { $currentSize = 0 }
             }
 
@@ -272,7 +274,7 @@ function Copy-VHDForVM {
         $copyState = $copyJob.State
         Remove-Job $copyJob -Force -ErrorAction SilentlyContinue
 
-        if ($copyState -eq "Failed" -or -not (Test-Path $destPath)) {
+        if ($copyState -eq "Failed" -or -not (Test-Path -LiteralPath $destPath)) {
             Write-OutputColor "  Failed to copy VHD." -color "Error"
             return $null
         }
@@ -302,8 +304,8 @@ function Copy-VHDForVM {
 
         while ($convertJob.State -eq "Running") {
             $currentSize = 0
-            if (Test-Path $fixedPath) {
-                try { $currentSize = (Get-Item $fixedPath -ErrorAction SilentlyContinue).Length } catch { $currentSize = 0 }
+            if (Test-Path -LiteralPath $fixedPath) {
+                try { $currentSize = (Get-Item -LiteralPath $fixedPath -ErrorAction SilentlyContinue).Length } catch { $currentSize = 0 }
             }
 
             if ($convertElapsed -gt 0 -and ($convertElapsed - $lastConvertSpeedCheck) -ge 3) {
@@ -328,7 +330,7 @@ function Copy-VHDForVM {
         $convertState = $convertJob.State
         Remove-Job $convertJob -Force -ErrorAction SilentlyContinue
 
-        if ($convertState -eq "Failed" -or -not (Test-Path $fixedPath)) {
+        if ($convertState -eq "Failed" -or -not (Test-Path -LiteralPath $fixedPath)) {
             Write-OutputColor "" -color "Info"
             Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Warning"
             Write-OutputColor "  ║$("  VHD CONVERSION FAILED — Dynamic VHD will be used instead".PadRight(72))║" -color "Warning"
@@ -357,7 +359,7 @@ function Copy-VHDForVM {
                     $retryState = $retryJob.State
                     Stop-Job $retryJob -ErrorAction SilentlyContinue
                     Remove-Job $retryJob -Force -ErrorAction SilentlyContinue
-                    if ($retryState -ne "Failed" -and (Test-Path $fixedPath)) {
+                    if ($retryState -ne "Failed" -and (Test-Path -LiteralPath $fixedPath)) {
                         Write-OutputColor "  Retry succeeded!" -color "Success"
                         # Fall through to the move logic below
                     } else {
@@ -392,14 +394,14 @@ function Copy-VHDForVM {
             Write-OutputColor "  Warning: Could not rename converted VHD: $_" -color "Warning"
         }
 
-        if (Test-Path $finalPath) {
+        if (Test-Path -LiteralPath $finalPath) {
             $finalSize = (Get-Item $finalPath).Length
             $sizeGB = [math]::Round($finalSize / 1GB, 2)
             Write-OutputColor "  Conversion complete! Fixed VHD: ${sizeGB} GB" -color "Success"
             Write-OutputColor "  Dynamic copy deleted. Master base image untouched." -color "Info"
             return $finalPath
         }
-        elseif (Test-Path $fixedPath) {
+        elseif (Test-Path -LiteralPath $fixedPath) {
             # Move failed but fixed file still exists at _fixed path - use it directly
             $finalSize = (Get-Item $fixedPath).Length
             $sizeGB = [math]::Round($finalSize / 1GB, 2)
@@ -416,8 +418,8 @@ function Copy-VHDForVM {
         return $null
     }
     finally {
-        if ($copyJob) { Remove-Job -Job $copyJob -Force -ErrorAction SilentlyContinue }
-        if ($convertJob) { Remove-Job -Job $convertJob -Force -ErrorAction SilentlyContinue }
+        if ($copyJob) { Stop-Job $copyJob -ErrorAction SilentlyContinue; Remove-Job -Job $copyJob -Force -ErrorAction SilentlyContinue }
+        if ($convertJob) { Stop-Job $convertJob -ErrorAction SilentlyContinue; Remove-Job -Job $convertJob -Force -ErrorAction SilentlyContinue }
     }
 }
 

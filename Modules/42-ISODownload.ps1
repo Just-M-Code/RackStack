@@ -18,7 +18,7 @@ function Test-CachedISO {
     $isoPath = Get-ISOStoragePath
 
     # Search local disk for any ISO matching the OS version
-    if (Test-Path $isoPath) {
+    if (Test-Path -LiteralPath $isoPath) {
         $found = Get-ChildItem -Path $isoPath -Filter "*$OSVersion*.iso" -File -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($found) {
             return @{
@@ -53,7 +53,7 @@ function Get-ServerISO {
     }
 
     # Ensure ISO directory exists
-    if (-not (Test-Path $isoPath)) {
+    if (-not (Test-Path -LiteralPath $isoPath)) {
         try {
             New-Item -Path $isoPath -ItemType Directory -Force | Out-Null
             Write-OutputColor "  Created ISO directory: $isoPath" -color "Success"

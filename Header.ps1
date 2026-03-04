@@ -30,10 +30,21 @@
     7h3 4b1d3r
 
 .VERSION
-    1.20.1
+    1.20.2
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.20.2
+    BUG FIXES — HARDENING SWEEP MODULES 25-43:
+    - FIX: Disk space checks in FileServer and VHD downloads guard against UNC paths — prevents silent failures when destination is a network share or CSV path (FileServer, VHD Management)
+    - FIX: Stop-Job called before Remove-Job in VHD copy/convert finally block — prevents orphaned background processes on failure (VHD Management)
+    - FIX: Test-Path calls use -LiteralPath across 5 modules for all constructed/config-derived paths (VHD Management, ISO Download, Offline VHD, Utilities, Host Storage)
+    - FIX: Get-ClusterResource includes -ErrorAction SilentlyContinue to prevent crashes when Cluster service is unavailable (Failover Clustering)
+    - FIX: CSV removal and Live Migration network changes now track session changes (Failover Clustering)
+    - FIX: Silent catch block in scheduled task info retrieval explicitly sets null (Utilities)
+    - FIX: Remote temp path fallback uses $env:SystemRoot instead of hardcoded C:\Windows (Utilities)
+    64 modules, 1873 tests
 
 .CHANGELOG v1.20.1
     BUG FIXES — HARDENING SWEEP ACROSS 15 MODULES:

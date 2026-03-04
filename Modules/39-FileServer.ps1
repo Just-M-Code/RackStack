@@ -299,20 +299,17 @@ function Get-FileServerFile {
         Write-OutputColor "" -color "Info"
 
         # Disk space check before download
-        if ($expectedSize -gt 0) {
-            $destDrive = Split-Path -Qualifier $destFile -ErrorAction SilentlyContinue
-            if ($destDrive) {
-                $driveLetter = $destDrive.TrimEnd(':')
-                $vol = Get-Volume -DriveLetter $driveLetter -ErrorAction SilentlyContinue
-                if ($vol) {
-                    $requiredSpace = [long]($expectedSize * 1.1)  # 10% buffer
-                    if ($vol.SizeRemaining -lt $requiredSpace) {
-                        $freeGB = [math]::Round($vol.SizeRemaining / 1GB, 1)
-                        $needGB = [math]::Round($requiredSpace / 1GB, 1)
-                        Write-OutputColor "  Insufficient disk space on ${destDrive}\" -color "Error"
-                        Write-OutputColor "  Available: ${freeGB} GB  |  Required: ${needGB} GB" -color "Error"
-                        return @{ Success = $false; FilePath = $destFile; Error = "Insufficient disk space" }
-                    }
+        if ($expectedSize -gt 0 -and $destFile -match '^[A-Za-z]:') {
+            $driveLetter = $destFile.Substring(0, 1)
+            $vol = Get-Volume -DriveLetter $driveLetter -ErrorAction SilentlyContinue
+            if ($vol) {
+                $requiredSpace = [long]($expectedSize * 1.1)  # 10% buffer
+                if ($vol.SizeRemaining -lt $requiredSpace) {
+                    $freeGB = [math]::Round($vol.SizeRemaining / 1GB, 1)
+                    $needGB = [math]::Round($requiredSpace / 1GB, 1)
+                    Write-OutputColor "  Insufficient disk space on ${driveLetter}:\" -color "Error"
+                    Write-OutputColor "  Available: ${freeGB} GB  |  Required: ${needGB} GB" -color "Error"
+                    return @{ Success = $false; FilePath = $destFile; Error = "Insufficient disk space" }
                 }
             }
         }

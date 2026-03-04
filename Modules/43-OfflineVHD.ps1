@@ -24,7 +24,7 @@ function Set-OfflineVHDConfiguration {
     Write-OutputColor "" -color "Info"
 
     # Verify VHD exists
-    if (-not (Test-Path $VHDPath)) {
+    if (-not (Test-Path -LiteralPath $VHDPath)) {
         Write-OutputColor "  VHD not found: $VHDPath" -color "Error"
         return $false
     }
