@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.16.0
+    1.16.1
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.16.1
+    VARIABLE INITIALIZATION FIXES:
+    - FIX: Driver Health Check initializes $allDevices before try/catch — if Get-CimInstance failed, references outside the try block would hit an uninitialized variable (35-Utilities)
+    - FIX: Uptime & Reboot History initializes $uptimeStr and $unexpectedCount before their conditional blocks — Add-SessionChange at the end of the function referenced both variables which were only set inside try/catch and if/else branches respectively (35-Utilities)
+    - FIX: Windows Update Status initializes $daysSince before try/catch — the session change description referenced $daysSince which was only set inside a nested if block within a try block, producing malformed output on failure (35-Utilities)
+    - FIX: Disk Space Analyzer initializes $totalScanGB before the results conditional — the session change description referenced $totalScanGB which was only set inside the if ($results.Count -gt 0) block, producing null output when no paths existed (35-Utilities)
 
 .CHANGELOG v1.16.0
     WINDOWS UPDATE STATUS & LISTENING PORTS:

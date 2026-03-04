@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.16.1
+
+- **Bug Fix:** Driver Health Check initializes `$allDevices` before `try/catch` — if `Get-CimInstance` failed, references outside the try block would hit an uninitialized variable (35-Utilities).
+- **Bug Fix:** Uptime & Reboot History initializes `$uptimeStr` and `$unexpectedCount` before their conditional blocks — `Add-SessionChange` at the end of the function referenced both variables which were only set inside `try/catch` and `if/else` branches respectively, producing null output on failure (35-Utilities).
+- **Bug Fix:** Windows Update Status initializes `$daysSince` before `try/catch` and uses null-safe formatting — the session change description referenced `$daysSince` which was only set inside a nested `if` block within a `try` block, producing malformed output when hotfix query failed or returned no dates (35-Utilities).
+- **Bug Fix:** Disk Space Analyzer initializes `$totalScanGB` before the results conditional — the session change description referenced `$totalScanGB` which was only set inside the `if ($results.Count -gt 0)` block, producing null output when no known paths existed on the system drive (35-Utilities).
+- 63 modules, 1854 tests
+
 ## v1.16.0
 
 - **New Feature:** Windows Update Status — shows the most recently installed hotfix with age warning (30+ days yellow, 60+ days red), lists the 15 most recent hotfixes with KB IDs and install dates, and checks the status of Windows Update services (wuauserv, BITS, CryptSvc, TrustedInstaller). Accessible from Operations > option [25] (35-Utilities, 56-OperationsMenu).

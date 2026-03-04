@@ -1443,6 +1443,7 @@ function Show-UptimeRebootHistory {
     Write-OutputColor "" -color "Info"
 
     # Current uptime
+    $uptimeStr = "Unknown"
     try {
         $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
         $lastBoot = $os.LastBootUpTime
@@ -1503,6 +1504,7 @@ function Show-UptimeRebootHistory {
 
     $reboots = @($reboots | Sort-Object Time -Descending | Select-Object -First 15)
 
+    $unexpectedCount = 0
     if ($reboots.Count -eq 0) {
         Write-OutputColor "  No reboot events found in the event log." -color "Info"
     } else {
@@ -1537,6 +1539,7 @@ function Show-DriverHealthCheck {
     Write-OutputColor "  Scanning device drivers..." -color "Info"
 
     # Get problem devices (status != OK)
+    $allDevices = @()
     $problemDevices = @()
     try {
         $allDevices = @(Get-CimInstance Win32_PnPEntity -ErrorAction Stop)
@@ -1691,6 +1694,7 @@ function Show-DiskSpaceAnalyzer {
     }
 
     $results = @($results | Sort-Object SizeGB -Descending)
+    $totalScanGB = 0
 
     if ($results.Count -gt 0) {
         Write-OutputColor "" -color "Info"
@@ -1723,6 +1727,7 @@ function Show-WindowsUpdateStatus {
     Write-OutputColor "" -color "Info"
 
     # Last update install date
+    $daysSince = $null
     try {
         $lastHotfix = Get-HotFix -ErrorAction Stop | Sort-Object InstalledOn -Descending -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($null -ne $lastHotfix -and $null -ne $lastHotfix.InstalledOn) {
@@ -1779,7 +1784,8 @@ function Show-WindowsUpdateStatus {
     Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
 
     $updateCount = if ($hotfixes) { $hotfixes.Count } else { 0 }
-    Add-SessionChange -Category "System" -Description "Windows Update status check: $updateCount recent updates, last installed $daysSince days ago"
+    $daysSinceStr = if ($null -eq $daysSince) { "unknown" } else { "$daysSince" }
+    Add-SessionChange -Category "System" -Description "Windows Update status check: $updateCount recent updates, last installed $daysSinceStr days ago"
 }
 
 # Open Ports & Listening Services
