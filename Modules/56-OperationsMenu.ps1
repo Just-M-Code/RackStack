@@ -64,6 +64,8 @@ function Show-OperationsMenu {
         Write-MenuItem "[26] Listening Ports & Services"
         Write-MenuItem "[27] Scheduled Task Overview"
         Write-MenuItem "[28] Firewall Rule Summary"
+        Write-MenuItem "[29] Reboot Pending Details"
+        Write-MenuItem "[30] Memory Pressure Diagnostics"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
 
@@ -197,6 +199,14 @@ function Show-OperationsMenu {
             }
             "28" {
                 Show-FirewallRuleSummary
+                Write-PressEnter
+            }
+            "29" {
+                Show-RebootPendingDetails
+                Write-PressEnter
+            }
+            "30" {
+                Show-MemoryDiagnostics
                 Write-PressEnter
             }
             "b" { return }

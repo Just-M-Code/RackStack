@@ -2056,4 +2056,218 @@ function Show-FirewallRuleSummary {
 
     Add-SessionChange -Category "Security" -Description "Firewall summary: $(@($allRules).Count) rules ($(@($enabledRules).Count) enabled), profiles: $(($profiles | ForEach-Object { "$($_.Name)=$($_.Enabled)" }) -join ', ')"
 }
+
+# Function to show pending reboot root cause details
+function Show-RebootPendingDetails {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                      REBOOT PENDING DETAILS").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    $reasons = @()
+
+    # CBS RebootPending (Windows Update / feature installs)
+    if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending") {
+        $reason = "Component Based Servicing (CBS) — pending Windows Update or feature install"
+        $reasons += $reason
+        Write-OutputColor "  [!!] $reason" -color "Warning"
+
+        # Check for specific packages pending
+        $packages = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\PackagesPending" -ErrorAction SilentlyContinue
+        if ($packages) {
+            foreach ($pkg in ($packages | Select-Object -First 5)) {
+                $pkgName = $pkg.PSChildName
+                if ($pkgName.Length -gt 65) { $pkgName = $pkgName.Substring(0, 62) + "..." }
+                Write-OutputColor "       Package: $pkgName" -color "Info"
+            }
+            if (@($packages).Count -gt 5) {
+                Write-OutputColor "       ... and $(@($packages).Count - 5) more" -color "Info"
+            }
+        }
+    }
+
+    # Windows Update AutoUpdate reboot required
+    if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired") {
+        $reason = "Windows Update — one or more updates require a reboot to complete"
+        $reasons += $reason
+        Write-OutputColor "  [!!] $reason" -color "Warning"
+    }
+
+    # Pending file rename operations (AV updates, in-use file replacements)
+    try {
+        $pfro = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" -Name PendingFileRenameOperations -ErrorAction SilentlyContinue
+        if ($null -ne $pfro) {
+            $ops = @($pfro.PendingFileRenameOperations | Where-Object { $_ -match '\S' })
+            $reason = "Pending File Rename Operations — $($ops.Count) queued file operation(s)"
+            $reasons += $reason
+            Write-OutputColor "  [!!] $reason" -color "Warning"
+            foreach ($op in ($ops | Select-Object -First 3)) {
+                $opStr = if ($op.Length -gt 65) { $op.Substring(0, 62) + "..." } else { $op }
+                Write-OutputColor "       $opStr" -color "Info"
+            }
+            if ($ops.Count -gt 3) {
+                Write-OutputColor "       ... and $($ops.Count - 3) more" -color "Info"
+            }
+        }
+    }
+    catch {}
+
+    # Pending computer rename
+    try {
+        $computerName = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName" -Name ComputerName -ErrorAction SilentlyContinue).ComputerName
+        $activeComputerName = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\ComputerName\ActiveComputerName" -Name ComputerName -ErrorAction SilentlyContinue).ComputerName
+        if ($computerName -and $activeComputerName -and $computerName -ne $activeComputerName) {
+            $reason = "Pending Computer Rename — '$activeComputerName' will become '$computerName'"
+            $reasons += $reason
+            Write-OutputColor "  [!!] $reason" -color "Warning"
+        }
+    }
+    catch {}
+
+    # SCCM/ConfigMgr pending reboot (if client is installed)
+    try {
+        $ccmReboot = Invoke-CimMethod -Namespace "root\ccm\clientsdk" -ClassName "CCM_ClientUtilities" -MethodName "DetermineIfRebootPending" -ErrorAction Stop
+        if ($ccmReboot -and ($ccmReboot.RebootPending -or $ccmReboot.IsHardRebootPending)) {
+            $reason = "SCCM/ConfigMgr client — configuration change pending reboot"
+            $reasons += $reason
+            Write-OutputColor "  [!!] $reason" -color "Warning"
+        }
+    }
+    catch {
+        # SCCM not installed — expected on most servers
+    }
+
+    # Domain join pending reboot
+    try {
+        $joinPending = Test-Path "HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\JoinDomain"
+        if ($joinPending) {
+            $reason = "Domain Join — pending domain membership change"
+            $reasons += $reason
+            Write-OutputColor "  [!!] $reason" -color "Warning"
+        }
+    }
+    catch {}
+
+    Write-OutputColor "" -color "Info"
+    if ($reasons.Count -eq 0) {
+        Write-OutputColor "  No pending reboot detected." -color "Success"
+    } else {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  SUMMARY: $($reasons.Count) reason(s) for pending reboot".PadRight(72))│" -color "Warning"
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    }
+
+    Add-SessionChange -Category "System" -Description "Reboot pending details: $($reasons.Count) reason(s) found"
+}
+
+# Function to show memory pressure diagnostics
+function Show-MemoryDiagnostics {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                     MEMORY PRESSURE DIAGNOSTICS").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Physical memory
+    $os = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+    if (-not $os) {
+        Write-OutputColor "  Failed to query system memory information." -color "Error"
+        return
+    }
+
+    $totalGB = [math]::Round($os.TotalVisibleMemorySize / 1MB, 2)
+    $freeGB = [math]::Round($os.FreePhysicalMemory / 1MB, 2)
+    $usedGB = [math]::Round($totalGB - $freeGB, 2)
+    $usedPct = if ($totalGB -gt 0) { [math]::Round(($usedGB / $totalGB) * 100, 1) } else { 0 }
+
+    $memColor = if ($usedPct -gt 90) { "Error" } elseif ($usedPct -gt 75) { "Warning" } else { "Success" }
+
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  PHYSICAL MEMORY").PadRight(72)│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  Total:  $totalGB GB".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Used:   $usedGB GB ($usedPct%)".PadRight(72))│" -color $memColor
+    Write-OutputColor "  │$("  Free:   $freeGB GB".PadRight(72))│" -color "Info"
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Page file
+    $pageFiles = Get-CimInstance Win32_PageFileUsage -ErrorAction SilentlyContinue
+    if ($pageFiles) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  PAGE FILE").PadRight(72)│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        foreach ($pf in $pageFiles) {
+            $pfTotal = [math]::Round($pf.AllocatedBaseSize / 1024, 1)
+            $pfUsed = [math]::Round($pf.CurrentUsage / 1024, 1)
+            $pfPct = if ($pf.AllocatedBaseSize -gt 0) { [math]::Round(($pf.CurrentUsage / $pf.AllocatedBaseSize) * 100, 1) } else { 0 }
+            $pfColor = if ($pfPct -gt 80) { "Warning" } else { "Info" }
+            Write-OutputColor "  │$("  $($pf.Name): $pfUsed GB / $pfTotal GB ($pfPct%)".PadRight(72))│" -color $pfColor
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+        Write-OutputColor "" -color "Info"
+    }
+
+    # Committed memory
+    $perfOS = Get-CimInstance Win32_PerfFormattedData_PerfOS_Memory -ErrorAction SilentlyContinue
+    if ($perfOS) {
+        $commitLimitGB = [math]::Round($perfOS.CommitLimit / 1GB, 1)
+        $committedGB = [math]::Round($perfOS.CommittedBytes / 1GB, 1)
+        $commitPct = if ($commitLimitGB -gt 0) { [math]::Round(($committedGB / $commitLimitGB) * 100, 1) } else { 0 }
+        $commitColor = if ($commitPct -gt 90) { "Error" } elseif ($commitPct -gt 75) { "Warning" } else { "Info" }
+
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  COMMITTED MEMORY").PadRight(72)│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        Write-OutputColor "  │$("  Committed: $committedGB GB / $commitLimitGB GB ($commitPct%)".PadRight(72))│" -color $commitColor
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+        Write-OutputColor "" -color "Info"
+    }
+
+    # Top processes by memory
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  TOP 15 PROCESSES BY MEMORY").PadRight(72)│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  PROCESS NAME                        WORKING SET   PRIVATE (MB)").PadRight(72)│" -color "Warning"
+    Write-OutputColor "  │$("  $('─' * 70)").PadRight(72)│" -color "Info"
+
+    $procs = Get-Process -ErrorAction SilentlyContinue | Sort-Object WorkingSet64 -Descending | Select-Object -First 15
+    foreach ($proc in $procs) {
+        $procName = if ($proc.ProcessName.Length -gt 34) { $proc.ProcessName.Substring(0, 31) + "..." } else { $proc.ProcessName.PadRight(34) }
+        $wsMB = [math]::Round($proc.WorkingSet64 / 1MB, 0)
+        $pmMB = if ($null -ne $proc.PrivateMemorySize64) { [math]::Round($proc.PrivateMemorySize64 / 1MB, 0) } else { 0 }
+        $wsStr = "$wsMB MB".PadLeft(12)
+        $pmStr = "$pmMB MB".PadLeft(12)
+        Write-OutputColor "  │  $procName $wsStr $pmStr  │" -color "Info"
+    }
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Hyper-V VM memory (if Hyper-V is installed)
+    if (Test-HyperVInstalled) {
+        $vms = Get-VM -ErrorAction SilentlyContinue | Where-Object { $_.State -eq 'Running' } | Sort-Object MemoryAssigned -Descending
+        if ($vms) {
+            $totalVMMemGB = [math]::Round(($vms | Measure-Object -Property MemoryAssigned -Sum).Sum / 1GB, 1)
+            Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+            Write-OutputColor "  │$("  HYPER-V VM MEMORY (Running VMs: $(@($vms).Count), Total: $totalVMMemGB GB)").PadRight(72)│" -color "Info"
+            Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+            Write-OutputColor "  │$("  VM NAME                         ASSIGNED    DEMAND     DYNAMIC").PadRight(72)│" -color "Warning"
+            Write-OutputColor "  │$("  $('─' * 70)").PadRight(72)│" -color "Info"
+
+            foreach ($vm in ($vms | Select-Object -First 20)) {
+                $vmName = if ($vm.Name.Length -gt 30) { $vm.Name.Substring(0, 27) + "..." } else { $vm.Name.PadRight(30) }
+                $assignedGB = [math]::Round($vm.MemoryAssigned / 1GB, 1)
+                $demandGB = if ($null -ne $vm.MemoryDemand) { [math]::Round($vm.MemoryDemand / 1GB, 1) } else { 0 }
+                $dynStr = if ($vm.DynamicMemoryEnabled) { "Yes" } else { "No" }
+                Write-OutputColor "  │  $vmName $("$assignedGB GB".PadLeft(9)) $("$demandGB GB".PadLeft(9))    $($dynStr.PadRight(4))  │" -color "Info"
+            }
+            Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+        }
+    }
+
+    Add-SessionChange -Category "System" -Description "Memory diagnostics: ${usedGB}GB/$($totalGB)GB ($usedPct% used)"
+}
 #endregion

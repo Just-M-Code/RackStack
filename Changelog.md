@@ -1,5 +1,11 @@
 ﻿# Changelog
 
+## v1.18.0
+
+- **New Feature:** Reboot Pending Details — enumerates every registry and WMI source that signals a pending reboot and reports the exact root cause: CBS pending packages, Windows Update completion, pending file rename operations, hostname change (showing old and new names), SCCM/ConfigMgr client reboot requests, and domain join changes. Operations menu option [29] (35-Utilities).
+- **New Feature:** Memory Pressure Diagnostics — shows physical memory breakdown (total/used/free with percentage), page file utilization per file, committed memory vs. commit limit, top 15 processes sorted by working set (with private bytes), and on Hyper-V hosts shows per-VM memory allocation including assigned, demand, and dynamic memory status. Operations menu option [30] (35-Utilities).
+- 63 modules, 1854 tests
+
 ## v1.17.2
 
 - **Bug Fix:** Process handle leak in credential storage — `cmdkey.exe` process was never disposed after use; timeout path would also crash reading `ExitCode` on a still-running process. Now uses `try/finally` with `Dispose()` (35-Utilities).

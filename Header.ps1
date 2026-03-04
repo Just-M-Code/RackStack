@@ -30,10 +30,15 @@
     7h3 4b1d3r
 
 .VERSION
-    1.17.2
+    1.18.0
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.18.0
+    NEW FEATURES — REBOOT DETAILS + MEMORY DIAGNOSTICS:
+    - NEW: Reboot Pending Details — enumerates every registry/WMI source that signals a pending reboot and shows the exact reason: CBS packages, Windows Update, pending file renames, hostname change, SCCM client, domain join (35-Utilities, 56-OperationsMenu [29])
+    - NEW: Memory Pressure Diagnostics — shows physical memory usage, page file utilization, committed memory ratio, top 15 processes by working set, and per-VM memory allocation on Hyper-V hosts with dynamic memory status (35-Utilities, 56-OperationsMenu [30])
 
 .CHANGELOG v1.17.2
     ROBUSTNESS SWEEP — 8 FIXES:
