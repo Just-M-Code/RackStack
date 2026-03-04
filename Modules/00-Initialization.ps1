@@ -135,7 +135,7 @@ if (-not $script:ModuleRoot) { $script:ModuleRoot = $PSScriptRoot }
 if (-not $script:ModuleRoot -and $script:ScriptPath) {
     $script:ModuleRoot = [System.IO.Path]::GetDirectoryName($script:ScriptPath)
 }
-$script:ScriptVersion = "1.16.7"
+$script:ScriptVersion = "1.17.0"
 $script:ScriptStartTime = Get-Date
 
 # OS version detection (for feature compatibility)

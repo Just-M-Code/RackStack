@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.17.0
+
+- **New Feature:** Scheduled Task Overview — shows all custom (non-Windows) scheduled tasks with state, next run time, and highlights tasks with non-zero last run results. Filters out built-in Windows maintenance tasks to reduce noise. Operations menu option [27] (35-Utilities).
+- **New Feature:** Firewall Rule Summary — shows firewall profile status (enabled/disabled with default actions), rule counts by direction and action (inbound/outbound, allow/block), and top inbound allow rule groups for quick security audit. Operations menu option [28] (35-Utilities).
+- 63 modules, 1854 tests
+
 ## v1.16.7
 
 - **Security:** Remote service management rejects wildcard characters in service names — entering `*` could match all services, causing a mass stop/restart on the remote target (56-OperationsMenu).

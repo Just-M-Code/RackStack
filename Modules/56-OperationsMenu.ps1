@@ -62,6 +62,8 @@ function Show-OperationsMenu {
         Write-MenuItem "[24] Disk Space Analyzer"
         Write-MenuItem "[25] Windows Update Status"
         Write-MenuItem "[26] Listening Ports & Services"
+        Write-MenuItem "[27] Scheduled Task Overview"
+        Write-MenuItem "[28] Firewall Rule Summary"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
 
@@ -187,6 +189,14 @@ function Show-OperationsMenu {
             }
             "26" {
                 Show-ListeningPorts
+                Write-PressEnter
+            }
+            "27" {
+                Show-ScheduledTaskOverview
+                Write-PressEnter
+            }
+            "28" {
+                Show-FirewallRuleSummary
                 Write-PressEnter
             }
             "b" { return }

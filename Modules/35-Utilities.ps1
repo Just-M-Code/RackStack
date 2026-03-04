@@ -1889,4 +1889,165 @@ function Show-ListeningPorts {
 
     Add-SessionChange -Category "Network" -Description "Listening ports scan: $($portInfo.Count) endpoints on $($uniquePorts.Count) unique ports"
 }
+
+# Scheduled Task Overview
+function Show-ScheduledTaskOverview {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                   SCHEDULED TASK OVERVIEW").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    $allTasks = @()
+    try {
+        $allTasks = @(Get-ScheduledTask -ErrorAction Stop | Where-Object {
+            $_.TaskPath -notlike '\Microsoft\Windows\*' -and $_.TaskName -notlike 'User_Feed*'
+        })
+    }
+    catch {
+        Write-OutputColor "  Failed to query scheduled tasks: $($_.Exception.Message)" -color "Error"
+        return
+    }
+
+    $ready = @($allTasks | Where-Object { $_.State -eq 'Ready' })
+    $running = @($allTasks | Where-Object { $_.State -eq 'Running' })
+    $disabled = @($allTasks | Where-Object { $_.State -eq 'Disabled' })
+
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  SUMMARY".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  Total: $(@($allTasks).Count)    Ready: $(@($ready).Count)    Running: $(@($running).Count)    Disabled: $(@($disabled).Count)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Show failed tasks (last run result != 0 and not disabled)
+    $taskInfoList = @()
+    foreach ($task in $allTasks) {
+        $info = Get-ScheduledTaskInfo -TaskName $task.TaskName -TaskPath $task.TaskPath -ErrorAction SilentlyContinue
+        if ($info) {
+            $taskInfoList += [PSCustomObject]@{
+                Name = $task.TaskName
+                State = $task.State
+                LastResult = $info.LastTaskResult
+                LastRun = $info.LastRunTime
+                NextRun = $info.NextRunTime
+            }
+        }
+    }
+
+    $failed = @($taskInfoList | Where-Object { $_.LastResult -ne 0 -and $_.State -ne 'Disabled' -and $null -ne $_.LastRun -and $_.LastRun -ne [DateTime]::MinValue })
+    if ($failed.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Error"
+        Write-OutputColor "  │$("  FAILED TASKS (last run result != 0)".PadRight(72))│" -color "Error"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Error"
+        foreach ($ft in $failed | Select-Object -First 15) {
+            $name = if ($ft.Name.Length -gt 40) { $ft.Name.Substring(0, 37) + "..." } else { $ft.Name }
+            $resultHex = "0x{0:X}" -f $ft.LastResult
+            $lineText = "  $($name.PadRight(42)) Result: $resultHex"
+            if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+            Write-OutputColor "  │$($lineText.PadRight(72))│" -color "Error"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Error"
+        Write-OutputColor "" -color "Info"
+    }
+
+    # Show all non-Microsoft tasks sorted by state
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  ALL CUSTOM TASKS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    $sortedTasks = $taskInfoList | Sort-Object State, Name
+    foreach ($ti in $sortedTasks | Select-Object -First 25) {
+        $name = if ($ti.Name.Length -gt 35) { $ti.Name.Substring(0, 32) + "..." } else { $ti.Name }
+        $stateStr = $ti.State.ToString().PadRight(10)
+        $nextStr = if ($ti.NextRun -and $ti.NextRun -gt (Get-Date)) { $ti.NextRun.ToString("MM/dd HH:mm") } else { "N/A" }
+        $color = switch ($ti.State) { "Ready" { "Success" } "Running" { "Info" } "Disabled" { "Debug" } default { "Warning" } }
+        $lineText = "  $($name.PadRight(37)) $stateStr Next: $nextStr"
+        if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+        Write-OutputColor "  │$($lineText.PadRight(72))│" -color $color
+    }
+    if (@($sortedTasks).Count -gt 25) {
+        Write-OutputColor "  │$("  ... and $(@($sortedTasks).Count - 25) more tasks".PadRight(72))│" -color "Info"
+    }
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+
+    $failedCount = @($failed).Count
+    Add-SessionChange -Category "System" -Description "Scheduled tasks: $(@($allTasks).Count) total, $failedCount failed, $(@($running).Count) running"
+}
+
+# Firewall Rule Summary
+function Show-FirewallRuleSummary {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                    FIREWALL RULE SUMMARY").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Profile status
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  FIREWALL PROFILE STATUS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    try {
+        $profiles = Get-NetFirewallProfile -ErrorAction Stop
+        foreach ($fwProfile in $profiles) {
+            $enabled = $fwProfile.Enabled -eq $true
+            $color = if ($enabled) { "Success" } else { "Error" }
+            $status = if ($enabled) { "ENABLED" } else { "DISABLED" }
+            $inAction = $fwProfile.DefaultInboundAction
+            $outAction = $fwProfile.DefaultOutboundAction
+            $lineText = "  $($fwProfile.Name.PadRight(14)) $($status.PadRight(10)) In: $($inAction.ToString().PadRight(8)) Out: $outAction"
+            Write-OutputColor "  │$($lineText.PadRight(72))│" -color $color
+        }
+    }
+    catch {
+        Write-OutputColor "  │$("  Failed to query firewall profiles: $($_.Exception.Message)".PadRight(72))│" -color "Error"
+    }
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Rule counts by direction
+    $allRules = @()
+    try {
+        $allRules = @(Get-NetFirewallRule -ErrorAction Stop)
+    }
+    catch {
+        Write-OutputColor "  Failed to query firewall rules: $($_.Exception.Message)" -color "Error"
+        return
+    }
+
+    $enabledRules = @($allRules | Where-Object { $_.Enabled -eq 'True' })
+    $disabledRules = @($allRules | Where-Object { $_.Enabled -ne 'True' })
+    $inbound = @($enabledRules | Where-Object { $_.Direction -eq 'Inbound' })
+    $outbound = @($enabledRules | Where-Object { $_.Direction -eq 'Outbound' })
+    $allowIn = @($inbound | Where-Object { $_.Action -eq 'Allow' })
+    $blockIn = @($inbound | Where-Object { $_.Action -eq 'Block' })
+    $allowOut = @($outbound | Where-Object { $_.Action -eq 'Allow' })
+    $blockOut = @($outbound | Where-Object { $_.Action -eq 'Block' })
+
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  RULE COUNTS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  Total Rules: $(@($allRules).Count)   Enabled: $(@($enabledRules).Count)   Disabled: $(@($disabledRules).Count)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Inbound:  $(@($inbound).Count) enabled ($(@($allowIn).Count) allow, $(@($blockIn).Count) block)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Outbound: $(@($outbound).Count) enabled ($(@($allowOut).Count) allow, $(@($blockOut).Count) block)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Recently added rules (last 30 days based on creation time approximation via display group)
+    # Show top inbound allow rules by program
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  TOP INBOUND ALLOW RULES BY GROUP".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    $grouped = $allowIn | Group-Object DisplayGroup | Sort-Object Count -Descending | Select-Object -First 12
+    foreach ($g in $grouped) {
+        $groupName = if ($g.Name) { $g.Name } else { "(No Group)" }
+        if ($groupName.Length -gt 55) { $groupName = $groupName.Substring(0, 52) + "..." }
+        $lineText = "  $($groupName.PadRight(58)) $($g.Count) rules"
+        Write-OutputColor "  │$($lineText.PadRight(72))│" -color "Info"
+    }
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+
+    Add-SessionChange -Category "Security" -Description "Firewall summary: $(@($allRules).Count) rules ($(@($enabledRules).Count) enabled), profiles: $(($profiles | ForEach-Object { "$($_.Name)=$($_.Enabled)" }) -join ', ')"
+}
 #endregion

@@ -30,10 +30,15 @@
     7h3 4b1d3r
 
 .VERSION
-    1.16.7
+    1.17.0
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.17.0
+    NEW FEATURES — SCHEDULED TASKS + FIREWALL SUMMARY:
+    - NEW: Scheduled Task Overview — shows all custom (non-Windows) scheduled tasks with state, next run time, and highlights tasks with non-zero last run results; filtered to avoid noise from built-in Windows tasks (35-Utilities, 56-OperationsMenu [27])
+    - NEW: Firewall Rule Summary — shows profile status (enabled/disabled, default actions), rule counts by direction and action, and top inbound allow groups for quick security audit (35-Utilities, 56-OperationsMenu [28])
 
 .CHANGELOG v1.16.7
     SECURITY HARDENING (8 FIXES):
