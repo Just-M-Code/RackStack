@@ -419,7 +419,7 @@ function Show-ServerReadiness {
     }
 
     $total++
-    $adaptersUp = @(Get-NetAdapter | Where-Object { $_.Status -eq "Up" })
+    $adaptersUp = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq "Up" })
     if ($adaptersUp.Count -gt 0) {
         $ready++
         $items += @{ Category = "NETWORK"; Name = "Network Adapters"; Value = "$($adaptersUp.Count) adapter(s) up"; Color = "Success"; Symbol = "[OK]" }

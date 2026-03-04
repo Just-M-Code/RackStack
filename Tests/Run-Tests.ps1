@@ -1,10 +1,10 @@
 ﻿<#
 .SYNOPSIS
-    Automated Test Runner for RackStack v1.19.1
+    Automated Test Runner for RackStack v1.20.0
 
 .DESCRIPTION
     Comprehensive non-interactive test suite covering:
-    - Parse tests (monolithic + 63 modules)
+    - Parse tests (monolithic + 64 modules)
     - Module loading
     - PSScriptAnalyzer (Error-severity only)
     - Function existence (50+ functions)
@@ -108,7 +108,7 @@ if (Test-Path $_testInitFile) {
     }
 }
 $monolithicPath = Join-Path (Join-Path $script:ModuleRoot "builds") "$_testToolFullName v$_testScriptVersion.ps1"
-$expectedModuleCount = 63  # 00-62 inclusive
+$expectedModuleCount = 64  # 00-63 inclusive
 
 # ============================================================================
 # BANNER
@@ -258,7 +258,7 @@ Write-TestResult "Script environment initialized" $true
 # SECTION 3: MODULE LOAD TEST
 # ============================================================================
 
-Write-SectionHeader "SECTION 3: MODULE LOAD TEST (dot-source all 63 modules)"
+Write-SectionHeader "SECTION 3: MODULE LOAD TEST (dot-source all 64 modules)"
 
 $loadedModules = 0
 $loadErrors = @()
@@ -526,8 +526,8 @@ try {
 try {
     $firstName = $moduleFiles[0].Name
     $lastName = $moduleFiles[-1].Name
-    $pass = $firstName -eq "00-Initialization.ps1" -and $lastName -eq "62-HyperVReplica.ps1"
-    Write-TestResult "Module range 00-Initialization to 62-HyperVReplica" $pass "First=$firstName, Last=$lastName"
+    $pass = $firstName -eq "00-Initialization.ps1" -and $lastName -eq "63-ScheduledTasks.ps1"
+    Write-TestResult "Module range 00-Initialization to 63-ScheduledTasks" $pass "First=$firstName, Last=$lastName"
 } catch {
     Write-TestResult "Module range verification" $false $_.Exception.Message
 }
@@ -1940,8 +1940,8 @@ try {
         if ($line -match '^\s*#region\s') { $regionStartCount++ }
         if ($line -match '^\s*#endregion') { $regionEndCount++ }
     }
-    Write-TestResult "Monolithic has 62 #region tags" ($regionStartCount -eq 62) "Found: $regionStartCount"
-    Write-TestResult "Monolithic has 62 #endregion tags" ($regionEndCount -eq 62) "Found: $regionEndCount"
+    Write-TestResult "Monolithic has 63 #region tags" ($regionStartCount -eq 63) "Found: $regionStartCount"
+    Write-TestResult "Monolithic has 63 #endregion tags" ($regionEndCount -eq 63) "Found: $regionEndCount"
     Write-TestResult "Region start/end counts match" ($regionStartCount -eq $regionEndCount) "Starts=$regionStartCount, Ends=$regionEndCount"
 } catch {
     Write-TestResult "Region count verification" $false $_.Exception.Message
@@ -4143,7 +4143,7 @@ Write-TestResult "README.md exists" (Test-Path $readmePath)
 
 try {
     $readmeContent = Get-Content $readmePath -Raw
-    Write-TestResult "README: mentions 63 modules" ($readmeContent -match '63 module')
+    Write-TestResult "README: mentions 64 modules" ($readmeContent -match '64 module')
     Write-TestResult "README: has batch mode section" ($readmeContent -match 'Batch Mode')
     Write-TestResult "README: has testing section" ($readmeContent -match 'Testing')
     Write-TestResult "README: has defaults.json example" ($readmeContent -match 'defaults\.json')
@@ -6523,18 +6523,18 @@ try {
     # RackStack.ps1 loader includes 62-HyperVReplica.ps1
     $loaderContent = Get-Content $loaderPath -Raw
     Write-TestResult "RackStack.ps1: loads 62-HyperVReplica.ps1" ($loaderContent -match '62-HyperVReplica\.ps1')
-    Write-TestResult "RackStack.ps1: mentions 63 modules" ($loaderContent -match '63 modules')
+    Write-TestResult "RackStack.ps1: mentions 64 modules" ($loaderContent -match '64 modules')
 
     # Module count verification
     $moduleCount = (Get-ChildItem -Path $modulesPath -Filter "*.ps1").Count
-    Write-TestResult "Module count is 63" ($moduleCount -eq 63) "Found $moduleCount modules"
+    Write-TestResult "Module count is 64" ($moduleCount -eq 64) "Found $moduleCount modules"
 
     # Changelog mentions v1.4.0
     $changelogPath = Join-Path $script:ModuleRoot "Changelog.md"
     $changelogContent = Get-Content $changelogPath -Raw
     Write-TestResult "Changelog: has v1.4.0 entry" ($changelogContent -match '## v1\.4\.0')
     Write-TestResult "Changelog: mentions Server Role Templates" ($changelogContent -match 'Server Role Templates')
-    Write-TestResult "Changelog: mentions 63 modules" ($changelogContent -match '63 modules')
+    Write-TestResult "Changelog: mentions 64 modules" ($changelogContent -match '64 modules')
 
 } catch {
     Write-TestResult "Storage Backend Integration Tests" $false $_.Exception.Message
@@ -7522,6 +7522,46 @@ try {
 
 } catch {
     Write-TestResult "Server Role Templates Tests" $false $_.Exception.Message
+}
+
+# ============================================================================
+# SECTION 142: SCHEDULED TASK MANAGER (63-ScheduledTasks.ps1 v1.20.0)
+# ============================================================================
+
+Write-SectionHeader "142" "SCHEDULED TASK MANAGER"
+
+try {
+    $stContent = Get-Content "$modulesPath\63-ScheduledTasks.ps1" -Raw
+
+    Write-TestResult "63-Tasks: function Show-ScheduledTaskManager exists" ($stContent -match 'function\s+Show-ScheduledTaskManager\b')
+    Write-TestResult "63-Tasks: function Get-ScheduledTaskSafe exists" ($stContent -match 'function\s+Get-ScheduledTaskSafe\b')
+    Write-TestResult "63-Tasks: function Format-TaskResult exists" ($stContent -match 'function\s+Format-TaskResult\b')
+    Write-TestResult "63-Tasks: function Show-AllScheduledTasks exists" ($stContent -match 'function\s+Show-AllScheduledTasks\b')
+    Write-TestResult "63-Tasks: function Show-RunningTasks exists" ($stContent -match 'function\s+Show-RunningTasks\b')
+    Write-TestResult "63-Tasks: function Show-FailedTasks exists" ($stContent -match 'function\s+Show-FailedTasks\b')
+    Write-TestResult "63-Tasks: function Search-ScheduledTasks exists" ($stContent -match 'function\s+Search-ScheduledTasks\b')
+    Write-TestResult "63-Tasks: function Set-ScheduledTaskState exists" ($stContent -match 'function\s+Set-ScheduledTaskState\b')
+    Write-TestResult "63-Tasks: function Invoke-ScheduledTaskNow exists" ($stContent -match 'function\s+Invoke-ScheduledTaskNow\b')
+    Write-TestResult "63-Tasks: function Export-ScheduledTaskXML exists" ($stContent -match 'function\s+Export-ScheduledTaskXML\b')
+    Write-TestResult "63-Tasks: function Import-ScheduledTaskXML exists" ($stContent -match 'function\s+Import-ScheduledTaskXML\b')
+    Write-TestResult "63-Tasks: ReturnToMainMenu check" ($stContent -match 'ReturnToMainMenu')
+    Write-TestResult "63-Tasks: navigation support" ($stContent -match 'Test-NavigationCommand')
+    Write-TestResult "63-Tasks: session change tracking" ($stContent -match 'Add-SessionChange')
+    Write-TestResult "63-Tasks: error handling" ($stContent -match 'try\s*\{')
+    Write-TestResult "63-Tasks: excludes Microsoft tasks by default" ($stContent -match 'Microsoft')
+
+    # Menu integration
+    $menuContent = Get-Content "$modulesPath\48-MenuDisplay.ps1" -Raw
+    $runnerContent = Get-Content "$modulesPath\49-MenuRunner.ps1" -Raw
+    Write-TestResult "63-Tasks: menu entry exists" ($menuContent -match 'Scheduled Task Manager')
+    Write-TestResult "63-Tasks: menu runner dispatches" ($runnerContent -match 'Show-ScheduledTaskManager')
+
+    # Loader integration
+    $loaderContent142 = Get-Content "$script:ModuleRoot\RackStack.ps1" -Raw
+    Write-TestResult "63-Tasks: loader includes module" ($loaderContent142 -match '63-ScheduledTasks\.ps1')
+
+} catch {
+    Write-TestResult "Scheduled Task Manager Tests" $false $_.Exception.Message
 }
 
 # ============================================================================

@@ -491,7 +491,7 @@ function Invoke-RemoteProfileApply {
         Write-OutputColor "No path entered." -color "Error"
         return
     }
-    if (-not (Test-Path $profilePath)) {
+    if (-not (Test-Path -LiteralPath $profilePath)) {
         Write-OutputColor "Profile file not found: $profilePath" -color "Error"
         return
     }

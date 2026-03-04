@@ -269,7 +269,7 @@ function Get-FileServerFile {
     $destFile = Join-Path $DestinationPath $FileName
 
     # Ensure destination directory exists
-    if (-not (Test-Path $DestinationPath)) {
+    if (-not (Test-Path -LiteralPath $DestinationPath)) {
         try {
             New-Item -Path $DestinationPath -ItemType Directory -Force | Out-Null
         }
@@ -363,7 +363,7 @@ function Get-FileServerFile {
 
             while ($downloadJob.State -eq "Running") {
                 $currentSize = 0
-                if (Test-Path $destFile) {
+                if (Test-Path -LiteralPath $destFile) {
                     try { $currentSize = (Get-Item $destFile -ErrorAction SilentlyContinue).Length } catch { $currentSize = 0 }
                 }
 
@@ -430,7 +430,7 @@ function Get-FileServerFile {
             }
 
             # Verify file exists
-            if (-not (Test-Path $destFile)) {
+            if (-not (Test-Path -LiteralPath $destFile)) {
                 if ($attempt -ge $maxAttempts) {
                     return @{ Success = $false; Error = "File not found after download."; FilePath = $null }
                 }

@@ -415,7 +415,7 @@ function Disable-AllIPv6 {
     Clear-Host
     Write-CenteredOutput "Disable IPv6 on All Adapters" -color "Info"
 
-    $adapters = Get-NetAdapter
+    $adapters = Get-NetAdapter -ErrorAction SilentlyContinue
 
     Write-OutputColor "`nThis will disable IPv6 on all network adapters." -color "Warning"
     Write-OutputColor "Adapters to be modified:" -color "Info"
@@ -463,7 +463,7 @@ function Rename-NetworkAdapter {
     Write-CenteredOutput "Rename Network Adapter" -color "Info"
 
     # Get all adapters
-    $adapters = Get-NetAdapter | Sort-Object Name
+    $adapters = Get-NetAdapter -ErrorAction SilentlyContinue | Sort-Object Name
 
     if ($null -eq $adapters -or @($adapters).Count -eq 0) {
         Write-OutputColor "No network adapters found." -color "Error"

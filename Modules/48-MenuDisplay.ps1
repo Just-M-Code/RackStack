@@ -434,6 +434,7 @@ function Show-ToolsUtilitiesMenu {
     Write-MenuItem "[10] SNMP Configuration"
     Write-MenuItem "[11] Windows Server Backup"
     Write-MenuItem "[12] Certificate Management ►"
+    Write-MenuItem "[13] Scheduled Task Manager ►"
     Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  [B] ◄ Back to Server Config" -color "Info"

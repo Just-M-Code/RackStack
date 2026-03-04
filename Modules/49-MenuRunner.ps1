@@ -275,9 +275,10 @@ function Start-Show-ToolsUtilitiesMenu {
             "10" { Set-SNMPConfiguration }
             "11" { Install-WindowsServerBackup; Write-PressEnter }
             "12" { Show-CertificateMenu }
+            "13" { Show-ScheduledTaskManager }
             "back" { return }
             default {
-                Write-OutputColor "Invalid choice. Please enter 1-12 or B." -color "Error"
+                Write-OutputColor "Invalid choice. Please enter 1-13 or B." -color "Error"
                 Start-Sleep -Seconds 2
             }
         }

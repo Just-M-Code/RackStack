@@ -87,7 +87,7 @@ function Test-iSCSICabling {
 
     if (-not $Adapters -or $Adapters.Count -lt 2) {
         # Find iSCSI candidate adapters
-        $Adapters = @(Get-NetAdapter | Where-Object {
+        $Adapters = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object {
             $_.Name -notlike "vEthernet*" -and
             $_.InterfaceDescription -notlike "*Hyper-V*" -and
             $_.InterfaceDescription -notlike "*Virtual*"
@@ -352,7 +352,7 @@ function Set-iSCSIAutoConfiguration {
     Write-OutputColor "" -color "Info"
 
     # Step 3: Find iSCSI candidate adapters
-    $adapters = @(Get-NetAdapter | Where-Object {
+    $adapters = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object {
         $_.Name -notlike "vEthernet*" -and
         $_.InterfaceDescription -notlike "*Hyper-V*" -and
         $_.InterfaceDescription -notlike "*Virtual*"
@@ -1265,7 +1265,7 @@ function Start-Show-iSCSISANMenu {
             }
             "2" {
                 # NIC identification helper
-                $adapters = @(Get-NetAdapter | Where-Object {
+                $adapters = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object {
                     $_.Name -notlike "vEthernet*" -and
                     $_.InterfaceDescription -notlike "*Hyper-V*" -and
                     $_.InterfaceDescription -notlike "*Virtual*"
@@ -1283,7 +1283,7 @@ function Start-Show-iSCSISANMenu {
                         }
                         elseif ($identifyChoice -match '^[Rr]$') {
                             # Refresh adapter list
-                            $adapters = @(Get-NetAdapter | Where-Object {
+                            $adapters = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object {
                                 $_.Name -notlike "vEthernet*" -and
                                 $_.InterfaceDescription -notlike "*Hyper-V*" -and
                                 $_.InterfaceDescription -notlike "*Virtual*"
@@ -1295,7 +1295,7 @@ function Start-Show-iSCSISANMenu {
                             if ($idx -ge 1 -and $idx -le $adapters.Count) {
                                 Disable-NICForIdentification -Adapter $adapters[$idx - 1]
                                 # Refresh after enable
-                                $adapters = @(Get-NetAdapter | Where-Object {
+                                $adapters = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object {
                                     $_.Name -notlike "vEthernet*" -and
                                     $_.InterfaceDescription -notlike "*Hyper-V*" -and
                                     $_.InterfaceDescription -notlike "*Virtual*"

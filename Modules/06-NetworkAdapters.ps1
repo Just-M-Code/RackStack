@@ -5,7 +5,7 @@ function Select-PhysicalAdapters {
         Write-CenteredOutput "Select Physical Adapters" -color "Info"
 
         # Show ALL physical adapters (up and down) for SET selection
-        $adapters = Get-NetAdapter | Where-Object {
+        $adapters = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object {
             $_.Name -notlike "vEthernet*" -and
             $_.InterfaceDescription -notlike "*Hyper-V*" -and
             $_.InterfaceDescription -notlike "*Virtual*"
@@ -69,7 +69,7 @@ function Select-Host-Network-Adapter {
         Write-CenteredOutput "Select Host Network Adapter" -color "Info"
 
         # Show ALL vEthernet adapters (up and down)
-        $adapters = Get-NetAdapter | Where-Object { $_.Name -like "vEthernet*" }
+        $adapters = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "vEthernet*" }
 
         if ($null -eq $adapters -or @($adapters).Count -eq 0) {
             Write-OutputColor "No virtual adapters found. Please create a Switch Embedded Team first." -color "Error"
@@ -129,7 +129,7 @@ function Select-VM-Network-Adapter {
         Write-CenteredOutput "Select VM Network Adapter" -color "Info"
 
         # Show ALL non-vEthernet adapters (up and down)
-        $adapters = Get-NetAdapter | Where-Object { $_.Name -notlike "vEthernet*" }
+        $adapters = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Name -notlike "vEthernet*" }
 
         if ($null -eq $adapters -or @($adapters).Count -eq 0) {
             Write-OutputColor "No network adapters found." -color "Error"
@@ -189,7 +189,7 @@ function Select-iSCSI-Adapters {
         Write-CenteredOutput "Select iSCSI Adapters" -color "Info"
 
         # Show ALL physical adapters regardless of status (up and down)
-        $adapters = Get-NetAdapter | Where-Object {
+        $adapters = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object {
             $_.Name -notlike "vEthernet*" -and
             $_.InterfaceDescription -notlike "*Hyper-V*"
         }

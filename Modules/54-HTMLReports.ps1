@@ -77,7 +77,7 @@ function Export-HTMLHealthReport {
     }
 
     # Network adapters (batch query to avoid N+1)
-    $adapters = Get-NetAdapter | Where-Object { $_.Status -eq "Up" }
+    $adapters = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq "Up" }
     $allIPv4Html = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue
     $networkHtml = ""
     foreach ($adapter in $adapters) {
@@ -609,7 +609,7 @@ function Export-HTMLReadinessReport {
 
     # Network
     $total++
-    $nics = @(Get-NetAdapter | Where-Object { $_.Status -eq "Up" })
+    $nics = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq "Up" })
     if ($nics.Count -gt 0) { $ready++; $rows += Add-ReadinessRow -Cat "Network" -Name "Adapters" -Value "$($nics.Count) up" -Status "ok" }
     else { $rows += Add-ReadinessRow -Cat "Network" -Name "Adapters" -Value "None up" -Status "fail" }
 

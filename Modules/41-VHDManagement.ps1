@@ -355,6 +355,7 @@ function Copy-VHDForVM {
                     $null = $retryJob | Wait-Job -Timeout 600
                     $null = Receive-Job $retryJob -ErrorAction SilentlyContinue
                     $retryState = $retryJob.State
+                    Stop-Job $retryJob -ErrorAction SilentlyContinue
                     Remove-Job $retryJob -Force -ErrorAction SilentlyContinue
                     if ($retryState -ne "Failed" -and (Test-Path $fixedPath)) {
                         Write-OutputColor "  Retry succeeded!" -color "Success"

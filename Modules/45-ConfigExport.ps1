@@ -340,7 +340,7 @@ function Save-ConfigurationProfile {
     $powerPlan = Get-CurrentPowerPlan
 
     # Get primary adapter info
-    $primaryAdapter = Get-NetAdapter | Where-Object { $_.Status -eq "Up" } | Select-Object -First 1
+    $primaryAdapter = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq "Up" } | Select-Object -First 1
     $primaryIP = $null
     $primaryDNS = $null
 
@@ -914,7 +914,7 @@ function Compare-ConfigurationDrift {
     }
 
     # Network
-    $primaryAdapter = Get-NetAdapter | Where-Object { $_.Status -eq "Up" } | Select-Object -First 1
+    $primaryAdapter = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq "Up" } | Select-Object -First 1
     if ($primaryAdapter) {
         $currentIP = (Get-NetIPAddress -InterfaceAlias $primaryAdapter.Name -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { $_.PrefixOrigin -ne "WellKnown" } | Select-Object -First 1).IPAddress
         $currentDNS = (Get-DnsClientServerAddress -InterfaceAlias $primaryAdapter.Name -AddressFamily IPv4 -ErrorAction SilentlyContinue).ServerAddresses

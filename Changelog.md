@@ -1,5 +1,15 @@
 ﻿# Changelog
 
+## v1.20.0
+
+- **New Feature:** Scheduled Task Manager — view all tasks, search by keyword, show running/failed tasks, enable/disable, run on demand, export/import XML backups with full state tracking (63-ScheduledTasks).
+- **Bug Fix:** Discovery cmdlets (`Get-NetAdapter`, `Get-Disk`, `Get-Volume`, `Get-NetIPAddress`) across 9 modules now include `-ErrorAction SilentlyContinue` to prevent unhandled terminating errors when WMI/CIM queries fail on disconnected or degraded hardware.
+- **Bug Fix:** ISO download disk space check no longer fails on UNC/network paths — guards against non-drive-letter paths (42-ISODownload).
+- **Bug Fix:** `Test-Path` calls use `-LiteralPath` for user-input profile path to prevent wildcard interpretation (35-Utilities).
+- **Bug Fix:** `Test-Path` calls use `-LiteralPath` for FileServer download destination and progress-check paths (39-FileServer).
+- **Bug Fix:** VHD conversion retry properly stops timed-out background job before cleanup (41-VHDManagement).
+- 64 modules, 1873 tests
+
 ## v1.19.1
 
 - **Bug Fix:** Port scan results now correctly match ports when some scans time out — results tracked per-job index instead of sequential array (58-NetworkDiagnostics).

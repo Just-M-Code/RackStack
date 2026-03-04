@@ -61,7 +61,7 @@ function Show-AllDisks {
     Write-OutputColor "Scanning disks..." -color "Info"
     Write-OutputColor "" -color "Info"
 
-    $disks = @(Get-Disk | Sort-Object Number)
+    $disks = @(Get-Disk -ErrorAction SilentlyContinue | Sort-Object Number)
 
     if ($disks.Count -eq 0) {
         Write-OutputColor "No disks found." -color "Warning"
@@ -174,7 +174,7 @@ function Show-AllVolumes {
 
     Write-OutputColor "" -color "Info"
 
-    $volumes = @(Get-Volume | Where-Object { $_.DriveLetter -or $_.FileSystemLabel } | Sort-Object DriveLetter)
+    $volumes = @(Get-Volume -ErrorAction SilentlyContinue | Where-Object { $_.DriveLetter -or $_.FileSystemLabel } | Sort-Object DriveLetter)
 
     if ($volumes.Count -eq 0) {
         Write-OutputColor "No volumes found." -color "Warning"
@@ -228,7 +228,7 @@ function Select-Disk {
         [switch]$ExcludeSystemDisk
     )
 
-    $disks = @(Get-Disk | Sort-Object Number)
+    $disks = @(Get-Disk -ErrorAction SilentlyContinue | Sort-Object Number)
 
     if ($OnlyUninitialized) {
         $disks = @($disks | Where-Object { $_.PartitionStyle -eq "RAW" })
@@ -386,7 +386,7 @@ function Initialize-NewDisk {
     Write-OutputColor "" -color "Info"
 
     # Check for offline disks first - they must be brought online before initialization
-    $offlineDisks = @(Get-Disk | Where-Object { $_.OperationalStatus -eq "Offline" })
+    $offlineDisks = @(Get-Disk -ErrorAction SilentlyContinue | Where-Object { $_.OperationalStatus -eq "Offline" })
     if ($offlineDisks.Count -gt 0) {
         Write-OutputColor "" -color "Info"
         Write-OutputColor "  $($offlineDisks.Count) disk(s) are currently offline." -color "Warning"
@@ -415,7 +415,7 @@ function Initialize-NewDisk {
     }
 
     # Show only uninitialized disks
-    $rawDisks = @(Get-Disk | Where-Object { $_.PartitionStyle -eq "RAW" })
+    $rawDisks = @(Get-Disk -ErrorAction SilentlyContinue | Where-Object { $_.PartitionStyle -eq "RAW" })
 
     if ($rawDisks.Count -eq 0) {
         Write-OutputColor "No uninitialized disks found." -color "Warning"

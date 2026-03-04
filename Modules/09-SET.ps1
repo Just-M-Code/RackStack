@@ -8,7 +8,7 @@ function Test-AdapterInternetConnectivity {
     $results = @()
 
     # Get physical adapters that are UP and not virtual
-    $adapters = Get-NetAdapter | Where-Object {
+    $adapters = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object {
         $_.Status -eq "Up" -and
         $_.Name -notlike "vEthernet*" -and
         $_.InterfaceDescription -notlike "*Hyper-V*" -and
