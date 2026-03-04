@@ -1417,7 +1417,7 @@ function Show-EventLogAlerts {
         Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Error"
         foreach ($item in $topEvents) {
             $e = $item.Event
-            $time = $e.TimeCreated.ToString("MM/dd HH:mm")
+            $time = if ($e.TimeCreated) { $e.TimeCreated.ToString("MM/dd HH:mm") } else { "N/A" }
             $src = if ($e.ProviderName) { $e.ProviderName } else { "Unknown" }
             if ($src.Length -gt 22) { $src = $src.Substring(0, 19) + "..." }
             $msg = ($e.Message -split "`n")[0]

@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.16.4
+
+- **Bug Fix:** Event Log Viewer guards against null `TimeCreated` — events with null timestamps caused "cannot call method on null-valued expression" on `.ToString()` (29-EventLogViewer).
+- **Bug Fix:** Event Log Alert Summary guards against null `TimeCreated` on latest events — same `.ToString()` crash on null (35-Utilities).
+- **Bug Fix:** BitLocker encryption progress guards against null `VolumeStatus` — the `.ToString()` call could crash if the volume status property was null (31-BitLocker).
+- 63 modules, 1854 tests
+
 ## v1.16.3
 
 - **Bug Fix:** Event Log Alert Summary guards against null `ProviderName` on events — events with null provider caused a "cannot call method on null-valued expression" error on `.PadRight()` in both the top sources list and the latest critical/error events list. Now defaults to "Unknown" (35-Utilities).

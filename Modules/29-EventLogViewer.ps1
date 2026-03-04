@@ -123,7 +123,7 @@ function Show-EventLogViewer {
                     "Warning" { "Warning" }
                     default { "Info" }
                 }
-                $timeStr = $logEvent.TimeCreated.ToString("MM-dd HH:mm")
+                $timeStr = if ($logEvent.TimeCreated) { $logEvent.TimeCreated.ToString("MM-dd HH:mm") } else { "N/A" }
                 $msg = if ($logEvent.Message -and $logEvent.Message.Length -gt 50) { $logEvent.Message.Substring(0,47) + "..." } elseif ($logEvent.Message) { $logEvent.Message } else { "(no message)" }
                 $msg = $msg -replace "`r`n|`n", " "
                 Write-OutputColor "  [$timeStr] $($logEvent.LevelDisplayName): $msg" -color $levelColor

@@ -30,10 +30,16 @@
     7h3 4b1d3r
 
 .VERSION
-    1.16.3
+    1.16.4
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.16.4
+    NULL PROPERTY GUARDS ON TOSTRING CALLS:
+    - FIX: Event Log Viewer guards against null TimeCreated — events with null timestamps caused "cannot call method on null-valued expression" on .ToString() (29-EventLogViewer)
+    - FIX: Event Log Alert Summary guards against null TimeCreated on latest events — same .ToString() crash on null (35-Utilities)
+    - FIX: BitLocker encryption progress guards against null VolumeStatus — the .ToString() call could crash if the volume status property was null (31-BitLocker)
 
 .CHANGELOG v1.16.3
     NULL PROVIDER NAME GUARD IN EVENT LOG ALERTS:

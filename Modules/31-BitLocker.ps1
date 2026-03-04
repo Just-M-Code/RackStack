@@ -283,7 +283,7 @@ function Show-BitLockerManagement {
                 Write-OutputColor "  │$("  ENCRYPTION PROGRESS".PadRight(72))│" -color "Info"
                 Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
                 foreach ($vol in $volumes) {
-                    $status = $vol.VolumeStatus.ToString()
+                    $status = if ($vol.VolumeStatus) { $vol.VolumeStatus.ToString() } else { "Unknown" }
                     $pct = $vol.EncryptionPercentage
                     $pctColor = if ($pct -eq 100) { "Success" } elseif ($pct -gt 0) { "Warning" } else { "Info" }
                     $statusText = switch -Wildcard ($status) {
