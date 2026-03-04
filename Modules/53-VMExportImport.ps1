@@ -83,19 +83,21 @@ function Export-VMWizard {
         }
     }
 
-    # Disk space pre-check on export destination
+    # Disk space pre-check on export destination (skip for UNC paths)
     try {
-        $exportDriveLetter = $exportPath.Substring(0, 1)
-        $exportVolume = Get-Volume -DriveLetter $exportDriveLetter -ErrorAction SilentlyContinue
-        if ($null -ne $exportVolume) {
-            $freeGB = [math]::Round($exportVolume.SizeRemaining / 1GB, 1)
-            # Estimate needed: sum of VHD file sizes
-            $vhdSizes = @($selectedVM.HardDrives | ForEach-Object { (Get-VHD $_.Path @vmParams -ErrorAction SilentlyContinue).FileSize })
-            $neededGB = if ($null -ne ($vhdSizes | Measure-Object -Sum).Sum) { [math]::Round(($vhdSizes | Measure-Object -Sum).Sum / 1GB, 1) } else { 0 }
-            if ($neededGB -gt 0 -and $freeGB -lt ($neededGB * 1.2)) {
-                Write-OutputColor "" -color "Info"
-                Write-OutputColor "  WARNING: Low disk space on ${exportDriveLetter}: drive!" -color "Warning"
-                Write-OutputColor "  Free: ${freeGB} GB | Estimated need: ~${neededGB} GB" -color "Warning"
+        if ($exportPath -match '^[A-Za-z]:') {
+            $exportDriveLetter = $exportPath.Substring(0, 1)
+            $exportVolume = Get-Volume -DriveLetter $exportDriveLetter -ErrorAction SilentlyContinue
+            if ($null -ne $exportVolume) {
+                $freeGB = [math]::Round($exportVolume.SizeRemaining / 1GB, 1)
+                # Estimate needed: sum of VHD file sizes
+                $vhdSizes = @($selectedVM.HardDrives | ForEach-Object { (Get-VHD $_.Path @vmParams -ErrorAction SilentlyContinue).FileSize })
+                $neededGB = if ($null -ne ($vhdSizes | Measure-Object -Sum).Sum) { [math]::Round(($vhdSizes | Measure-Object -Sum).Sum / 1GB, 1) } else { 0 }
+                if ($neededGB -gt 0 -and $freeGB -lt ($neededGB * 1.2)) {
+                    Write-OutputColor "" -color "Info"
+                    Write-OutputColor "  WARNING: Low disk space on ${exportDriveLetter}: drive!" -color "Warning"
+                    Write-OutputColor "  Free: ${freeGB} GB | Estimated need: ~${neededGB} GB" -color "Warning"
+                }
             }
         }
     } catch {
@@ -184,7 +186,10 @@ function Export-VMWizard {
         Write-OutputColor "  Error exporting VM: $_" -color "Error"
     }
     finally {
-        if ($exportJob) { Remove-Job -Job $exportJob -Force -ErrorAction SilentlyContinue }
+        if ($exportJob) {
+            Stop-Job -Job $exportJob -ErrorAction SilentlyContinue
+            Remove-Job -Job $exportJob -Force -ErrorAction SilentlyContinue
+        }
     }
 }
 
@@ -319,6 +324,7 @@ function Show-VMExportImportMenu {
     }
 
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         Clear-Host
         Write-OutputColor "" -color "Info"
         Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"

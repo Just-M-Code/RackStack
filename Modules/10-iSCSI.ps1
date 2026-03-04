@@ -1246,6 +1246,7 @@ function Show-iSCSISANMenu {
 # Function to run iSCSI & SAN Management menu
 function Start-Show-iSCSISANMenu {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         $choice = Show-iSCSISANMenu
 
         $navResult = Test-NavigationCommand -UserInput $choice

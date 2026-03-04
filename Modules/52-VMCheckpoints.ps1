@@ -162,11 +162,11 @@ function New-VMCheckpointWizard {
     Write-OutputColor "  Type: $cpType" -color "Info"
     Write-OutputColor "" -color "Info"
 
-    # Disk space validation
+    # Disk space validation (skip for UNC paths)
     try {
         $vmPath = $selectedVM.Path
         if (-not $vmPath) { $vmPath = $selectedVM.ConfigurationLocation }
-        if ($vmPath) {
+        if ($vmPath -and $vmPath -match '^[A-Za-z]:') {
             $driveLetter = $vmPath.Substring(0, 2)
             $volume = Get-Volume -DriveLetter $driveLetter.TrimEnd(':') -ErrorAction SilentlyContinue
             if ($null -ne $volume) {
@@ -406,6 +406,7 @@ function Show-VMCheckpointManagement {
     }
 
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         Clear-Host
         Write-OutputColor "" -color "Info"
         Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"

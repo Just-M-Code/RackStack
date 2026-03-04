@@ -233,6 +233,7 @@ function Show-FCSANMenu {
 # Function to run FC SAN menu
 function Start-FCSANMenu {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         $choice = Show-FCSANMenu
 
         $navResult = Test-NavigationCommand -UserInput $choice
@@ -564,6 +565,7 @@ function Show-S2DMenu {
 # Function to run S2D menu
 function Start-S2DMenu {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         $choice = Show-S2DMenu
 
         $navResult = Test-NavigationCommand -UserInput $choice
@@ -713,6 +715,7 @@ function Show-SMB3Menu {
 # Function to run SMB3 menu
 function Start-SMB3Menu {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         $choice = Show-SMB3Menu
 
         $navResult = Test-NavigationCommand -UserInput $choice
@@ -812,6 +815,7 @@ function Show-NVMeoFMenu {
 # Function to run NVMe-oF menu
 function Start-NVMeoFMenu {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         $choice = Show-NVMeoFMenu
 
         $navResult = Test-NavigationCommand -UserInput $choice
@@ -991,6 +995,7 @@ function Show-StorageSANMenu {
 # Function to run the unified Storage & SAN menu
 function Start-StorageSANMenu {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         $choice = Show-StorageSANMenu
 
         $navResult = Test-NavigationCommand -UserInput $choice

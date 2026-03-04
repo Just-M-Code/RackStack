@@ -439,6 +439,7 @@ function Show-DefenderStatus {
     Write-OutputColor "" -color "Info"
 
     # Threat detection history
+    $threats = @()
     try {
         $threats = @(Get-MpThreatDetection -ErrorAction Stop)
         if ($threats.Count -gt 0) {

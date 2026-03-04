@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    Automated Test Runner for RackStack v1.18.2
+    Automated Test Runner for RackStack v1.19.0
 
 .DESCRIPTION
     Comprehensive non-interactive test suite covering:
@@ -7261,7 +7261,6 @@ try {
     Write-TestResult "39-FS: disk space check before download" ($fsContent -match 'SizeRemaining|requiredSpace|Insufficient disk')
     Write-TestResult "39-FS: progress bar with speed/ETA" ($fsContent -match 'Write-ProgressBar|SpeedBytesPerSec')
     Write-TestResult "00-Init: MaxDownloadRetries constant" ($initContent -match '\$script:MaxDownloadRetries\s*=\s*3')
-    Write-TestResult "00-Init: BITSPreferred constant" ($initContent -match '\$script:BITSPreferred\s*=\s*\$true')
 
 } catch {
     Write-TestResult "Download Resume/Retry Tests" $false $_.Exception.Message

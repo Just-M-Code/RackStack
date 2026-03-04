@@ -360,6 +360,7 @@ function Show-SettingsMenu {
 # Function to run settings menu
 function Start-Show-SettingsMenu {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         $choice = Show-SettingsMenu
 
         switch ($choice) {

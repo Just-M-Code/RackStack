@@ -2372,7 +2372,7 @@ function Test-DeploymentDiskSpace {
             }
         } catch { }
     }
-    if ($null -eq $freeBytes) {
+    if ($null -eq $freeBytes -and $StoragePath -match '^[A-Za-z]:') {
         $driveLetter = $StoragePath.Substring(0, 1)
         $volume = Get-Volume -DriveLetter $driveLetter -ErrorAction SilentlyContinue
         if ($volume) { $freeBytes = $volume.SizeRemaining }

@@ -96,7 +96,7 @@ function Get-WindowsVersionInfo {
 # Function to check if server is activated
 function Test-ServerActivated {
     try {
-        $result = cscript.exe //NoLogo C:\Windows\System32\slmgr.vbs /dli 2>&1
+        $result = cscript.exe //NoLogo "$env:SystemRoot\System32\slmgr.vbs" /dli 2>&1
         $resultText = $result -join "`n"
 
         if ($resultText -match "License Status: Licensed") {
@@ -132,7 +132,7 @@ function Enable-ServerActivation {
         }
 
         Write-OutputColor "Installing product key..." -color "Info"
-        $ipkResult = cscript.exe //NoLogo C:\Windows\System32\slmgr.vbs /ipk "$productKey" 2>&1
+        $ipkResult = cscript.exe //NoLogo "$env:SystemRoot\System32\slmgr.vbs" /ipk "$productKey" 2>&1
         $ipkText = $ipkResult -join ' '
 
         if ($ipkText -notmatch "(?i)success") {
@@ -153,7 +153,7 @@ function Enable-ServerActivation {
 
         Write-OutputColor "  Key installed. Activating..." -color "Info"
         Start-Sleep -Seconds 5
-        $activateResult = cscript.exe //NoLogo C:\Windows\System32\slmgr.vbs /ato 2>&1
+        $activateResult = cscript.exe //NoLogo "$env:SystemRoot\System32\slmgr.vbs" /ato 2>&1
         $atoText = $activateResult -join ' '
 
         if ($atoText -match "(?i)success") {

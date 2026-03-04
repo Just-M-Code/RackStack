@@ -2,6 +2,7 @@
 # Function to configure NTP time servers
 function Set-NTPConfiguration {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         Clear-Host
         Write-OutputColor "" -color "Info"
         Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
@@ -161,7 +162,8 @@ function Show-DetailedTimeStatus {
 
             # Parse phase offset (in seconds)
             if ($lineStr -match 'Phase Offset:\s*([\-\d\.]+)s') {
-                $offsetSeconds = [double]$Matches[1]
+                $regexMatches = $matches
+                $offsetSeconds = [double]$regexMatches[1]
             }
         }
     }

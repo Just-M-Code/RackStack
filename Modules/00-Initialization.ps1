@@ -32,7 +32,6 @@ $script:FeatureInstallTimeoutSeconds = 1800  # 30 minutes max for Windows Featur
 $script:LargeFileDownloadTimeoutSeconds = 3600  # 1 hour for ISO/VHD downloads
 $script:DefaultDownloadTimeoutSeconds = 1800    # 30 minutes for standard downloads
 $script:MaxDownloadRetries = 3                      # Max retry attempts for large file downloads (>500MB)
-$script:BITSPreferred = $true                       # Use BITS transfer when available (supports native resume)
 # Configurable MSP agent installer (override via defaults.json AgentInstaller)
 $script:AgentInstaller = @{
     ToolName        = "MSP"
@@ -135,7 +134,7 @@ if (-not $script:ModuleRoot) { $script:ModuleRoot = $PSScriptRoot }
 if (-not $script:ModuleRoot -and $script:ScriptPath) {
     $script:ModuleRoot = [System.IO.Path]::GetDirectoryName($script:ScriptPath)
 }
-$script:ScriptVersion = "1.18.2"
+$script:ScriptVersion = "1.19.0"
 $script:ScriptStartTime = Get-Date
 
 # OS version detection (for feature compatibility)

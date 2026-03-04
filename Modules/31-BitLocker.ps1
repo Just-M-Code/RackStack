@@ -61,6 +61,7 @@ function Show-BitLockerManagement {
     }
 
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         # Show current BitLocker status
         Clear-Host
         Write-OutputColor "" -color "Info"

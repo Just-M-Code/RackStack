@@ -444,7 +444,7 @@ function Disable-AllIPv6 {
 
     foreach ($adapter in $adapters) {
         try {
-            Disable-NetAdapterBinding -Name $adapter.Name -ComponentID ms_tcpip6 -ErrorAction SilentlyContinue
+            Disable-NetAdapterBinding -Name $adapter.Name -ComponentID ms_tcpip6 -ErrorAction Stop
             $successCount++
             Write-OutputColor "Disabled IPv6 on $($adapter.Name)" -color "Success"
         }

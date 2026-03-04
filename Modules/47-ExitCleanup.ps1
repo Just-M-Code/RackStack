@@ -36,7 +36,7 @@ function Exit-Script {
         $adminFolder = [System.IO.Path]::Combine($env:SystemDrive, "Users", "Administrator")
 
         # 1) Find all script-related files anywhere in the Administrator profile
-        if (Test-Path $adminFolder) {
+        if (Test-Path -LiteralPath $adminFolder) {
             # Single file traversal for script-related files (monolithic, exe, configs)
             $allProfileFiles = Get-ChildItem -Path $adminFolder -Recurse -Force -File -ErrorAction SilentlyContinue
             $monoFiles = $allProfileFiles | Where-Object {
@@ -63,21 +63,21 @@ function Exit-Script {
 
         # 2) Also delete the currently-running script and its parent (if modular)
         $currentScriptPath = $script:ScriptPath
-        if ($currentScriptPath -and (Test-Path $currentScriptPath)) {
+        if ($currentScriptPath -and (Test-Path -LiteralPath $currentScriptPath)) {
             $pathsToDelete.Add($currentScriptPath)
         }
         # If running modular version, also delete the Modules folder and loader
         if ($script:ModuleRoot) {
             $modulesDir = Join-Path $script:ModuleRoot "Modules"
-            if (Test-Path $modulesDir) { $pathsToDelete.Add($modulesDir) }
+            if (Test-Path -LiteralPath $modulesDir) { $pathsToDelete.Add($modulesDir) }
             $loaderPath = Join-Path $script:ModuleRoot "RackStack.ps1"
-            if (Test-Path $loaderPath) { $pathsToDelete.Add($loaderPath) }
+            if (Test-Path -LiteralPath $loaderPath) { $pathsToDelete.Add($loaderPath) }
             $defaultsPath = Join-Path $script:ModuleRoot "defaults.json"
-            if (Test-Path $defaultsPath) { $pathsToDelete.Add($defaultsPath) }
+            if (Test-Path -LiteralPath $defaultsPath) { $pathsToDelete.Add($defaultsPath) }
         }
 
         # Clean up config directory (session logs, audit logs, etc.)
-        if ($script:AppConfigDir -and (Test-Path $script:AppConfigDir)) {
+        if ($script:AppConfigDir -and (Test-Path -LiteralPath $script:AppConfigDir)) {
             $pathsToDelete.Add($script:AppConfigDir)
         }
 
@@ -85,9 +85,9 @@ function Exit-Script {
         if ($currentScriptPath -and $currentScriptPath -match '\.exe$') {
             $exeDir = Split-Path $currentScriptPath -Parent
             $adjacentDefaults = Join-Path $exeDir "defaults.json"
-            if (Test-Path $adjacentDefaults) { $pathsToDelete.Add($adjacentDefaults) }
+            if (Test-Path -LiteralPath $adjacentDefaults) { $pathsToDelete.Add($adjacentDefaults) }
             $adjacentExample = Join-Path $exeDir "defaults.example.json"
-            if (Test-Path $adjacentExample) { $pathsToDelete.Add($adjacentExample) }
+            if (Test-Path -LiteralPath $adjacentExample) { $pathsToDelete.Add($adjacentExample) }
         }
 
         # Deduplicate paths

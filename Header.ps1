@@ -30,10 +30,22 @@
     7h3 4b1d3r
 
 .VERSION
-    1.18.2
+    1.19.0
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.19.0
+    NAVIGATION + RESILIENCE SWEEP — 20 FIXES:
+    - FIX: "Home" navigation now works from all nested menus — added ReturnToMainMenu checks to 17 menu loops across iSCSI, Firewall Templates, NTP, Disk Cleanup, BitLocker, ISO Download, Cluster Dashboard, VM Checkpoints, VM Export/Import, Network Diagnostics, Hyper-V Replica, Storage Backends, and Settings
+    - FIX: Disk space pre-checks no longer fail on UNC/network paths — VM Export, VM Checkpoints, and VM Deployment now guard against non-drive-letter paths (clusters with CSVs, SMB shares)
+    - FIX: Hardcoded slmgr.vbs paths replaced with $env:SystemRoot for non-standard Windows installations (Licensing)
+    - FIX: Defender threat count logged correctly when query fails — $threats initialized before try block to prevent false "Threats=1" in session log (Defender Exclusions)
+    - FIX: IPv6 disable now reports actual failures instead of silent success — changed from SilentlyContinue to Stop error action (IP Configuration)
+    - FIX: Export VM cleanup now properly stops orphaned background jobs before removing them (VM Export/Import)
+    - FIX: $Matches automatic variable captured immediately per project convention (NTP Configuration)
+    - FIX: Test-Path calls use -LiteralPath for all constructed paths in exit cleanup to prevent wildcard interpretation (Exit Cleanup)
+    - CLEANUP: Removed unused $script:BITSPreferred variable (Initialization)
 
 .CHANGELOG v1.18.2
     ROBUSTNESS + CONSISTENCY SWEEP — 14 FIXES:

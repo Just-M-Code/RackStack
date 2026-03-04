@@ -347,6 +347,7 @@ function Show-CSVHealth {
 # Function to show cluster operations submenu
 function Show-ClusterOperationsMenu {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         Clear-Host
         Write-OutputColor "" -color "Info"
         Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
