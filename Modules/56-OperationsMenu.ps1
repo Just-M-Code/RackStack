@@ -54,6 +54,7 @@ function Show-OperationsMenu {
         Write-MenuItem "[16] Scheduled Task Viewer"
         Write-MenuItem "[17] SMB Share Audit"
         Write-MenuItem "[18] Installed Software Inventory"
+        Write-MenuItem "[19] Certificate Expiry Check"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
 
@@ -148,6 +149,10 @@ function Show-OperationsMenu {
             }
             "18" {
                 Show-InstalledSoftware
+            }
+            "19" {
+                Show-CertificateExpiryCheck
+                Write-PressEnter
             }
             "b" { return }
             "B" { return }

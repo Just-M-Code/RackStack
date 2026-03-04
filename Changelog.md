@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.11.0
+
+- **New Feature:** Certificate Expiry Check — scans Local Machine certificate stores (Personal, Trusted Root CA, Intermediate CA, Web Hosting, Remote Desktop) and categorizes certificates as expired, expiring soon (within 90 days), or valid. Color-coded output with per-store grouping. Accessible from Operations > option [19] (35-Utilities, 56-OperationsMenu).
+- **Bug Fix:** Scheduled task info query logs warning on failure instead of bare `catch {}` — if `Get-ScheduledTaskInfo` threw an exception for a specific task, the error was silently discarded and the task was excluded from the failed-tasks list without notice (35-Utilities).
+- **Bug Fix:** SMB security configuration query logs warning on failure instead of bare `catch {}` — `Get-SmbServerConfiguration` failures (e.g., SMB feature not installed) were silently ignored, preventing the SMBv1 security check from reporting its status (35-Utilities).
+- **Bug Fix:** Software inventory registry scan logs warning on failure instead of bare `catch {}` — if either the 32-bit or 64-bit registry uninstall path failed, the error was silently swallowed and that half of the inventory was missing without warning (35-Utilities).
+- **Bug Fix:** HTML report disk growth calculation has documented catch block instead of bare `catch {}` — non-critical growth rate estimation failure now has inline documentation explaining the intentional suppression (54-HTMLReports).
+- 63 modules, 1854 tests
+
 ## v1.10.0
 
 - **New Feature:** Firewall Rule Search — search firewall rules by display name (with wildcard support), by port number, or browse all enabled inbound allow rules, all block rules, and custom/recently created rules. Results show direction, action, and enabled status with color coding. Accessible from Security & Access > option [5] (16-Firewall, 48-MenuDisplay, 49-MenuRunner).

@@ -846,7 +846,9 @@ function Export-HTMLTrendReport {
                             $daysLeft = [math]::Round($disk.FreeGB / $ratePerDay, 0)
                             $daysUntilFull = " (~$daysLeft days until full)"
                         }
-                    } catch {}
+                    } catch {
+                        # Disk growth calculation is non-critical; skip silently
+                    }
                 }
             }
             $diskColor = if ($disk.UsedPercent -gt 90) { "status-bad" } elseif ($disk.UsedPercent -gt 75) { "status-warn" } else { "status-good" }

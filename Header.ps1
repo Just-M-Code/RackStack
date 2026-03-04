@@ -30,10 +30,18 @@
     7h3 4b1d3r
 
 .VERSION
-    1.10.0
+    1.11.0
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.11.0
+    CERTIFICATE CHECK & ERROR HANDLING:
+    - NEW: Certificate Expiry Check — scans Personal, Root CA, Intermediate CA, Web Hosting, and Remote Desktop certificate stores. Groups by expired/expiring soon (90 days)/valid with color-coded output. Shows certificate count by store. Accessible from Operations menu option [19] (35-Utilities, 56-OperationsMenu)
+    - FIX: Scheduled task info query logs warning on failure instead of bare catch {} — previously, if Get-ScheduledTaskInfo threw for a specific task, the error was silently discarded (35-Utilities)
+    - FIX: SMB security configuration query logs warning on failure instead of bare catch {} — previously, Get-SmbServerConfiguration failures (e.g., SMB feature not installed) were silently ignored, hiding whether SMBv1 check succeeded (35-Utilities)
+    - FIX: Software inventory registry scan logs warning on failure instead of bare catch {} — if one of the two registry paths failed, the error was silently swallowed (35-Utilities)
+    - FIX: HTML report disk growth calculation has documented catch instead of bare catch {} — non-critical calculation failure now has inline comment explaining the intentional suppression (54-HTMLReports)
 
 .CHANGELOG v1.10.0
     FIREWALL SEARCH, SOFTWARE INVENTORY & MENU EXPANSION:

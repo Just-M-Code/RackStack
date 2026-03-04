@@ -853,7 +853,9 @@ function Show-ScheduledTaskViewer {
                     NextRun    = $info.NextRunTime
                 }
             }
-        } catch {}
+        } catch {
+            Write-OutputColor "  Could not query task info for $($_.TaskName): $_" -color "Warning"
+        }
     })
     $disabledTasks = @($tasks | Where-Object { $_.State -eq "Disabled" -and $_.TaskPath -notlike "\Microsoft\*" })
 
@@ -997,7 +999,9 @@ function Show-SMBShareAudit {
         if ($smbConfig.EnableSMB1Protocol) {
             $issues += "SMBv1 is enabled (security risk)"
         }
-    } catch {}
+    } catch {
+        Write-OutputColor "  Could not query SMB configuration: $_" -color "Warning"
+    }
 
     # Issues summary
     if ($issues.Count -gt 0) {
@@ -1049,7 +1053,9 @@ function Show-InstalledSoftware {
                     Size      = if ($entry.EstimatedSize) { [math]::Round($entry.EstimatedSize / 1024, 1) } else { $null }
                 }
             }
-        } catch {}
+        } catch {
+            Write-OutputColor "  Could not read registry path $regPath : $_" -color "Warning"
+        }
     }
 
     # Deduplicate by name+version
@@ -1133,5 +1139,107 @@ function Show-InstalledSoftware {
 
     Add-SessionChange -Category "System" -Description "Viewed installed software inventory ($($software.Count) programs)"
     Write-PressEnter
+}
+
+# Certificate Expiry Checker
+function Show-CertificateExpiryCheck {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                   CERTIFICATE EXPIRY CHECK").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    $stores = @(
+        @{ Name = "Personal (My)";    Path = "Cert:\LocalMachine\My" }
+        @{ Name = "Trusted Root CA";  Path = "Cert:\LocalMachine\Root" }
+        @{ Name = "Intermediate CA";  Path = "Cert:\LocalMachine\CA" }
+        @{ Name = "Web Hosting";      Path = "Cert:\LocalMachine\WebHosting" }
+        @{ Name = "Remote Desktop";   Path = "Cert:\LocalMachine\Remote Desktop" }
+    )
+
+    $allCerts = @()
+    $now = Get-Date
+    $warnDays = 90
+
+    foreach ($store in $stores) {
+        try {
+            $certs = @(Get-ChildItem -Path $store.Path -ErrorAction Stop | Where-Object {
+                $null -ne $_.NotAfter
+            })
+            foreach ($cert in $certs) {
+                $daysLeft = [math]::Round(($cert.NotAfter - $now).TotalDays, 0)
+                $subject = $cert.Subject
+                if ($subject.Length -gt 40) { $subject = $subject.Substring(0, 37) + "..." }
+                $allCerts += [PSCustomObject]@{
+                    Store     = $store.Name
+                    Subject   = $subject
+                    Thumbprint = $cert.Thumbprint.Substring(0, 16) + "..."
+                    Expires   = $cert.NotAfter.ToString("MM/dd/yyyy")
+                    DaysLeft  = $daysLeft
+                }
+            }
+        } catch {
+            Write-OutputColor "  Could not read $($store.Name) store: $_" -color "Warning"
+        }
+    }
+
+    # Separate into categories
+    $expired = @($allCerts | Where-Object { $_.DaysLeft -lt 0 })
+    $expiringSoon = @($allCerts | Where-Object { $_.DaysLeft -ge 0 -and $_.DaysLeft -le $warnDays })
+    $valid = @($allCerts | Where-Object { $_.DaysLeft -gt $warnDays })
+
+    # Summary
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  SUMMARY".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  Total Certificates:   $($allCerts.Count)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Expired:              $($expired.Count)".PadRight(72))│" -color $(if ($expired.Count -gt 0) { "Error" } else { "Success" })
+    Write-OutputColor "  │$("  Expiring (≤${warnDays}d):     $($expiringSoon.Count)".PadRight(72))│" -color $(if ($expiringSoon.Count -gt 0) { "Warning" } else { "Success" })
+    Write-OutputColor "  │$("  Valid:                $($valid.Count)".PadRight(72))│" -color "Success"
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Show expired certs
+    if ($expired.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Error"
+        Write-OutputColor "  │$("  EXPIRED CERTIFICATES ($($expired.Count))".PadRight(72))│" -color "Error"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Error"
+        foreach ($cert in ($expired | Sort-Object DaysLeft)) {
+            $line = "  $($cert.Subject.PadRight(42)) $($cert.Expires) ($($cert.DaysLeft)d)"
+            if ($line.Length -gt 72) { $line = $line.Substring(0, 72) }
+            Write-OutputColor "  │$($line.PadRight(72))│" -color "Error"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Error"
+        Write-OutputColor "" -color "Info"
+    }
+
+    # Show expiring soon
+    if ($expiringSoon.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Warning"
+        Write-OutputColor "  │$("  EXPIRING SOON ($($expiringSoon.Count))".PadRight(72))│" -color "Warning"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Warning"
+        foreach ($cert in ($expiringSoon | Sort-Object DaysLeft)) {
+            $line = "  $($cert.Subject.PadRight(42)) $($cert.Expires) ($($cert.DaysLeft)d)"
+            if ($line.Length -gt 72) { $line = $line.Substring(0, 72) }
+            Write-OutputColor "  │$($line.PadRight(72))│" -color "Warning"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Warning"
+        Write-OutputColor "" -color "Info"
+    }
+
+    # Show valid certs (just count by store)
+    if ($valid.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Success"
+        Write-OutputColor "  │$("  VALID CERTIFICATES BY STORE".PadRight(72))│" -color "Success"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Success"
+        $grouped = $valid | Group-Object Store
+        foreach ($group in $grouped) {
+            Write-OutputColor "  │$("  $($group.Name): $($group.Count) certificate(s)".PadRight(72))│" -color "Success"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Success"
+    }
+
+    Add-SessionChange -Category "Security" -Description "Certificate expiry check: $($expired.Count) expired, $($expiringSoon.Count) expiring soon, $($valid.Count) valid"
 }
 #endregion
