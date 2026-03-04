@@ -1,5 +1,16 @@
 ﻿# Changelog
 
+## v1.20.3
+
+- **Bug Fix:** `Get-Item` calls use `-LiteralPath` for all config-derived and user-input paths across FileServer, VHD Management, and Navigation (10 instances).
+- **Bug Fix:** `Remove-Item` calls use `-LiteralPath` for all constructed paths across Utilities, FileServer, VHD Management, ISO Download, QoL Features, and Agent Installer (20+ instances).
+- **Bug Fix:** `Get-ChildItem` calls use `-LiteralPath` for config-derived directory paths in VHD Management and ISO Download.
+- **Bug Fix:** `Copy-Item` and `Move-Item` calls use `-LiteralPath` for source paths across VHD Management, Utilities, and Navigation.
+- **Bug Fix:** `Add-Content` and `Set-Content` calls use `-LiteralPath` for log files and generated scripts across Logging, Navigation, FileServer, and Offline VHD.
+- **Bug Fix:** Hash computation job cleanup includes `Stop-Job` before `Remove-Job` (04-Navigation).
+- **Bug Fix:** Empty `catch {}` blocks explicitly assign `$null` in Disk Cleanup, Utilities reboot checks, and VM Deployment CSV check.
+- 64 modules, 1873 tests
+
 ## v1.20.2
 
 - **Bug Fix:** Disk space checks in FileServer and VHD downloads guard against UNC/CSV paths — prevents silent failures when destination is a network share (39-FileServer, 41-VHDManagement).

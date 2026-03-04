@@ -233,11 +233,11 @@ Remove-Item -Path `$MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyCont
             $psScriptPath = "$scriptFolder\$($script:ToolName)FirstBoot.ps1"
 
             # Write the PowerShell script
-            Set-Content -Path $psScriptPath -Value $firstBootScript -Encoding UTF8 -Force
+            Set-Content -LiteralPath $psScriptPath -Value $firstBootScript -Encoding UTF8 -Force
 
             # Write SetupComplete.cmd to call our PowerShell script
             $cmdContent = "@echo off`r`npowershell.exe -ExecutionPolicy Bypass -File `"$($psScriptPath.Replace($windowsDrive, '%SystemDrive%'))`""
-            Set-Content -Path $setupCompletePath -Value $cmdContent -Force
+            Set-Content -LiteralPath $setupCompletePath -Value $cmdContent -Force
 
             Write-OutputColor "  First-boot script created at: $scriptFolder" -color "Success"
         }

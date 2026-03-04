@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    Automated Test Runner for RackStack v1.20.2
+    Automated Test Runner for RackStack v1.20.3
 
 .DESCRIPTION
     Comprehensive non-interactive test suite covering:
@@ -3565,7 +3565,7 @@ try {
     Write-TestResult "57-Agent: auto-detects site from hostname" $hasSiteDetect
 
     # Installer cleanup in finally block
-    $hasCleanup = $aiModContent -match 'finally' -and $aiModContent -match 'Remove-Item \$tempPath'
+    $hasCleanup = $aiModContent -match 'finally' -and $aiModContent -match 'Remove-Item\s+(-LiteralPath\s+)?\$tempPath'
     Write-TestResult "57-Agent: cleans up temp installer in finally block" $hasCleanup
 
     # Install uses AgentInstaller.InstallArgs

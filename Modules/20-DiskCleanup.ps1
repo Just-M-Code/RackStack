@@ -110,7 +110,7 @@ function Invoke-QuickClean {
                     $cleaned += $fileSize
                     $fileCount++
                 }
-                catch { }
+                catch { $null = $_ }
                 # Progress update every 500ms
                 if (([DateTime]::Now - $lastUpdate).TotalMilliseconds -gt 500) {
                     $cleanedMB = [math]::Round($cleaned / 1MB, 1)

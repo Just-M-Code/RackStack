@@ -353,7 +353,7 @@ function Restore-SessionState {
 
         if ($hoursSinceSave -gt 24) {
             # Session too old, delete it
-            Remove-Item $script:SessionStatePath -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $script:SessionStatePath -Force -ErrorAction SilentlyContinue
             return $false
         }
 
@@ -362,7 +362,7 @@ function Restore-SessionState {
         $changesCount = if ($sessionState.SessionChanges) { $sessionState.SessionChanges.Count } else { 0 }
 
         if ($queueCount -eq 0 -and $changesCount -eq 0) {
-            Remove-Item $script:SessionStatePath -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $script:SessionStatePath -Force -ErrorAction SilentlyContinue
             return $false
         }
 
@@ -398,17 +398,17 @@ function Restore-SessionState {
             Start-Sleep -Seconds 1
 
             # Clear the saved session
-            Remove-Item $script:SessionStatePath -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $script:SessionStatePath -Force -ErrorAction SilentlyContinue
             return $true
         }
         else {
             # User declined, clear the session
-            Remove-Item $script:SessionStatePath -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $script:SessionStatePath -Force -ErrorAction SilentlyContinue
             return $false
         }
     }
     catch {
-        Remove-Item $script:SessionStatePath -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $script:SessionStatePath -Force -ErrorAction SilentlyContinue
         return $false
     }
 }

@@ -8,7 +8,7 @@ function Write-LogMessage {
     if ($logFilePath) {
         $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         $logMessage = "$timestamp - $message"
-        Add-Content -Path $logFilePath -Value $logMessage -Encoding UTF8 -ErrorAction SilentlyContinue
+        Add-Content -LiteralPath $logFilePath -Value $logMessage -Encoding UTF8 -ErrorAction SilentlyContinue
     }
 }
 

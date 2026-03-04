@@ -2370,7 +2370,7 @@ function Test-DeploymentDiskSpace {
                     }
                 }
             }
-        } catch { }
+        } catch { $null = $_ }
     }
     if ($null -eq $freeBytes -and $StoragePath -match '^[A-Za-z]:') {
         $driveLetter = $StoragePath.Substring(0, 1)

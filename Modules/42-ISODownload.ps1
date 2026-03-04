@@ -19,7 +19,7 @@ function Test-CachedISO {
 
     # Search local disk for any ISO matching the OS version
     if (Test-Path -LiteralPath $isoPath) {
-        $found = Get-ChildItem -Path $isoPath -Filter "*$OSVersion*.iso" -File -ErrorAction SilentlyContinue | Select-Object -First 1
+        $found = Get-ChildItem -LiteralPath $isoPath -Filter "*$OSVersion*.iso" -File -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($found) {
             return @{
                 Exists = $true
@@ -79,7 +79,7 @@ function Get-ServerISO {
         # Integrity check: size mismatch = corrupt, silently delete
         $remoteSize = Get-FileServerFileSize -FilePath $driveFile.FilePath
         if ($remoteSize -gt 0 -and $cached.Size -ne $remoteSize) {
-            Remove-Item $cached.Path -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $cached.Path -Force -ErrorAction SilentlyContinue
             $cached = @{ Exists = $false; Path = $null; Size = 0 }
         }
 
@@ -96,7 +96,7 @@ function Get-ServerISO {
             Write-OutputColor "" -color "Info"
 
             if (Confirm-UserAction -Message "Replace local ISO with newer version?") {
-                Remove-Item $cached.Path -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $cached.Path -Force -ErrorAction SilentlyContinue
                 $cached = @{ Exists = $false; Path = $null; Size = 0 }
             }
         }
@@ -128,7 +128,7 @@ function Get-ServerISO {
             }
             "2" {
                 Write-OutputColor "  Removing old ISO..." -color "Info"
-                Remove-Item $cached.Path -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $cached.Path -Force -ErrorAction SilentlyContinue
             }
             default { return $null }
         }

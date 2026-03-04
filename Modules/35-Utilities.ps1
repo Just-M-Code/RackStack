@@ -255,14 +255,14 @@ function Install-ScriptUpdate {
     }
     catch {
         Write-OutputColor "  Download failed: $($_.Exception.Message)" -color "Error"
-        Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
         return
     }
 
     # Verify the download is not empty
     if (-not (Test-Path -LiteralPath $tempPath) -or (Get-Item -LiteralPath $tempPath).Length -lt 1000) {
         Write-OutputColor "  Downloaded file appears invalid." -color "Error"
-        Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
         return
     }
 
@@ -304,7 +304,7 @@ function Install-ScriptUpdate {
             Write-OutputColor "  SHA256 MISMATCH - download may be corrupted or tampered with!" -color "Error"
             Write-OutputColor "  Expected: $expectedHash" -color "Error"
             Write-OutputColor "  Actual:   $actualHash" -color "Error"
-            Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
             return
         }
     }
@@ -349,8 +349,8 @@ del "%~f0"
         # PS1 self-update: replace the script file directly
         $targetPath = $script:ScriptPath
         try {
-            Copy-Item -Path $tempPath -Destination $targetPath -Force -ErrorAction Stop
-            Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
+            Copy-Item -LiteralPath $tempPath -Destination $targetPath -Force -ErrorAction Stop
+            Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
             Write-OutputColor "" -color "Info"
             Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
             Write-OutputColor "  │$("  Updated to v$remoteVersion! Please restart the tool.".PadRight(72))│" -color "Success"
@@ -359,8 +359,8 @@ del "%~f0"
         catch {
             # If the running script is locked, save alongside it
             $newPath = Join-Path $scriptDir "RackStack v$remoteVersion.ps1"
-            Copy-Item -Path $tempPath -Destination $newPath -Force
-            Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
+            Copy-Item -LiteralPath $tempPath -Destination $newPath -Force
+            Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
             Write-OutputColor "  Could not replace running script." -color "Warning"
             Write-OutputColor "  New version saved as: $newPath" -color "Info"
         }
@@ -2115,7 +2115,7 @@ function Show-RebootPendingDetails {
             }
         }
     }
-    catch {}
+    catch { $null = $_ }
 
     # Pending computer rename
     try {
@@ -2127,7 +2127,7 @@ function Show-RebootPendingDetails {
             Write-OutputColor "  [!!] $reason" -color "Warning"
         }
     }
-    catch {}
+    catch { $null = $_ }
 
     # SCCM/ConfigMgr pending reboot (if client is installed)
     try {
@@ -2151,7 +2151,7 @@ function Show-RebootPendingDetails {
             Write-OutputColor "  [!!] $reason" -color "Warning"
         }
     }
-    catch {}
+    catch { $null = $_ }
 
     Write-OutputColor "" -color "Info"
     if ($reasons.Count -eq 0) {

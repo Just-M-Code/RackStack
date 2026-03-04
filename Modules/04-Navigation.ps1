@@ -85,7 +85,7 @@ function Add-SessionChange {
     $logFile = Join-Path $logDir "session-log.txt"
     $datestamp = Get-Date -Format "yyyy-MM-dd"
     $line = "$datestamp $timestamp [$Category] $Description"
-    Add-Content -Path $logFile -Value $line -Encoding UTF8 -ErrorAction SilentlyContinue
+    Add-Content -LiteralPath $logFile -Value $line -Encoding UTF8 -ErrorAction SilentlyContinue
 
     # JSON audit log (one JSON object per line for easy parsing)
     $auditFile = Join-Path $logDir "audit-log.jsonl"
@@ -96,15 +96,15 @@ function Add-SessionChange {
         category = $Category
         action   = $Description
     } | ConvertTo-Json -Compress
-    Add-Content -Path $auditFile -Value $auditEntry -Encoding UTF8 -ErrorAction SilentlyContinue
+    Add-Content -LiteralPath $auditFile -Value $auditEntry -Encoding UTF8 -ErrorAction SilentlyContinue
 
     # Rotate audit log if over 10MB
-    $auditInfo = Get-Item $auditFile -ErrorAction SilentlyContinue
+    $auditInfo = Get-Item -LiteralPath $auditFile -ErrorAction SilentlyContinue
     if ($auditInfo -and $auditInfo.Length -gt 10MB) {
         $archiveName = "audit-log-$(Get-Date -Format 'yyyyMMdd-HHmmss').jsonl"
         $archivePath = Join-Path $logDir $archiveName
         try {
-            Move-Item -Path $auditFile -Destination $archivePath -Force -ErrorAction Stop
+            Move-Item -LiteralPath $auditFile -Destination $archivePath -Force -ErrorAction Stop
         }
         catch {
             Write-LogMessage -message "Failed to rotate audit log: $_" -logFilePath $logFilePath
@@ -530,6 +530,7 @@ function Get-FileHashBackground {
     Write-Host ""
 
     $hash = Receive-Job $hashJob
+    Stop-Job $hashJob -ErrorAction SilentlyContinue
     Remove-Job $hashJob -Force -ErrorAction SilentlyContinue
     return $hash
 }

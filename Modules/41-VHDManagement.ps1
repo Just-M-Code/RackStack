@@ -54,7 +54,7 @@ function Test-CachedVHD {
 
     # Search local disk for any VHDX matching the OS version
     if (Test-Path -LiteralPath $cachePath) {
-        $found = Get-ChildItem -Path $cachePath -Filter "*$OSVersion*.vhdx" -File -ErrorAction SilentlyContinue | Select-Object -First 1
+        $found = Get-ChildItem -LiteralPath $cachePath -Filter "*$OSVersion*.vhdx" -File -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($found) {
             return @{
                 Exists = $true
@@ -96,7 +96,7 @@ function Get-SyspreppedVHD {
         if ($remoteSize -gt 0 -and $cached.Size -ne $remoteSize) {
             Write-OutputColor "  Cached VHD size mismatch (local: $([math]::Round($cached.Size/1GB, 2))GB, remote: $([math]::Round($remoteSize/1GB, 2))GB)" -color "Warning"
             if (Confirm-UserAction -Message "Delete mismatched cache and re-download?") {
-                Remove-Item $cached.Path -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $cached.Path -Force -ErrorAction SilentlyContinue
                 $cached = @{ Exists = $false; Path = $null; Size = 0 }
             }
         }
@@ -114,7 +114,7 @@ function Get-SyspreppedVHD {
             Write-OutputColor "" -color "Info"
 
             if (Confirm-UserAction -Message "Replace local VHD with newer version?") {
-                Remove-Item $cached.Path -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $cached.Path -Force -ErrorAction SilentlyContinue
                 $cached = @{ Exists = $false; Path = $null; Size = 0 }
             }
         }
@@ -147,7 +147,7 @@ function Get-SyspreppedVHD {
             "1" { return $cached.Path }
             "2" {
                 Write-OutputColor "  Removing old cached VHD..." -color "Info"
-                Remove-Item $cached.Path -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $cached.Path -Force -ErrorAction SilentlyContinue
                 # Continue to download below
             }
             default { return $null }
@@ -238,10 +238,10 @@ function Copy-VHDForVM {
         # Copy the file first
         $copyJob = Start-Job -ScriptBlock {
             param($src, $dst)
-            Copy-Item -Path $src -Destination $dst -Force -ErrorAction Stop
+            Copy-Item -LiteralPath $src -Destination $dst -Force -ErrorAction Stop
         } -ArgumentList $SourceVHDPath, $destPath
 
-        $sourceItem = Get-Item $SourceVHDPath -ErrorAction SilentlyContinue
+        $sourceItem = Get-Item -LiteralPath $SourceVHDPath -ErrorAction SilentlyContinue
         $sourceSize = if ($null -ne $sourceItem) { $sourceItem.Length } else { 0 }
         $copyElapsed = 0
         $lastCopySize = 0
@@ -251,7 +251,7 @@ function Copy-VHDForVM {
         while ($copyJob.State -eq "Running") {
             $currentSize = 0
             if (Test-Path -LiteralPath $destPath) {
-                try { $currentSize = (Get-Item $destPath -ErrorAction SilentlyContinue).Length } catch { $currentSize = 0 }
+                try { $currentSize = (Get-Item -LiteralPath $destPath -ErrorAction SilentlyContinue).Length } catch { $currentSize = 0 }
             }
 
             if ($copyElapsed -gt 0 -and ($copyElapsed - $lastCopySpeedCheck) -ge 3) {
@@ -279,7 +279,7 @@ function Copy-VHDForVM {
             return $null
         }
 
-        $copySize = (Get-Item $destPath -ErrorAction SilentlyContinue).Length
+        $copySize = (Get-Item -LiteralPath $destPath -ErrorAction SilentlyContinue).Length
         Write-TransferComplete -TotalBytes $copySize -ElapsedSeconds $copyElapsed -Activity "Copy"
         Write-OutputColor "" -color "Info"
 
@@ -376,7 +376,7 @@ function Copy-VHDForVM {
             }
             elseif ($fallbackChoice -eq "3") {
                 Write-OutputColor "  Deployment cancelled." -color "Info"
-                Remove-Item $destPath -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $destPath -Force -ErrorAction SilentlyContinue
                 return $null
             }
             else {
@@ -388,14 +388,14 @@ function Copy-VHDForVM {
         # Move the fixed file to the final name (overwrites the dynamic copy)
         $finalPath = Join-Path $DestinationFolder $destFileName
         try {
-            Move-Item -Path $fixedPath -Destination $finalPath -Force -ErrorAction Stop
+            Move-Item -LiteralPath $fixedPath -Destination $finalPath -Force -ErrorAction Stop
         }
         catch {
             Write-OutputColor "  Warning: Could not rename converted VHD: $_" -color "Warning"
         }
 
         if (Test-Path -LiteralPath $finalPath) {
-            $finalSize = (Get-Item $finalPath).Length
+            $finalSize = (Get-Item -LiteralPath $finalPath).Length
             $sizeGB = [math]::Round($finalSize / 1GB, 2)
             Write-OutputColor "  Conversion complete! Fixed VHD: ${sizeGB} GB" -color "Success"
             Write-OutputColor "  Dynamic copy deleted. Master base image untouched." -color "Info"
@@ -403,7 +403,7 @@ function Copy-VHDForVM {
         }
         elseif (Test-Path -LiteralPath $fixedPath) {
             # Move failed but fixed file still exists at _fixed path - use it directly
-            $finalSize = (Get-Item $fixedPath).Length
+            $finalSize = (Get-Item -LiteralPath $fixedPath).Length
             $sizeGB = [math]::Round($finalSize / 1GB, 2)
             Write-OutputColor "  Conversion complete! Fixed VHD: ${sizeGB} GB" -color "Success"
             return $fixedPath

@@ -30,10 +30,21 @@
     7h3 4b1d3r
 
 .VERSION
-    1.20.2
+    1.20.3
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.20.3
+    BUG FIXES — DEEP -LITERALPATH SWEEP ACROSS ALL FILE OPERATIONS:
+    - FIX: Get-Item calls use -LiteralPath for all config-derived/user-input paths across FileServer, VHD Management, Navigation (10 instances)
+    - FIX: Remove-Item calls use -LiteralPath for all constructed paths across Utilities, FileServer, VHD Management, ISO Download, QoL Features, Agent Installer (20+ instances)
+    - FIX: Get-ChildItem calls use -LiteralPath for config-derived directory paths in VHD Management and ISO Download
+    - FIX: Copy-Item and Move-Item calls use -LiteralPath for source paths across VHD Management, Utilities, Navigation
+    - FIX: Add-Content and Set-Content calls use -LiteralPath for log files and generated scripts across Logging, Navigation, FileServer, Offline VHD
+    - FIX: Hash computation job cleanup includes Stop-Job before Remove-Job (Navigation)
+    - FIX: Empty catch blocks explicitly assign $null in Disk Cleanup, Utilities reboot checks, VM Deployment CSV check
+    64 modules, 1873 tests
 
 .CHANGELOG v1.20.2
     BUG FIXES — HARDENING SWEEP MODULES 25-43:

@@ -522,7 +522,7 @@ function Install-SelectedAgent {
             Stop-Job -Job $installJob -ErrorAction SilentlyContinue
             Remove-Job -Job $installJob -Force -ErrorAction SilentlyContinue
         }
-        Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
     }
 }
 

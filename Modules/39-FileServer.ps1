@@ -324,7 +324,7 @@ function Get-FileServerFile {
             $attempt++
             if ($attempt -gt 1) {
                 Write-OutputColor "  Retrying download (attempt $attempt of $maxAttempts)..." -color "Warning"
-                Remove-Item $destFile -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $destFile -Force -ErrorAction SilentlyContinue
             }
 
             # Background job using WebClient (closes connection immediately, no hang)
@@ -361,7 +361,7 @@ function Get-FileServerFile {
             while ($downloadJob.State -eq "Running") {
                 $currentSize = 0
                 if (Test-Path -LiteralPath $destFile) {
-                    try { $currentSize = (Get-Item $destFile -ErrorAction SilentlyContinue).Length } catch { $currentSize = 0 }
+                    try { $currentSize = (Get-Item -LiteralPath $destFile -ErrorAction SilentlyContinue).Length } catch { $currentSize = 0 }
                 }
 
                 # Update speed every 3 seconds
@@ -435,11 +435,11 @@ function Get-FileServerFile {
             }
 
             # Check for error page (tiny file = likely HTML error)
-            $fileSize = (Get-Item $destFile -ErrorAction SilentlyContinue).Length
+            $fileSize = (Get-Item -LiteralPath $destFile -ErrorAction SilentlyContinue).Length
             if ($fileSize -lt 1000) {
                 $content = Get-Content $destFile -Raw -ErrorAction SilentlyContinue
                 if ($content -match "html|error|not found|denied|exception") {
-                    Remove-Item $destFile -Force -ErrorAction SilentlyContinue
+                    Remove-Item -LiteralPath $destFile -Force -ErrorAction SilentlyContinue
                     if ($attempt -ge $maxAttempts) {
                         return @{ Success = $false; Error = "Downloaded file appears to be an error response."; FilePath = $null }
                     }
@@ -451,7 +451,7 @@ function Get-FileServerFile {
             if ($expectedSize -gt 0 -and $fileSize -ne $expectedSize) {
                 Write-OutputColor "  Size mismatch (local: $fileSize, expected: $expectedSize)." -color "Warning"
                 if ($attempt -ge $maxAttempts) {
-                    Remove-Item $destFile -Force -ErrorAction SilentlyContinue
+                    Remove-Item -LiteralPath $destFile -Force -ErrorAction SilentlyContinue
                     return @{ Success = $false; Error = "File size mismatch after $maxAttempts attempts."; FilePath = $null }
                 }
                 continue
@@ -464,14 +464,14 @@ function Get-FileServerFile {
             return @{ Success = $false; Error = "Download failed after $maxAttempts attempts."; FilePath = $null }
         }
 
-        $fileSize = (Get-Item $destFile -ErrorAction SilentlyContinue).Length
+        $fileSize = (Get-Item -LiteralPath $destFile -ErrorAction SilentlyContinue).Length
 
         # SHA256 integrity verification
         $integrity = Test-FileIntegrity -FilePath $destFile -ExpectedSize $expectedSize -RemoteFilePath $FilePath
 
         if (-not $integrity.Valid) {
             Write-OutputColor "  Integrity check failed: $($integrity.Error)" -color "Error"
-            Remove-Item $destFile -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $destFile -Force -ErrorAction SilentlyContinue
             return @{ Success = $false; Error = "Integrity check failed: $($integrity.Error)"; FilePath = $null }
         }
 
@@ -598,7 +598,7 @@ function Test-FileIntegrity {
         Error     = $null
     }
 
-    $localFile = Get-Item $FilePath -ErrorAction SilentlyContinue
+    $localFile = Get-Item -LiteralPath $FilePath -ErrorAction SilentlyContinue
     if (-not $localFile) {
         $result.Valid = $false
         $result.Error = "File not found"
@@ -642,7 +642,7 @@ function Test-FileIntegrity {
     # Save local .sha256 file for future re-verification
     $hashFilePath = "$FilePath.sha256"
     try {
-        "$($result.Hash)  $(Split-Path $FilePath -Leaf)" | Set-Content -Path $hashFilePath -Encoding UTF8 -Force -ErrorAction SilentlyContinue
+        "$($result.Hash)  $(Split-Path $FilePath -Leaf)" | Set-Content -LiteralPath $hashFilePath -Encoding UTF8 -Force -ErrorAction SilentlyContinue
     }
     catch {
         # Non-fatal: just skip saving hash file
