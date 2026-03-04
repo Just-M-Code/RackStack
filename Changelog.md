@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.16.3
+
+- **Bug Fix:** Event Log Alert Summary guards against null `ProviderName` on events — events with null provider caused a "cannot call method on null-valued expression" error on `.PadRight()` in both the top sources list and the latest critical/error events list. Now defaults to "Unknown" (35-Utilities).
+- 63 modules, 1854 tests
+
 ## v1.16.2
 
 - **Bug Fix:** Drift detection baseline comparison validates user input before integer cast — previously, non-numeric input to the baseline number prompts was cast via `-as [int]` which returns `$null`, then subtracted by 1 producing `-1`, silently failing the range check without user feedback. Now validates with regex and shows an error message (45-ConfigExport).

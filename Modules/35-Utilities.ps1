@@ -1396,7 +1396,7 @@ function Show-EventLogAlerts {
     Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
     $topN = $grouped | Select-Object -First 15
     foreach ($g in $topN) {
-        $srcName = $g.Name
+        $srcName = if ($g.Name) { $g.Name } else { "Unknown" }
         if ($srcName.Length -gt 35) { $srcName = $srcName.Substring(0, 32) + "..." }
         $latestEvent = $g.Group | Sort-Object { $_.Event.TimeCreated } -Descending | Select-Object -First 1
         $age = [math]::Round(((Get-Date) - $latestEvent.Event.TimeCreated).TotalHours, 1)
@@ -1418,7 +1418,7 @@ function Show-EventLogAlerts {
         foreach ($item in $topEvents) {
             $e = $item.Event
             $time = $e.TimeCreated.ToString("MM/dd HH:mm")
-            $src = $e.ProviderName
+            $src = if ($e.ProviderName) { $e.ProviderName } else { "Unknown" }
             if ($src.Length -gt 22) { $src = $src.Substring(0, 19) + "..." }
             $msg = ($e.Message -split "`n")[0]
             if ($null -eq $msg) { $msg = "Event ID $($e.Id)" }

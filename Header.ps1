@@ -30,10 +30,14 @@
     7h3 4b1d3r
 
 .VERSION
-    1.16.2
+    1.16.3
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.16.3
+    NULL PROVIDER NAME GUARD IN EVENT LOG ALERTS:
+    - FIX: Event Log Alert Summary guards against null ProviderName — events with null provider caused a "cannot call method on null-valued expression" error on .PadRight() in both the top sources list and the latest events list (35-Utilities)
 
 .CHANGELOG v1.16.2
     DRIFT BASELINE INPUT VALIDATION:
