@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.9.66
+
+- **New Feature:** Server readiness dashboard now includes disk health monitoring — reports healthy/unhealthy/predictive-failure status for all physical disks using `Get-PhysicalDisk` health status and operational status (37-HealthCheck).
+- **New Feature:** Server readiness dashboard now includes disk temperature monitoring on Server 2016+ — warns when any physical disk exceeds 55°C using `Get-StorageReliabilityCounter`, showing the hottest disk's temperature (37-HealthCheck).
+- **Bug Fix:** Storage Manager disk online operations use `-ErrorAction Stop` on `Set-Disk -IsReadOnly $false` — 3 instances where `-ErrorAction SilentlyContinue` inside `try/catch` silently swallowed failures, showing "disk brought online" even when the read-only flag could not be cleared (38-StorageManager).
+- **Bug Fix:** Storage Manager drive letter assignment uses `-ErrorAction Stop` on `Set-Partition -NewDriveLetter` — previously, the failure was silently ignored and the subsequent verification check ran against stale partition state (38-StorageManager).
+- **Bug Fix:** Windows Feature install job error extraction now logs a warning on failure instead of using a bare `catch {}` — previously, if `ChildJobs[0].Error` parsing threw an exception, the details were silently discarded (05-SystemCheck).
+- **Bug Fix:** Network adapter selection uses `Test-NavigationCommand` and case-insensitive matching for refresh/back input — 2 functions had manual `$selection -eq 'R' -or $selection -eq 'r'` checks instead of using the standard navigation helper, which also handles 'back', 'exit', 'menu', etc. (06-NetworkAdapters).
+- 63 modules, 1854 tests
+
 ## v1.9.65
 
 - **New Feature:** Config export now includes a key services section — shows status and startup type for WinRM, Defender, Cluster Service, DNS, iSCSI Initiator, Windows Update, and other critical services (45-ConfigExport).

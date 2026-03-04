@@ -396,7 +396,7 @@ function Initialize-NewDisk {
             foreach ($offDisk in $offlineDisks) {
                 try {
                     Set-Disk -Number $offDisk.Number -IsOffline $false -ErrorAction Stop
-                    Set-Disk -Number $offDisk.Number -IsReadOnly $false -ErrorAction SilentlyContinue
+                    Set-Disk -Number $offDisk.Number -IsReadOnly $false -ErrorAction Stop
                     # Verify read-only was cleared
                     $diskState = Get-Disk -Number $offDisk.Number -ErrorAction Stop
                     if ($diskState.IsReadOnly) {
@@ -436,7 +436,7 @@ function Initialize-NewDisk {
         if (Confirm-UserAction -Message "Bring Disk $($disk.Number) online now?") {
             try {
                 Set-Disk -Number $disk.Number -IsOffline $false -ErrorAction Stop
-                Set-Disk -Number $disk.Number -IsReadOnly $false -ErrorAction SilentlyContinue
+                Set-Disk -Number $disk.Number -IsReadOnly $false -ErrorAction Stop
                 Write-OutputColor "  Disk $($disk.Number) brought online." -color "Success"
             }
             catch {
@@ -551,7 +551,7 @@ function Set-DiskOnlineStatus {
                 Set-Disk -Number $disk.Number -IsOffline $false -ErrorAction Stop
 
                 # Also clear read-only if set
-                Set-Disk -Number $disk.Number -IsReadOnly $false -ErrorAction SilentlyContinue
+                Set-Disk -Number $disk.Number -IsReadOnly $false -ErrorAction Stop
 
                 Write-OutputColor "Disk $($disk.Number) is now ONLINE." -color "Success"
                 Add-SessionChange -Category "Storage" -Description "Set Disk $($disk.Number) online"
@@ -965,7 +965,7 @@ function Format-DiskVolume {
 
         # Assign drive letter first if needed
         if ($newDriveLetter) {
-            Set-Partition -DiskNumber $disk.Number -PartitionNumber $partition.PartitionNumber -NewDriveLetter $newDriveLetter -ErrorAction SilentlyContinue
+            Set-Partition -DiskNumber $disk.Number -PartitionNumber $partition.PartitionNumber -NewDriveLetter $newDriveLetter -ErrorAction Stop
             # Verify drive letter was actually assigned
             $verifyPartition = Get-Partition -DiskNumber $disk.Number -PartitionNumber $partition.PartitionNumber -ErrorAction Stop
             if ($verifyPartition.DriveLetter -eq $newDriveLetter) {

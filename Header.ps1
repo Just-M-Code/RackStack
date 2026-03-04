@@ -30,10 +30,19 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.65
+    1.9.66
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.66
+    DISK HEALTH, STORAGE SAFETY & INPUT HARDENING:
+    - NEW: Server readiness dashboard includes disk health check — detects unhealthy disks and predictive failure warnings via Get-PhysicalDisk
+    - NEW: Server readiness dashboard includes disk temperature monitoring (Server 2016+) — warns when any disk exceeds 55°C via StorageReliabilityCounter
+    - FIX: Storage Manager disk online/read-only operations use -ErrorAction Stop — 3 instances where SilentlyContinue inside try/catch silently swallowed Set-Disk failures, hiding read-only flag errors
+    - FIX: Storage Manager drive letter assignment uses -ErrorAction Stop — Set-Partition failure was silently ignored, causing misleading success/failure messages
+    - FIX: Feature install job error extraction logs warning instead of bare catch {} — previously discarded exception details when ChildJobs error parsing failed
+    - FIX: Network adapter selection uses Test-NavigationCommand and case-insensitive matching — 2 instances of manual case checks replaced with standard navigation helper
 
 .CHANGELOG v1.9.65
     EXPORTS, SESSION & LICENSING:

@@ -90,12 +90,13 @@ function Select-Host-Network-Adapter {
         $selection = Read-Host
 
         # Check for refresh
-        if ($selection -eq 'R' -or $selection -eq 'r' -or $selection -eq 'refresh') {
+        if ($selection -match '^[Rr]$' -or $selection -ieq 'refresh') {
             continue
         }
 
-        # Check for back
-        if ($selection -eq 'B' -or $selection -eq 'b' -or $selection -eq 'back') {
+        # Check for back using navigation helper
+        $navResult = Test-NavigationCommand -UserInput $selection
+        if ($navResult.ShouldReturn) {
             return $null
         }
 
@@ -149,12 +150,13 @@ function Select-VM-Network-Adapter {
         $selection = Read-Host
 
         # Check for refresh
-        if ($selection -eq 'R' -or $selection -eq 'r' -or $selection -eq 'refresh') {
+        if ($selection -match '^[Rr]$' -or $selection -ieq 'refresh') {
             continue
         }
 
-        # Check for back
-        if ($selection -eq 'B' -or $selection -eq 'b' -or $selection -eq 'back') {
+        # Check for back using navigation helper
+        $navResult = Test-NavigationCommand -UserInput $selection
+        if ($navResult.ShouldReturn) {
             return $null
         }
 

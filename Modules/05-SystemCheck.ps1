@@ -390,7 +390,9 @@ function Install-WindowsFeatureWithTimeout {
             if ($installJob.ChildJobs.Count -gt 0) {
                 $jobError = $installJob.ChildJobs[0].Error | Out-String
             }
-        } catch {}
+        } catch {
+            Write-OutputColor "  Could not extract job error details: $_" -color "Warning"
+        }
         if (-not $jobError) { $jobError = "Job failed without error details. Check Windows Event Log." }
     }
     Remove-Job $installJob -Force -ErrorAction SilentlyContinue

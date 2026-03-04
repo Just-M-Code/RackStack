@@ -474,6 +474,52 @@ function Show-ServerReadiness {
         $items += @{ Category = "SYSTEM"; Name = "Uptime"; Value = "Check failed"; Color = "Warning"; Symbol = "[--]" }
     }
 
+    # --- HARDWARE ---
+    # Physical disk health check via storage reliability counters
+    $total++
+    try {
+        $physDisks = @(Get-PhysicalDisk -ErrorAction Stop)
+        if ($physDisks.Count -eq 0) {
+            $items += @{ Category = "HARDWARE"; Name = "Disk Health"; Value = "No physical disks found"; Color = "Warning"; Symbol = "[--]" }
+        } else {
+            $unhealthy = @($physDisks | Where-Object { $_.HealthStatus -ne "Healthy" })
+            $warnDisks = @($physDisks | Where-Object { $_.OperationalStatus -eq "Predictive Failure" })
+            if ($unhealthy.Count -gt 0) {
+                $items += @{ Category = "HARDWARE"; Name = "Disk Health"; Value = "$($unhealthy.Count)/$($physDisks.Count) disk(s) unhealthy"; Color = "Error"; Symbol = "[!!]" }
+            } elseif ($warnDisks.Count -gt 0) {
+                $items += @{ Category = "HARDWARE"; Name = "Disk Health"; Value = "$($warnDisks.Count) predictive failure warning(s)"; Color = "Warning"; Symbol = "[--]" }
+            } else {
+                $ready++
+                $items += @{ Category = "HARDWARE"; Name = "Disk Health"; Value = "$($physDisks.Count) disk(s) healthy"; Color = "Success"; Symbol = "[OK]" }
+            }
+        }
+    } catch {
+        $items += @{ Category = "HARDWARE"; Name = "Disk Health"; Value = "Check failed"; Color = "Warning"; Symbol = "[--]" }
+    }
+
+    # Disk temperature check (Server 2016+ with Get-StorageReliabilityCounter)
+    if ($script:IsServer2016OrLater) {
+        $total++
+        try {
+            $hotDisks = @()
+            foreach ($pd in @(Get-PhysicalDisk -ErrorAction Stop)) {
+                $rel = Get-StorageReliabilityCounter -PhysicalDisk $pd -ErrorAction SilentlyContinue
+                if ($null -ne $rel -and $null -ne $rel.Temperature -and $rel.Temperature -gt 55) {
+                    $hotDisks += @{ Disk = $pd.FriendlyName; Temp = $rel.Temperature }
+                }
+            }
+            if ($hotDisks.Count -gt 0) {
+                $hottest = ($hotDisks | Sort-Object { $_.Temp } -Descending | Select-Object -First 1)
+                $items += @{ Category = "HARDWARE"; Name = "Disk Temperature"; Value = "$($hotDisks.Count) disk(s) above 55C (max: $($hottest.Temp)C)"; Color = "Warning"; Symbol = "[--]" }
+            } else {
+                $ready++
+                $items += @{ Category = "HARDWARE"; Name = "Disk Temperature"; Value = "All within normal range"; Color = "Success"; Symbol = "[OK]" }
+            }
+        } catch {
+            $items += @{ Category = "HARDWARE"; Name = "Disk Temperature"; Value = "Check failed"; Color = "Warning"; Symbol = "[--]" }
+        }
+    }
+
     # --- SECURITY ---
     # Certificate expiration check - scan LocalMachine\My for certs expiring within 30 days
     $total++
