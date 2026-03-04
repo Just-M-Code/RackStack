@@ -723,7 +723,7 @@ function Export-HTMLReadinessReport {
 # Save a performance snapshot to JSON
 function Save-PerformanceSnapshot {
     $metricsDir = "$script:AppConfigDir\metrics"
-    if (-not (Test-Path $metricsDir)) {
+    if (-not (Test-Path -LiteralPath $metricsDir)) {
         $null = New-Item -Path $metricsDir -ItemType Directory -Force -ErrorAction SilentlyContinue
     }
 
@@ -784,7 +784,7 @@ function Export-HTMLTrendReport {
     )
 
     $metricsDir = "$script:AppConfigDir\metrics"
-    if (-not (Test-Path $metricsDir)) {
+    if (-not (Test-Path -LiteralPath $metricsDir)) {
         Write-OutputColor "  No metrics found. Save snapshots first." -color "Warning"
         return
     }

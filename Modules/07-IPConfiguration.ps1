@@ -415,7 +415,11 @@ function Disable-AllIPv6 {
     Clear-Host
     Write-CenteredOutput "Disable IPv6 on All Adapters" -color "Info"
 
-    $adapters = Get-NetAdapter -ErrorAction SilentlyContinue
+    $adapters = @(Get-NetAdapter -ErrorAction SilentlyContinue)
+    if ($adapters.Count -eq 0) {
+        Write-OutputColor "  No network adapters found." -color "Error"
+        return
+    }
 
     Write-OutputColor "`nThis will disable IPv6 on all network adapters." -color "Warning"
     Write-OutputColor "Adapters to be modified:" -color "Info"

@@ -557,9 +557,9 @@ function Install-NewForest {
     Write-OutputColor "  │$("  Forest Mode:      $levelDisplay".PadRight(72))│" -color "Info"
     Write-OutputColor "  │$("  Domain Mode:      $levelDisplay".PadRight(72))│" -color "Info"
     Write-OutputColor "  │$("  Install DNS:      Yes".PadRight(72))│" -color "Info"
-    Write-OutputColor "  │$("  Database Path:    C:\Windows\NTDS".PadRight(72))│" -color "Info"
-    Write-OutputColor "  │$("  Log Path:         C:\Windows\NTDS".PadRight(72))│" -color "Info"
-    Write-OutputColor "  │$("  SYSVOL Path:      C:\Windows\SYSVOL".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Database Path:    $env:SystemRoot\NTDS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Log Path:         $env:SystemRoot\NTDS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  SYSVOL Path:      $env:SystemRoot\SYSVOL".PadRight(72))│" -color "Info"
     Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
     Write-OutputColor "" -color "Info"
 
@@ -687,9 +687,9 @@ function Install-AdditionalDC {
     Write-OutputColor "  │$($lineStr.PadRight(72))│" -color "Info"
     Write-OutputColor "  │$("  Site:             $siteName".PadRight(72))│" -color "Info"
     Write-OutputColor "  │$("  Install DNS:      Yes".PadRight(72))│" -color "Info"
-    Write-OutputColor "  │$("  Database Path:    C:\Windows\NTDS".PadRight(72))│" -color "Info"
-    Write-OutputColor "  │$("  Log Path:         C:\Windows\NTDS".PadRight(72))│" -color "Info"
-    Write-OutputColor "  │$("  SYSVOL Path:      C:\Windows\SYSVOL".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Database Path:    $env:SystemRoot\NTDS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Log Path:         $env:SystemRoot\NTDS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  SYSVOL Path:      $env:SystemRoot\SYSVOL".PadRight(72))│" -color "Info"
     Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
     Write-OutputColor "" -color "Info"
 
@@ -829,9 +829,9 @@ function Install-ReadOnlyDC {
         Write-OutputColor "  │$("  Delegated Admin:  $delegatedAdmin".PadRight(72))│" -color "Info"
     }
     Write-OutputColor "  │$("  Install DNS:      Yes".PadRight(72))│" -color "Info"
-    Write-OutputColor "  │$("  Database Path:    C:\Windows\NTDS".PadRight(72))│" -color "Info"
-    Write-OutputColor "  │$("  Log Path:         C:\Windows\NTDS".PadRight(72))│" -color "Info"
-    Write-OutputColor "  │$("  SYSVOL Path:      C:\Windows\SYSVOL".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Database Path:    $env:SystemRoot\NTDS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Log Path:         $env:SystemRoot\NTDS".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  SYSVOL Path:      $env:SystemRoot\SYSVOL".PadRight(72))│" -color "Info"
     Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
     Write-OutputColor "" -color "Info"
 

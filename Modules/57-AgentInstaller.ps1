@@ -19,7 +19,7 @@ function Test-AgentInstalled {
     # Check configured installation paths
     foreach ($path in $script:AgentInstaller.InstallPaths) {
         $expandedPath = [Environment]::ExpandEnvironmentVariables($path)
-        if (Test-Path $expandedPath) {
+        if (Test-Path -LiteralPath $expandedPath) {
             return @{ Installed = $true; Status = "Files Found"; Path = $expandedPath }
         }
     }
@@ -518,7 +518,10 @@ function Install-SelectedAgent {
         }
     }
     finally {
-        if ($installJob) { Remove-Job -Job $installJob -Force -ErrorAction SilentlyContinue }
+        if ($installJob) {
+            Stop-Job -Job $installJob -ErrorAction SilentlyContinue
+            Remove-Job -Job $installJob -Force -ErrorAction SilentlyContinue
+        }
         Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
     }
 }
@@ -957,7 +960,7 @@ function Test-AgentInstalledByConfig {
     # Check configured installation paths
     foreach ($path in $AgentConfig.InstallPaths) {
         $expandedPath = [Environment]::ExpandEnvironmentVariables($path)
-        if (Test-Path $expandedPath) {
+        if (Test-Path -LiteralPath $expandedPath) {
             return @{ Installed = $true; Status = "Files Found"; Path = $expandedPath }
         }
     }

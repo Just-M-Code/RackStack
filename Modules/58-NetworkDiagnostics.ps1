@@ -305,6 +305,7 @@ function Invoke-SubnetSweep {
                 if ($r) { $allResults.Add($r) }
             }
         }
+        $jobs | Stop-Job -ErrorAction SilentlyContinue
         $jobs | Remove-Job -Force
     }
     Write-Host ""
@@ -539,6 +540,7 @@ function Invoke-QuickPortScan {
             $jobResults[$i] = Receive-Job -Job $jobs[$i] -ErrorAction SilentlyContinue
         }
     }
+    $jobs | Stop-Job -ErrorAction SilentlyContinue
     $jobs | Remove-Job -Force
 
     # Display results

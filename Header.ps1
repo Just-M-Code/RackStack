@@ -30,10 +30,24 @@
     7h3 4b1d3r
 
 .VERSION
-    1.20.0
+    1.20.1
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.20.1
+    BUG FIXES — HARDENING SWEEP ACROSS 15 MODULES:
+    - FIX: Test-Path calls use -LiteralPath across 15 modules for all constructed, user-input, and config-derived paths — prevents wildcard interpretation on paths with bracket characters (Navigation, Defender, Operations Menu, Agent Installer, Session Summary, Entry Point, Config Export, HTML Reports, QoL Features, VM Deployment)
+    - FIX: Subnet sweep and port scan properly stop timed-out background jobs before cleanup — prevents orphaned processes (Network Diagnostics)
+    - FIX: Agent installer properly stops background install job in finally block (Agent Installer)
+    - FIX: Hardcoded C:\Windows paths replaced with $env:SystemRoot in AD DC promotion display (Active Directory)
+    - FIX: Hardcoded C:\Hyper-V fallback paths replaced with $env:SystemDrive (Hyper-V Replica, Operations Menu)
+    - FIX: Get-MpPreference wrapped in try/catch with -ErrorAction Stop in secondary Defender functions (Defender Exclusions)
+    - FIX: Disable-AllIPv6 guards against null adapter list (IP Configuration)
+    - FIX: Invoke-WithTimeout returns consistent keys across all code paths (Navigation)
+    - FIX: Windows activation tracks session change (Licensing)
+    - FIX: ReturnToMainMenu checks added to SNMP config, Edit Defaults, and Edit Licenses menu loops (QoL Features, Operations Menu)
+    64 modules, 1873 tests
 
 .CHANGELOG v1.20.0
     NEW FEATURE + HARDENING — 28 CHANGES:

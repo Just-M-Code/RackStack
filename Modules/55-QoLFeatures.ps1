@@ -1,7 +1,7 @@
 ﻿#region ===== QOL FEATURES (v2.8.0) =====
 # Initialize QoL directories and files
 function Initialize-AppConfigDir {
-    if (-not (Test-Path $script:AppConfigDir)) {
+    if (-not (Test-Path -LiteralPath $script:AppConfigDir)) {
         try {
             $null = New-Item -Path $script:AppConfigDir -ItemType Directory -Force -ErrorAction Stop
         }
@@ -14,7 +14,7 @@ function Initialize-AppConfigDir {
 # Load favorites from file
 function Import-Favorites {
     Initialize-AppConfigDir
-    if (Test-Path $script:FavoritesPath) {
+    if (Test-Path -LiteralPath $script:FavoritesPath) {
         try {
             $script:Favorites = @(Get-Content $script:FavoritesPath -Raw | ConvertFrom-Json)
             if (-not $script:Favorites) { $script:Favorites = @() }
@@ -233,7 +233,7 @@ function Add-CommandHistory {
 # Load command history from file
 function Import-CommandHistory {
     Initialize-AppConfigDir
-    if (Test-Path $script:HistoryPath) {
+    if (Test-Path -LiteralPath $script:HistoryPath) {
         try {
             $script:CommandHistory = @(Get-Content $script:HistoryPath -Raw | ConvertFrom-Json)
             if (-not $script:CommandHistory) { $script:CommandHistory = @() }
@@ -342,7 +342,7 @@ function Save-SessionState {
 
 # Restore session state
 function Restore-SessionState {
-    if (-not (Test-Path $script:SessionStatePath)) { return $false }
+    if (-not (Test-Path -LiteralPath $script:SessionStatePath)) { return $false }
 
     try {
         $sessionState = Get-Content $script:SessionStatePath -Raw | ConvertFrom-Json
@@ -706,6 +706,7 @@ function Set-SNMPConfiguration {
 
     # --- Section: Main Configuration Loop ---
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         Clear-Host
 
         Write-OutputColor "" -color "Info"
@@ -1255,7 +1256,7 @@ function Show-CertificateMenu {
 
                 # Determine export path
                 $exportDir = $script:TempPath
-                if (-not (Test-Path $exportDir)) {
+                if (-not (Test-Path -LiteralPath $exportDir)) {
                     $null = New-Item -Path $exportDir -ItemType Directory -Force -ErrorAction SilentlyContinue
                 }
 

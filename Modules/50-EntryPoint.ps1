@@ -3,7 +3,7 @@
 function Start-ScriptTranscript {
     # Ensure temp directory exists
     $tempPath = $script:TempPath
-    if (-not (Test-Path $tempPath)) {
+    if (-not (Test-Path -LiteralPath $tempPath)) {
         try {
             New-Item -Path $tempPath -ItemType Directory -Force | Out-Null
         }
@@ -45,7 +45,7 @@ function Remove-OldTranscripts {
     )
 
     $tempPath = $script:TempPath
-    if (-not (Test-Path $tempPath)) { return }
+    if (-not (Test-Path -LiteralPath $tempPath)) { return }
 
     try {
         $logFilter = "$($script:ToolName)Config_*.log"
@@ -993,7 +993,7 @@ function Start-BatchMode {
         $storageAlready = $false
         if ($checkDrive) {
             $checkPaths = @("$($checkDrive):\Virtual Machines", "$($checkDrive):\ISOs", "$($checkDrive):\Virtual Machines\_BaseImages")
-            $storageAlready = @($checkPaths | Where-Object { Test-Path $_ }).Count -eq 3
+            $storageAlready = @($checkPaths | Where-Object { Test-Path -LiteralPath $_ }).Count -eq 3
         }
         if ($storageAlready) {
             Write-OutputColor "  [$stepNum/$totalSteps] Host storage: already initialized on $($checkDrive):" -color "Debug"
@@ -1018,7 +1018,7 @@ function Start-BatchMode {
                 $script:HostISOPath = "$($driveLetter):\ISOs"
                 $script:VHDCachePath = "$($driveLetter):\Virtual Machines\_BaseImages"
                 foreach ($folder in @($script:HostVMStoragePath, $script:HostISOPath, $script:VHDCachePath)) {
-                    if (-not (Test-Path $folder)) {
+                    if (-not (Test-Path -LiteralPath $folder)) {
                         New-Item -Path $folder -ItemType Directory -Force | Out-Null
                     }
                 }
@@ -1461,7 +1461,7 @@ function Start-BatchMode {
 if ($script:ScriptPath) {
     $scriptDir = Split-Path -Parent $script:ScriptPath
     $batchConfigPath = Join-Path $scriptDir "batch_config.json"
-    if (Test-Path $batchConfigPath) {
+    if (Test-Path -LiteralPath $batchConfigPath) {
         # Verify elevation before batch mode
         $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
         if (-not $isAdmin) {

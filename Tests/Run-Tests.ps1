@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    Automated Test Runner for RackStack v1.20.0
+    Automated Test Runner for RackStack v1.20.1
 
 .DESCRIPTION
     Comprehensive non-interactive test suite covering:
@@ -7433,7 +7433,7 @@ try {
     # Import-CompanyDefaults: merges, skips _* metadata
     Write-TestResult "Company: Import-CompanyDefaults takes Merged and CompanyFilePath params" ($opsContent -match 'function\s+Import-CompanyDefaults[\s\S]{0,200}\$Merged[\s\S]{0,200}\$CompanyFilePath')
     Write-TestResult "Company: Import-CompanyDefaults skips _* metadata fields" ($opsContent -match 'Import-CompanyDefaults[\s\S]{0,500}\$prop\.Name\s+-like\s+"_\*"')
-    Write-TestResult "Company: Import-CompanyDefaults handles missing file" ($opsContent -match 'Import-CompanyDefaults[\s\S]{0,300}Test-Path\s+\$CompanyFilePath')
+    Write-TestResult "Company: Import-CompanyDefaults handles missing file" ($opsContent -match 'Import-CompanyDefaults[\s\S]{0,300}Test-Path\s+(-LiteralPath\s+)?\$CompanyFilePath')
 
     # Three-tier merge in Import-Defaults
     Write-TestResult "Company: Import-Defaults calls Get-CompanyDefaultsFiles" ($opsContent -match 'function\s+Import-Defaults[\s\S]{0,2000}Get-CompanyDefaultsFiles')

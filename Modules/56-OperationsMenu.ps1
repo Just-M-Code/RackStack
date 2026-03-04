@@ -559,7 +559,7 @@ function Import-CompanyDefaults {
         [string]$CompanyFilePath
     )
 
-    if (-not (Test-Path $CompanyFilePath)) {
+    if (-not (Test-Path -LiteralPath $CompanyFilePath)) {
         Write-OutputColor "  Warning: Company defaults file not found: $CompanyFilePath" -color "Warning"
         return
     }
@@ -585,9 +585,9 @@ function Import-Defaults {
     $companyFiles = @(Get-CompanyDefaultsFiles)
 
     # Run first-run wizard if no defaults.json exists (skip in batch mode)
-    if (-not (Test-Path $script:DefaultsPath)) {
+    if (-not (Test-Path -LiteralPath $script:DefaultsPath)) {
         $batchConfig = Join-Path $script:ModuleRoot "batch_config.json"
-        if (-not (Test-Path $batchConfig)) {
+        if (-not (Test-Path -LiteralPath $batchConfig)) {
             Show-FirstRunWizard
         }
     }
@@ -659,7 +659,7 @@ function Import-Defaults {
     }
 
     # Tier 3: Merge personal defaults from file if it exists
-    if (Test-Path $script:DefaultsPath) {
+    if (Test-Path -LiteralPath $script:DefaultsPath) {
         try {
             $fileDefaults = Get-Content $script:DefaultsPath -Raw | ConvertFrom-Json
             foreach ($prop in $fileDefaults.PSObject.Properties) {
@@ -879,7 +879,7 @@ function Import-Defaults {
     # Import custom license keys from defaults.json
     $script:CustomKMSKeys = @{}
     $script:CustomAVMAKeys = @{}
-    if ((Test-Path $script:DefaultsPath)) {
+    if ((Test-Path -LiteralPath $script:DefaultsPath)) {
         try {
             $fileData = Get-Content $script:DefaultsPath -Raw | ConvertFrom-Json
             if ($fileData.CustomKMSKeys) {
@@ -1111,6 +1111,7 @@ function Export-CustomLicenses {
 # Settings menu: Edit Environment Defaults
 function Show-EditDefaults {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         Clear-Host
 
         Write-OutputColor "" -color "Info"
@@ -1366,7 +1367,7 @@ function Show-EditDefaults {
                     $script:iSCSISubnet = "172.16.1"
                     $script:StorageBackendType = "iSCSI"
                     $script:AutoUpdate = $false
-                    $script:TempPath = "C:\Temp"
+                    $script:TempPath = "$env:SystemDrive\Temp"
                     $script:TimeZoneRegion = ""
 
                     # Remove custom DNS presets
@@ -1395,6 +1396,7 @@ function Show-EditDefaults {
 # Settings menu: Edit Custom Licenses
 function Show-EditLicenses {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         Clear-Host
 
         Write-OutputColor "" -color "Info"

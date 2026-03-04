@@ -35,7 +35,7 @@ function Show-SessionSummary {
 
     # Show persistent log path
     $logFile = "$script:AppConfigDir\session-log.txt"
-    if (Test-Path $logFile) {
+    if (Test-Path -LiteralPath $logFile) {
         Write-OutputColor "" -color "Info"
         Write-OutputColor "Session log saved to: $logFile" -color "Info"
     }

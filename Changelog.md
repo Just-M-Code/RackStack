@@ -1,5 +1,19 @@
 ﻿# Changelog
 
+## v1.20.1
+
+- **Bug Fix:** `Test-Path` calls use `-LiteralPath` across 15 modules for all constructed, user-input, and config-derived paths — prevents wildcard interpretation on paths containing bracket characters.
+- **Bug Fix:** Subnet sweep and port scan properly stop timed-out background jobs before cleanup — prevents orphaned processes (58-NetworkDiagnostics).
+- **Bug Fix:** Agent installer properly stops background install job in finally block (57-AgentInstaller).
+- **Bug Fix:** Hardcoded `C:\Windows` paths replaced with `$env:SystemRoot` in AD DC promotion confirmation display (61-ActiveDirectory).
+- **Bug Fix:** Hardcoded `C:\Hyper-V` fallback paths replaced with `$env:SystemDrive` (62-HyperVReplica, 56-OperationsMenu).
+- **Bug Fix:** `Get-MpPreference` wrapped in `try/catch` with `-ErrorAction Stop` in Defender view/remove functions (17-DefenderExclusions).
+- **Bug Fix:** `Disable-AllIPv6` guards against null adapter list before iterating (07-IPConfiguration).
+- **Bug Fix:** `Invoke-WithTimeout` returns consistent `Failed`/`Error` keys across all code paths (04-Navigation).
+- **Bug Fix:** Windows activation now tracks session change on success (21-Licensing).
+- **Bug Fix:** `ReturnToMainMenu` checks added to SNMP config, Edit Defaults, and Edit Licenses menu loops (55-QoLFeatures, 56-OperationsMenu).
+- 64 modules, 1873 tests
+
 ## v1.20.0
 
 - **New Feature:** Scheduled Task Manager — view all tasks, search by keyword, show running/failed tasks, enable/disable, run on demand, export/import XML backups with full state tracking (63-ScheduledTasks).

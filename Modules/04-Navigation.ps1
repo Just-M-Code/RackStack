@@ -79,7 +79,7 @@ function Add-SessionChange {
     # Persist to session log on disk
     $logDir = $script:AppConfigDir
     if ([string]::IsNullOrWhiteSpace($logDir)) { return }
-    if (-not (Test-Path $logDir)) {
+    if (-not (Test-Path -LiteralPath $logDir)) {
         $null = New-Item -Path $logDir -ItemType Directory -Force -ErrorAction SilentlyContinue
     }
     $logFile = Join-Path $logDir "session-log.txt"
@@ -119,7 +119,7 @@ function Show-AuditLog {
 
     $auditFile = "$script:AppConfigDir\audit-log.jsonl"
 
-    if (-not (Test-Path $auditFile)) {
+    if (-not (Test-Path -LiteralPath $auditFile)) {
         Write-OutputColor "  No audit log found." -color "Warning"
         Write-OutputColor "  Log entries are created as you make changes." -color "Info"
         return
@@ -558,7 +558,7 @@ function Invoke-WithTimeout {
     if ($job.State -eq "Running") {
         Stop-Job $job -Force
         Remove-Job $job -Force
-        return @{ TimedOut = $true; Result = $null }
+        return @{ TimedOut = $true; Result = $null; Failed = $false; Error = "Timed out after $TimeoutSeconds seconds" }
     }
 
     if ($job.State -eq "Failed") {
@@ -569,6 +569,6 @@ function Invoke-WithTimeout {
 
     $result = Receive-Job $job
     Remove-Job $job -Force
-    return @{ TimedOut = $false; Result = $result }
+    return @{ TimedOut = $false; Result = $result; Failed = $false; Error = $null }
 }
 #endregion

@@ -86,7 +86,7 @@ function Set-DefenderExclusions {
             $customPath = Read-Host "  Enter path to exclude"
             $navResult = Test-NavigationCommand -UserInput $customPath
             if ($navResult.ShouldReturn) { return }
-            if ($customPath -and (Test-Path $customPath -IsValid)) {
+            if ($customPath -and (Test-Path -LiteralPath $customPath -IsValid)) {
                 try {
                     Add-MpPreference -ExclusionPath $customPath -ErrorAction Stop
                     Write-OutputColor "  Added path exclusion: $customPath" -color "Success"
@@ -163,13 +163,13 @@ function Add-HyperVDefenderExclusions {
     $pathsToExclude = @($script:DefenderExclusionPaths)
 
     # Add custom VM storage path if set
-    if ($script:HostVMStoragePath -and (Test-Path $script:HostVMStoragePath)) {
+    if ($script:HostVMStoragePath -and (Test-Path -LiteralPath $script:HostVMStoragePath)) {
         $pathsToExclude += $script:HostVMStoragePath
     }
 
     # Check common VM storage locations (configurable via defaults.json DefenderCommonVMPaths)
     foreach ($vmPath in $script:DefenderCommonVMPaths) {
-        if (Test-Path $vmPath) {
+        if (Test-Path -LiteralPath $vmPath) {
             $pathsToExclude += $vmPath
         }
     }
@@ -254,7 +254,13 @@ function Show-AllDefenderExclusions {
     Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
     Write-OutputColor "" -color "Info"
 
-    $prefs = Get-MpPreference
+    try {
+        $prefs = Get-MpPreference -ErrorAction Stop
+    }
+    catch {
+        Write-OutputColor "  Failed to read Defender preferences: $_" -color "Error"
+        return
+    }
 
     # Path exclusions
     Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
@@ -308,7 +314,13 @@ function Show-AllDefenderExclusions {
 
 # Function to remove a Defender exclusion
 function Remove-DefenderExclusion {
-    $prefs = Get-MpPreference
+    try {
+        $prefs = Get-MpPreference -ErrorAction Stop
+    }
+    catch {
+        Write-OutputColor "  Failed to read Defender preferences: $_" -color "Error"
+        return
+    }
     $allExclusions = @()
 
     # Build list of all exclusions

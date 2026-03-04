@@ -189,7 +189,7 @@ function Enable-ReplicaServer {
     }
 
     # Step 3: Set storage path
-    $defaultStorage = if ($script:HostVMStoragePath) { $script:HostVMStoragePath } else { "C:\Hyper-V\Replica" }
+    $defaultStorage = if ($script:HostVMStoragePath) { $script:HostVMStoragePath } else { "$env:SystemDrive\Hyper-V\Replica" }
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Default storage path for replica VMs (Enter for default: $defaultStorage):" -color "Info"
     $storagePath = Read-Host "  "
@@ -454,7 +454,7 @@ function Enable-VMReplicationWizard {
             Write-OutputColor "" -color "Info"
             Write-OutputColor "  Enter export path for external media:" -color "Info"
             $exportPath = Read-Host "  "
-            if ([string]::IsNullOrWhiteSpace($exportPath)) { $exportPath = "C:\Hyper-V\ReplicaExport" }
+            if ([string]::IsNullOrWhiteSpace($exportPath)) { $exportPath = "$env:SystemDrive\Hyper-V\ReplicaExport" }
             Start-VMInitialReplication -VMName $vmName -DestinationPath $exportPath -ErrorAction Stop
             Write-OutputColor "  Initial replication exported to: $exportPath" -color "Success"
             Write-OutputColor "  Transfer this to the replica server and import it there." -color "Info"

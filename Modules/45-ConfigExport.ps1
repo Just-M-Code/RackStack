@@ -1153,7 +1153,7 @@ function Save-DriftBaseline {
     )
 
     $baselineDir = "$script:AppConfigDir\baselines"
-    if (-not (Test-Path $baselineDir)) {
+    if (-not (Test-Path -LiteralPath $baselineDir)) {
         $null = New-Item -Path $baselineDir -ItemType Directory -Force -ErrorAction SilentlyContinue
     }
 
@@ -1232,7 +1232,7 @@ function Save-DriftBaseline {
 # List saved drift baselines
 function Get-DriftBaselines {
     $baselineDir = "$script:AppConfigDir\baselines"
-    if (-not (Test-Path $baselineDir)) { return @() }
+    if (-not (Test-Path -LiteralPath $baselineDir)) { return @() }
 
     $files = Get-ChildItem -Path $baselineDir -Filter "*.json" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
     $baselines = @()

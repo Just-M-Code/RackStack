@@ -1685,8 +1685,8 @@ function New-VMDirectories {
     if ($ComputerName) {
         $scriptBlock = {
             param($vmPath, $vhdPath)
-            if (-not (Test-Path $vmPath)) { New-Item -Path $vmPath -ItemType Directory -Force | Out-Null }
-            if (-not (Test-Path $vhdPath)) { New-Item -Path $vhdPath -ItemType Directory -Force | Out-Null }
+            if (-not (Test-Path -LiteralPath $vmPath)) { New-Item -Path $vmPath -ItemType Directory -Force | Out-Null }
+            if (-not (Test-Path -LiteralPath $vhdPath)) { New-Item -Path $vhdPath -ItemType Directory -Force | Out-Null }
         }
         $invokeParams = @{
             ComputerName = $ComputerName
@@ -1933,7 +1933,7 @@ function New-DeployedVM {
         Register-VMInCluster -VMName $Config.VMName
 
         # Offer offline VHD customization if sysprepped VHD was used
-        if ($Config.UseVHD -and $osVhdPath -and (Test-Path $osVhdPath)) {
+        if ($Config.UseVHD -and $osVhdPath -and (Test-Path -LiteralPath $osVhdPath)) {
             Write-OutputColor "" -color "Info"
             $customized = Show-OfflineCustomizationPrompt -VHDPath $osVhdPath -VMName $Config.VMName
             if ($customized) {
@@ -3039,7 +3039,7 @@ function Test-VMDeploymentPreFlight {
     $vhdVMs = @($VMConfigs | Where-Object { $_.UseVHD -and $_.VHDSourcePath })
     $vhdMissing = @()
     foreach ($vm in $vhdVMs) {
-        if (-not (Test-Path $vm.VHDSourcePath -ErrorAction SilentlyContinue)) {
+        if (-not (Test-Path -LiteralPath $vm.VHDSourcePath -ErrorAction SilentlyContinue)) {
             $vhdMissing += $vm.VHDSourcePath
         }
     }
