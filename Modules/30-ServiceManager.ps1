@@ -190,7 +190,7 @@ function Show-ServiceManager {
             "^[Aa]$" {
                 $search = Read-Host "  Enter service name to search"
                 if ($search) {
-                    $found = Get-Service | Where-Object { $_.Name -like "*$search*" -or $_.DisplayName -like "*$search*" } | Select-Object -First 10
+                    $found = Get-Service -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*$search*" -or $_.DisplayName -like "*$search*" } | Select-Object -First 10
                     if ($found) {
                         Write-OutputColor "" -color "Info"
                         foreach ($s in $found) {

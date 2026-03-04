@@ -1,5 +1,20 @@
 ﻿# Changelog
 
+## v1.18.2
+
+- **Bug Fix:** HTML reports encode all dynamic values with `HtmlEncode` — VM names, adapter names, CPU model, process names, and config profile comparison data are now safe from display issues with special characters like `&`, `<`, `>` in generated HTML (54-HTMLReports).
+- **Bug Fix:** Hardcoded power plan GUID in offline VHD first-boot script replaced with centralized `$script:PowerPlanGUID` constant (43-OfflineVHD).
+- **Bug Fix:** Firewall rule `.Enabled` comparison uses boolean `$true` instead of string `"True"` for consistency with `GpoBoolean` enum across codebase (35-Utilities, 16-Firewall).
+- **Bug Fix:** `Save-StoredCredential` clears plaintext password variable on exception path — if `Process.Start()` threw, the password remained in memory (35-Utilities).
+- **Bug Fix:** `Install-HyperVRole` adds `-ErrorAction` on `Get-CimInstance` with graceful fallback if WMI is unavailable (25-HyperV).
+- **Bug Fix:** SHA256 hash verification guards against null stream/hasher in finally block (35-Utilities).
+- **Bug Fix:** `Clear-MenuCache` called after SET, vSwitch, and vNIC creation/removal to ensure menus reflect current adapter state (09-SET).
+- **Bug Fix:** Disk cleanup uses `try/catch` instead of TOCTOU `Test-Path` pattern for accurate deletion counting (20-DiskCleanup).
+- **Bug Fix:** Disk cleanup uses `$env:SystemRoot` instead of hardcoded `C:\Windows` paths for non-standard installations (20-DiskCleanup).
+- **Bug Fix:** VHD Management, Deduplication, and Storage Replica menu loops check `$global:ReturnToMainMenu` flag to exit immediately when triggered from a sub-function (41-VHDManagement, 32-Deduplication, 33-StorageReplica).
+- **Bug Fix:** `Get-Volume` and `Get-Service` calls add `-ErrorAction SilentlyContinue` to prevent noise from restricted services or unavailable storage (38-StorageManager, 30-ServiceManager).
+- 63 modules, 1854 tests
+
 ## v1.18.1
 
 - **Bug Fix:** `Remove-NetIPAddress` and `Remove-NetRoute` calls now specify `-AddressFamily IPv4` — without this flag, IPv6 link-local addresses and routes were stripped unnecessarily during IP reconfiguration (09-SET, 45-ConfigExport, 50-EntryPoint).

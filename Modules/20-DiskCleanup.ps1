@@ -15,7 +15,7 @@ function Start-DiskCleanup {
         $logsSize = 0
 
         # Temp files
-        $tempPaths = @($env:TEMP, "C:\Windows\Temp", "C:\Windows\Prefetch")
+        $tempPaths = @($env:TEMP, "$env:SystemRoot\Temp", "$env:SystemRoot\Prefetch")
         foreach ($path in $tempPaths) {
             if (Test-Path $path) {
                 $tempSize += [long](Get-ChildItem $path -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
@@ -23,13 +23,13 @@ function Start-DiskCleanup {
         }
 
         # Windows Update cache
-        $wuPath = "C:\Windows\SoftwareDistribution\Download"
+        $wuPath = "$env:SystemRoot\SoftwareDistribution\Download"
         if (Test-Path $wuPath) {
             $wuSize = [long](Get-ChildItem $wuPath -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
         }
 
         # CBS Logs
-        $cbsPath = "C:\Windows\Logs\CBS"
+        $cbsPath = "$env:SystemRoot\Logs\CBS"
         if (Test-Path $cbsPath) {
             $logsSize = [long](Get-ChildItem $cbsPath -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
         }
@@ -98,17 +98,18 @@ function Invoke-QuickClean {
     $fileCount = 0
     $lastUpdate = [DateTime]::Now
 
-    $tempPaths = @($env:TEMP, "C:\Windows\Temp")
+    $tempPaths = @($env:TEMP, "$env:SystemRoot\Temp")
     foreach ($tempPath in $tempPaths) {
         if (Test-Path $tempPath) {
             $files = Get-ChildItem $tempPath -Recurse -Force -File -ErrorAction SilentlyContinue
             foreach ($file in $files) {
-                $fileSize = $file.Length
-                Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue
-                if (-not (Test-Path $file.FullName)) {
+                try {
+                    $fileSize = $file.Length
+                    Remove-Item $file.FullName -Force -ErrorAction Stop
                     $cleaned += $fileSize
                     $fileCount++
                 }
+                catch { }
                 # Progress update every 500ms
                 if (([DateTime]::Now - $lastUpdate).TotalMilliseconds -gt 500) {
                     $cleanedMB = [math]::Round($cleaned / 1MB, 1)
@@ -149,8 +150,8 @@ function Invoke-DeepClean {
     }
 
     # Clear CBS logs
-    if (Test-Path "C:\Windows\Logs\CBS") {
-        Get-ChildItem "C:\Windows\Logs\CBS\*.log" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+    if (Test-Path "$env:SystemRoot\Logs\CBS") {
+        Get-ChildItem "$env:SystemRoot\Logs\CBS\*.log" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
         Write-OutputColor "  CBS logs cleared." -color "Success"
     }
 
@@ -168,7 +169,7 @@ function Clear-WindowsUpdateCache {
         Start-Sleep -Seconds 2
 
         # Clear download folder
-        $wuPath = "C:\Windows\SoftwareDistribution\Download"
+        $wuPath = "$env:SystemRoot\SoftwareDistribution\Download"
         if (Test-Path $wuPath) {
             Get-ChildItem $wuPath -Recurse -Force -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
         }

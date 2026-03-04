@@ -1645,7 +1645,7 @@ function Set-VolumeLabel {
     Write-OutputColor "" -color "Info"
 
     # Show volumes with drive letters
-    $volumes = @(Get-Volume | Where-Object { $_.DriveLetter } | Sort-Object DriveLetter)
+    $volumes = @(Get-Volume -ErrorAction SilentlyContinue | Where-Object { $_.DriveLetter } | Sort-Object DriveLetter)
 
     if ($volumes.Count -eq 0) {
         Write-OutputColor "No volumes with drive letters found." -color "Warning"

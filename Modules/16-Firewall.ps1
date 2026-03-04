@@ -243,7 +243,7 @@ function Show-FirewallRuleSearch {
             foreach ($rule in $displayRules) {
                 $dir = if ($rule.Direction -eq "Inbound") { "IN " } else { "OUT" }
                 $act = if ($rule.Action -eq "Allow") { "ALLOW" } else { "BLOCK" }
-                $ena = if ($rule.Enabled -eq "True") { "" } else { " [OFF]" }
+                $ena = if ($rule.Enabled -eq $true) { "" } else { " [OFF]" }
                 $actColor = if ($rule.Action -eq "Allow") { "Success" } else { "Warning" }
                 $name = $rule.DisplayName
                 if ($name.Length -gt 46) { $name = $name.Substring(0, 43) + "..." }

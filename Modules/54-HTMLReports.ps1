@@ -1,4 +1,7 @@
 ﻿#region ===== HTML REPORTING (v2.8.0) =====
+# HTML-encode dynamic values to prevent display issues with special characters
+function ConvertTo-HtmlSafe([string]$s) { if ($s) { [System.Net.WebUtility]::HtmlEncode($s) } else { $s } }
+
 # Function to generate HTML health report
 function Export-HTMLHealthReport {
     param(
@@ -80,7 +83,7 @@ function Export-HTMLHealthReport {
     foreach ($adapter in $adapters) {
         $ip = $allIPv4Html | Where-Object { $_.InterfaceAlias -eq $adapter.Name }
         $ipStr = if ($ip) { $ip.IPAddress } else { "No IP" }
-        $networkHtml += "<tr><td>$($adapter.Name)</td><td>$ipStr</td><td class='status-good'>Up</td><td>$($adapter.LinkSpeed)</td></tr>"
+        $networkHtml += "<tr><td>$(ConvertTo-HtmlSafe $adapter.Name)</td><td>$(ConvertTo-HtmlSafe $ipStr)</td><td class='status-good'>Up</td><td>$(ConvertTo-HtmlSafe $adapter.LinkSpeed)</td></tr>"
     }
 
     # Services
@@ -109,7 +112,7 @@ function Export-HTMLHealthReport {
                 $latMs = [math]::Round($sample.CookedValue * 1000, 2)
                 $metricName = if ($sample.Path -match 'Read') { "Read" } else { "Write" }
                 $latStat = if ($latMs -gt 20) { "bad" } elseif ($latMs -gt 10) { "warn" } else { "good" }
-                $diskIOHtml += "<tr><td>$($sample.InstanceName)</td><td>$metricName</td><td>${latMs}ms</td><td class='status-$latStat'>$($latStat.ToUpper())</td></tr>"
+                $diskIOHtml += "<tr><td>$(ConvertTo-HtmlSafe $sample.InstanceName)</td><td>$metricName</td><td>${latMs}ms</td><td class='status-$latStat'>$($latStat.ToUpper())</td></tr>"
             }
         } else { $diskIOHtml += "<tr><td colspan='4'>Performance counters unavailable</td></tr>" }
     } catch { $diskIOHtml += "<tr><td colspan='4'>Unable to read disk I/O counters</td></tr>" }
@@ -122,7 +125,7 @@ function Export-HTMLHealthReport {
         foreach ($nic in $nicStats) {
             $totalErr = $nic.InErrors + $nic.OutErrors + $nic.InDiscards
             $nicStat = if ($totalErr -gt 0) { "warn" } else { "good" }
-            $nicErrorHtml += "<tr><td>$($nic.Name)</td><td>$($nic.InErrors)</td><td>$($nic.OutErrors)</td><td>$($nic.InDiscards)</td><td class='status-$nicStat'>$($nicStat.ToUpper())</td></tr>"
+            $nicErrorHtml += "<tr><td>$(ConvertTo-HtmlSafe $nic.Name)</td><td>$($nic.InErrors)</td><td>$($nic.OutErrors)</td><td>$($nic.InDiscards)</td><td class='status-$nicStat'>$($nicStat.ToUpper())</td></tr>"
         }
     } catch { $nicErrorHtml += "<tr><td colspan='5'>NIC statistics unavailable</td></tr>" }
     $nicErrorHtml += "</table>"
@@ -156,7 +159,7 @@ function Export-HTMLHealthReport {
                     $hvHbSt = if ($hvHb -and $hvHb.PrimaryStatusDescription -eq "OK") { "good" } else { "warn" }
                     $hvHbTxt = if ($hvHb) { $hvHb.PrimaryStatusDescription } else { "N/A" }
                     $hvRAM = [math]::Round($hvm.MemoryAssigned / 1GB, 1)
-                    $hvGuestHtml += "<tr><td>$($hvm.Name)</td><td class='status-$hvHbSt'>$hvHbTxt</td><td>$($hvm.ProcessorCount)</td><td>$hvRAM</td></tr>"
+                    $hvGuestHtml += "<tr><td>$(ConvertTo-HtmlSafe $hvm.Name)</td><td class='status-$hvHbSt'>$hvHbTxt</td><td>$($hvm.ProcessorCount)</td><td>$hvRAM</td></tr>"
                 }
             } else { $hvGuestHtml += "<tr><td colspan='4'>No running VMs</td></tr>" }
         } catch { $hvGuestHtml += "<tr><td colspan='4'>Guest health unavailable</td></tr>" }
@@ -170,7 +173,7 @@ function Export-HTMLHealthReport {
         foreach ($p in $topP) {
             $pCPU = if ($null -ne $p.CPU) { [math]::Round($p.CPU, 1) } else { 0 }
             $pMem = [math]::Round($p.WorkingSet64 / 1MB, 0)
-            $topProcsHtml += "<tr><td>$($p.ProcessName)</td><td>$pCPU</td><td>$pMem</td></tr>"
+            $topProcsHtml += "<tr><td>$(ConvertTo-HtmlSafe $p.ProcessName)</td><td>$pCPU</td><td>$pMem</td></tr>"
         }
     } catch { $topProcsHtml += "<tr><td colspan='3'>Process information unavailable</td></tr>" }
     $topProcsHtml += "</table>"
@@ -194,7 +197,7 @@ function Export-HTMLHealthReport {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Server Health Report - $($cs.Name)</title>
+    <title>Server Health Report - $(ConvertTo-HtmlSafe $cs.Name)</title>
     <meta charset="UTF-8">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f5f5f5; }
@@ -236,15 +239,15 @@ function Export-HTMLHealthReport {
 
         <h2>System Information</h2>
         <div class="info-grid">
-            <div class="info-box"><div class="info-label">Computer Name</div><div class="info-value">$($cs.Name)</div></div>
-            <div class="info-box"><div class="info-label">Operating System</div><div class="info-value">$($os.Caption)</div></div>
+            <div class="info-box"><div class="info-label">Computer Name</div><div class="info-value">$(ConvertTo-HtmlSafe $cs.Name)</div></div>
+            <div class="info-box"><div class="info-label">Operating System</div><div class="info-value">$(ConvertTo-HtmlSafe $os.Caption)</div></div>
             <div class="info-box"><div class="info-label">OS Version</div><div class="info-value">$($os.Version)</div></div>
             <div class="info-box"><div class="info-label">Uptime</div><div class="info-value">$uptimeStr</div></div>
         </div>
 
         <h2>CPU</h2>
         <div class="info-grid">
-            <div class="info-box"><div class="info-label">Processor</div><div class="info-value">$(if ($cpu) { $cpu.Name } else { 'Unknown' })</div></div>
+            <div class="info-box"><div class="info-label">Processor</div><div class="info-value">$(if ($cpu) { ConvertTo-HtmlSafe $cpu.Name } else { 'Unknown' })</div></div>
             <div class="info-box"><div class="info-label">Cores / Logical</div><div class="info-value">$(if ($cpu) { "$($cpu.NumberOfCores) / $($cpu.NumberOfLogicalProcessors)" } else { 'N/A' })</div></div>
             <div class="info-box"><div class="info-label">Current Load</div><div class="info-value status-$cpuStatus">$([math]::Round($cpuLoad, 1))%</div></div>
         </div>
@@ -401,20 +404,23 @@ function Export-ProfileComparisonHTML {
         $hasVal1 = $null -ne $val1
         $hasVal2 = $null -ne $val2
 
+        $eProp = ConvertTo-HtmlSafe $prop
+        $eVal1 = ConvertTo-HtmlSafe "$val1"
+        $eVal2 = ConvertTo-HtmlSafe "$val2"
         if ($hasVal1 -and -not $hasVal2) {
-            $rowsHtml += "<tr class='removed'><td>$prop</td><td>$val1</td><td><em>(removed)</em></td><td>Removed</td></tr>"
+            $rowsHtml += "<tr class='removed'><td>$eProp</td><td>$eVal1</td><td><em>(removed)</em></td><td>Removed</td></tr>"
             $removed++
         }
         elseif (-not $hasVal1 -and $hasVal2) {
-            $rowsHtml += "<tr class='added'><td>$prop</td><td><em>(none)</em></td><td>$val2</td><td>Added</td></tr>"
+            $rowsHtml += "<tr class='added'><td>$eProp</td><td><em>(none)</em></td><td>$eVal2</td><td>Added</td></tr>"
             $added++
         }
         elseif ((ConvertTo-Json $val1 -Compress -Depth 5) -ne (ConvertTo-Json $val2 -Compress -Depth 5)) {
-            $rowsHtml += "<tr class='changed'><td>$prop</td><td>$val1</td><td>$val2</td><td>Changed</td></tr>"
+            $rowsHtml += "<tr class='changed'><td>$eProp</td><td>$eVal1</td><td>$eVal2</td><td>Changed</td></tr>"
             $changed++
         }
         else {
-            $rowsHtml += "<tr><td>$prop</td><td>$val1</td><td>$val2</td><td>Same</td></tr>"
+            $rowsHtml += "<tr><td>$eProp</td><td>$eVal1</td><td>$eVal2</td><td>Same</td></tr>"
         }
     }
 
@@ -527,7 +533,7 @@ function Export-HTMLReadinessReport {
         param([string]$Cat, [string]$Name, [string]$Value, [string]$Status)
         $class = switch ($Status) { "ok" { "good" }; "warn" { "warn" }; "fail" { "bad" }; default { "good" } }
         $icon = switch ($Status) { "ok" { "&#10004;" }; "warn" { "&#9888;" }; "fail" { "&#10008;" }; default { "?" } }
-        return "<tr><td>$Cat</td><td>$Name</td><td class='status-$class'>$icon $Value</td></tr>"
+        return "<tr><td>$(ConvertTo-HtmlSafe $Cat)</td><td>$(ConvertTo-HtmlSafe $Name)</td><td class='status-$class'>$icon $(ConvertTo-HtmlSafe $Value)</td></tr>"
     }
 
     # Hostname
@@ -632,7 +638,7 @@ function Export-HTMLReadinessReport {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Server Readiness Report - $($cs.Name)</title>
+    <title>Server Readiness Report - $(ConvertTo-HtmlSafe $cs.Name)</title>
     <meta charset="UTF-8">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f5f5f5; }
@@ -669,7 +675,7 @@ function Export-HTMLReadinessReport {
     <div class="container">
         <h1>Server Readiness Report</h1>
         <div class="info">
-            <div class="info-item"><div class="info-label">Server</div><div class="info-value">$($cs.Name)</div></div>
+            <div class="info-item"><div class="info-label">Server</div><div class="info-value">$(ConvertTo-HtmlSafe $cs.Name)</div></div>
             <div class="info-item"><div class="info-label">Generated</div><div class="info-value">$(Get-Date -Format 'yyyy-MM-dd HH:mm')</div></div>
             <div class="info-item"><div class="info-label">Tool Version</div><div class="info-value">v$($script:ScriptVersion)</div></div>
         </div>
@@ -883,7 +889,7 @@ function Export-HTMLTrendReport {
 <body>
     <div class="container">
         <h1>Performance Trend Report</h1>
-        <p>Server: $($latestSnap.Hostname) | Snapshots: $($snapshots.Count) | Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')</p>
+        <p>Server: $(ConvertTo-HtmlSafe $latestSnap.Hostname) | Snapshots: $($snapshots.Count) | Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')</p>
 
         <h2>CPU Usage Over Time</h2>
         <p class="metric-info">Bar width = CPU utilization percentage</p>

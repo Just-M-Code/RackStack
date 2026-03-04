@@ -11,7 +11,11 @@ function Install-HyperVRole {
     }
 
     # Detect if this is Windows Server or Windows Client
-    $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem
+    $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue
+    if (-not $osInfo) {
+        Write-OutputColor "Could not detect OS type via CIM." -color "Error"
+        return
+    }
     $isServer = $osInfo.ProductType -ne 1  # 1 = Workstation, 2 = Domain Controller, 3 = Server
 
     Write-OutputColor "Hyper-V is not currently installed." -color "Info"

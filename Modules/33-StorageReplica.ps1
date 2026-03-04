@@ -66,6 +66,7 @@ function Show-StorageReplicaManagement {
     }
 
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         # Show current SR partnerships
         Clear-Host
         Write-OutputColor "" -color "Info"

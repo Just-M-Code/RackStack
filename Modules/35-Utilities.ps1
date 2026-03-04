@@ -283,15 +283,17 @@ function Install-ScriptUpdate {
         }
         catch {
             # Fallback for environments where Get-FileHash is unavailable
-            $sha256 = [System.Security.Cryptography.SHA256]::Create()
-            $stream = [System.IO.File]::OpenRead($tempPath)
+            $sha256 = $null
+            $stream = $null
             try {
+                $sha256 = [System.Security.Cryptography.SHA256]::Create()
+                $stream = [System.IO.File]::OpenRead($tempPath)
                 $hashBytes = $sha256.ComputeHash($stream)
                 $actualHash = ($hashBytes | ForEach-Object { $_.ToString("X2") }) -join ""
             }
             finally {
-                $stream.Close()
-                $sha256.Dispose()
+                if ($stream) { $stream.Close() }
+                if ($sha256) { $sha256.Dispose() }
             }
         }
 
@@ -725,6 +727,7 @@ function Save-StoredCredential {
         }
     }
     catch {
+        $password = $null
         Write-OutputColor "Failed to save credential: $_" -color "Error"
         return $false
     }
@@ -2022,8 +2025,8 @@ function Show-FirewallRuleSummary {
         return
     }
 
-    $enabledRules = @($allRules | Where-Object { $_.Enabled -eq 'True' })
-    $disabledRules = @($allRules | Where-Object { $_.Enabled -ne 'True' })
+    $enabledRules = @($allRules | Where-Object { $_.Enabled -eq $true })
+    $disabledRules = @($allRules | Where-Object { $_.Enabled -ne $true })
     $inbound = @($enabledRules | Where-Object { $_.Direction -eq 'Inbound' })
     $outbound = @($enabledRules | Where-Object { $_.Direction -eq 'Outbound' })
     $allowIn = @($inbound | Where-Object { $_.Action -eq 'Allow' })

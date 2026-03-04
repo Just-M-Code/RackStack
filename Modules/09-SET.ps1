@@ -296,6 +296,7 @@ function New-SwitchEmbeddedTeam {
         Write-OutputColor "Switch Name: $SwitchName" -color "Info"
         Write-OutputColor "Management NIC: vEthernet ($ManagementName)" -color "Info"
         Add-SessionChange -Category "Network" -Description "Created SET '$SwitchName' with $adapterCount adapters"
+        Clear-MenuCache
 
         # Check if there are iSCSI candidate adapters from auto-detection
         if ($script:iSCSICandidateAdapters -and $script:iSCSICandidateAdapters.Count -gt 0) {
@@ -494,6 +495,7 @@ function Add-CustomVNIC {
 
     $vlanMsg = if ($vlanInput -match '^\d+$' -and [int]$vlanInput -ge 1 -and [int]$vlanInput -le 4094) { " VLAN $vlanInput" } else { "" }
     Add-SessionChange -Category "Network" -Description "Added vNIC '$vnicName'$vlanMsg to SET '$($existingSwitch.Name)'"
+    Clear-MenuCache
 
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  Virtual NIC '$vnicName' created successfully!" -color "Success"
@@ -651,6 +653,7 @@ function New-StandardVSwitch {
 
                 Write-OutputColor "  External switch '$SwitchName' created!" -color "Success"
                 Add-SessionChange -Category "Network" -Description "Created External switch '$SwitchName' on $AdapterName"
+                Clear-MenuCache
             }
             "Internal" {
                 Write-OutputColor "" -color "Info"
@@ -659,6 +662,7 @@ function New-StandardVSwitch {
                 Write-OutputColor "  Internal switch '$SwitchName' created!" -color "Success"
                 Write-OutputColor "  Note: Host gets a vEthernet adapter. No physical NIC used." -color "Info"
                 Add-SessionChange -Category "Network" -Description "Created Internal switch '$SwitchName'"
+                Clear-MenuCache
             }
             "Private" {
                 Write-OutputColor "" -color "Info"
@@ -667,6 +671,7 @@ function New-StandardVSwitch {
                 Write-OutputColor "  Private switch '$SwitchName' created!" -color "Success"
                 Write-OutputColor "  Note: VMs can only communicate with each other. No host access." -color "Info"
                 Add-SessionChange -Category "Network" -Description "Created Private switch '$SwitchName'"
+                Clear-MenuCache
             }
         }
     }
@@ -797,6 +802,7 @@ function Remove-VirtualSwitch {
         Remove-VMSwitch -Name $targetSwitch.Name -Force -ErrorAction Stop
         Write-OutputColor "  Switch '$($targetSwitch.Name)' removed." -color "Success"
         Add-SessionChange -Category "Network" -Description "Removed virtual switch '$($targetSwitch.Name)'"
+        Clear-MenuCache
     }
     catch {
         Write-OutputColor "  Failed to remove switch: $_" -color "Error"

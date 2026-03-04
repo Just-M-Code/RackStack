@@ -757,6 +757,7 @@ function Show-LinuxVHDGuide {
 
 function Start-VHDManagement {
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         $choice = Show-VHDManagementMenu
 
         switch ($choice) {

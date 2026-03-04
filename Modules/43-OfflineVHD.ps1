@@ -212,7 +212,7 @@ try {
 
 # Set power plan to High Performance
 try {
-    powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
+    powercfg /setactive $($script:PowerPlanGUID["High Performance"])
 } catch { }
 
 # Enable PowerShell Remoting

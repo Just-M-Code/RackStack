@@ -30,10 +30,24 @@
     7h3 4b1d3r
 
 .VERSION
-    1.18.1
+    1.18.2
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.18.2
+    ROBUSTNESS + CONSISTENCY SWEEP — 14 FIXES:
+    - FIX: HTML reports encode all dynamic values — VM names, adapter names, CPU model, process names, and config profile comparison data now use HtmlEncode to prevent display issues with special characters like & < > in generated HTML (54-HTMLReports)
+    - FIX: Hardcoded power plan GUID in first-boot script uses centralized $script:PowerPlanGUID constant (43-OfflineVHD)
+    - FIX: Firewall rule .Enabled comparison uses boolean ($true) instead of string ("True") for consistency with GpoBoolean enum (35-Utilities, 16-Firewall)
+    - FIX: Save-StoredCredential clears plaintext password on exception path (35-Utilities)
+    - FIX: Install-HyperVRole adds -ErrorAction on Get-CimInstance with graceful fallback (25-HyperV)
+    - FIX: SHA256 hash verification guards against null stream/hasher in finally block (35-Utilities)
+    - FIX: Clear-MenuCache called after SET, vSwitch, and vNIC creation/removal to prevent stale menu data (09-SET)
+    - FIX: Disk cleanup uses try/catch instead of TOCTOU Test-Path pattern for deletion counting (20-DiskCleanup)
+    - FIX: Disk cleanup uses $env:SystemRoot instead of hardcoded C:\Windows paths (20-DiskCleanup)
+    - FIX: VHD Management, Deduplication, and Storage Replica menu loops check $global:ReturnToMainMenu (41-VHDManagement, 32-Deduplication, 33-StorageReplica)
+    - FIX: Get-Volume and Get-Service calls add -ErrorAction SilentlyContinue (38-StorageManager, 30-ServiceManager)
 
 .CHANGELOG v1.18.1
     LOGIC BUG FIXES — ADDRESSFAMILY SCOPING + ISCSI MULTIPATH:
