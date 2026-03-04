@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.66
+    1.9.67
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.67
+    TASK VIEWER, SHARE AUDIT & ERROR HANDLING:
+    - NEW: Scheduled Task Viewer — shows all tasks with status, last run time, and result codes. Highlights custom (non-Microsoft) tasks, failed tasks with hex error codes, and disabled tasks. Accessible from Operations menu option [16] (35-Utilities, 56-OperationsMenu)
+    - NEW: SMB Share Audit — lists all SMB shares with NTFS permissions, flags Everyone write access, checks SMB encryption status and SMBv1 protocol. Shows security issue summary. Accessible from Operations menu option [17] (35-Utilities, 56-OperationsMenu)
+    - FIX: Windows Update scan job error extraction logs warning instead of bare catch {} — previously silently discarded ChildJobs error details when parsing failed (14-WindowsUpdates)
+    - FIX: Hyper-V install job error extraction logs warning instead of bare catch {} — same pattern as above (25-HyperV)
 
 .CHANGELOG v1.9.66
     DISK HEALTH, STORAGE SAFETY & INPUT HARDENING:

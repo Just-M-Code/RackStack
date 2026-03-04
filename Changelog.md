@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.9.67
+
+- **New Feature:** Scheduled Task Viewer — lists all scheduled tasks with status, last run time, and result codes. Highlights custom (non-Microsoft) tasks separately, flags tasks that failed their last run with hex error codes, and shows disabled custom tasks. Accessible from Operations > option [16] (35-Utilities, 56-OperationsMenu).
+- **New Feature:** SMB Share Audit — enumerates all SMB shares with per-share NTFS/share permissions, flags shares that grant write access to Everyone, checks SMB server encryption status, and warns if SMBv1 protocol is still enabled. Shows a security issue summary. Accessible from Operations > option [17] (35-Utilities, 56-OperationsMenu).
+- **Bug Fix:** Windows Update scan job error extraction now logs a warning instead of using a bare `catch {}` — previously, if `ChildJobs[0].Error` parsing threw an exception, the scan error details were silently discarded and the user only saw "Update scan failed" with no additional context (14-WindowsUpdates).
+- **Bug Fix:** Hyper-V install job error extraction now logs a warning instead of using a bare `catch {}` — same silent error swallowing pattern where ChildJobs error parsing failures were discarded (25-HyperV).
+- 63 modules, 1854 tests
+
 ## v1.9.66
 
 - **New Feature:** Server readiness dashboard now includes disk health monitoring — reports healthy/unhealthy/predictive-failure status for all physical disks using `Get-PhysicalDisk` health status and operational status (37-HealthCheck).

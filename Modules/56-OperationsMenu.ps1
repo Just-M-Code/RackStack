@@ -51,6 +51,8 @@ function Show-OperationsMenu {
         Write-MenuItem "[13] Save Performance Snapshot"
         Write-MenuItem "[14] Generate Trend Report"
         Write-MenuItem "[15] Collect Metrics (Interval)"
+        Write-MenuItem "[16] Scheduled Task Viewer"
+        Write-MenuItem "[17] SMB Share Audit"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
 
@@ -133,6 +135,14 @@ function Show-OperationsMenu {
                     continue
                 }
                 Start-MetricCollection -IntervalMinutes $intervalInt -DurationMinutes $durationInt
+                Write-PressEnter
+            }
+            "16" {
+                Show-ScheduledTaskViewer
+                Write-PressEnter
+            }
+            "17" {
+                Show-SMBShareAudit
                 Write-PressEnter
             }
             "b" { return }

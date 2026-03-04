@@ -818,4 +818,202 @@ function Show-CredentialManager {
         default { return }
     }
 }
+
+# Scheduled Task Viewer — list tasks, show status, filter by folder
+function Show-ScheduledTaskViewer {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                    SCHEDULED TASK VIEWER").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    Write-OutputColor "  Gathering scheduled tasks..." -color "Info"
+
+    try {
+        $tasks = @(Get-ScheduledTask -ErrorAction Stop)
+    }
+    catch {
+        Write-OutputColor "  Failed to query scheduled tasks: $_" -color "Error"
+        return
+    }
+
+    # Filter to non-Microsoft custom tasks by default, with option to show all
+    $customTasks = @($tasks | Where-Object { $_.TaskPath -notlike "\Microsoft\*" })
+    $failedTasks = @($tasks | ForEach-Object {
+        try {
+            $info = $_ | Get-ScheduledTaskInfo -ErrorAction SilentlyContinue
+            if ($null -ne $info -and $info.LastTaskResult -ne 0 -and $info.LastTaskResult -ne 267009) {
+                [PSCustomObject]@{
+                    Name       = $_.TaskName
+                    Path       = $_.TaskPath
+                    State      = $_.State
+                    LastResult = $info.LastTaskResult
+                    LastRun    = $info.LastRunTime
+                    NextRun    = $info.NextRunTime
+                }
+            }
+        } catch {}
+    })
+    $disabledTasks = @($tasks | Where-Object { $_.State -eq "Disabled" -and $_.TaskPath -notlike "\Microsoft\*" })
+
+    # Summary
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  TASK SUMMARY".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  Total Tasks:       $($tasks.Count)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Custom Tasks:      $($customTasks.Count) (non-Microsoft)".PadRight(72))│" -color "Info"
+    $failColor = if ($failedTasks.Count -gt 0) { "Warning" } else { "Success" }
+    Write-OutputColor "  │$("  Failed Last Run:   $($failedTasks.Count)".PadRight(72))│" -color $failColor
+    $disColor = if ($disabledTasks.Count -gt 0) { "Warning" } else { "Info" }
+    Write-OutputColor "  │$("  Disabled (Custom): $($disabledTasks.Count)".PadRight(72))│" -color $disColor
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Show custom tasks
+    if ($customTasks.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  CUSTOM TASKS".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        foreach ($task in $customTasks | Sort-Object TaskPath, TaskName) {
+            $stateColor = switch ($task.State) {
+                "Ready" { "Success" }
+                "Running" { "Info" }
+                "Disabled" { "Warning" }
+                default { "Info" }
+            }
+            $info = $null
+            try { $info = $task | Get-ScheduledTaskInfo -ErrorAction SilentlyContinue } catch {}
+            $lastRun = if ($null -ne $info -and $null -ne $info.LastRunTime -and $info.LastRunTime.Year -gt 1999) { $info.LastRunTime.ToString("MM/dd HH:mm") } else { "Never" }
+            $nameStr = "$($task.TaskPath)$($task.TaskName)"
+            if ($nameStr.Length -gt 44) { $nameStr = $nameStr.Substring(0, 41) + "..." }
+            $line = "  $($nameStr.PadRight(44)) $($task.State.ToString().PadRight(10)) $lastRun"
+            Write-OutputColor "  │$($line.PadRight(72))│" -color $stateColor
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+        Write-OutputColor "" -color "Info"
+    }
+
+    # Show failed tasks
+    if ($failedTasks.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  FAILED TASKS (Last Run)".PadRight(72))│" -color "Warning"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        foreach ($ft in $failedTasks | Sort-Object LastRun -Descending) {
+            $nameStr = "$($ft.Path)$($ft.Name)"
+            if ($nameStr.Length -gt 38) { $nameStr = $nameStr.Substring(0, 35) + "..." }
+            $resultHex = "0x{0:X}" -f $ft.LastResult
+            $lastRun = if ($null -ne $ft.LastRun -and $ft.LastRun.Year -gt 1999) { $ft.LastRun.ToString("MM/dd HH:mm") } else { "N/A" }
+            $line = "  $($nameStr.PadRight(38)) $($resultHex.PadRight(14)) $lastRun"
+            Write-OutputColor "  │$($line.PadRight(72))│" -color "Warning"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    }
+
+    Add-SessionChange -Category "System" -Description "Viewed scheduled tasks ($($tasks.Count) total, $($failedTasks.Count) failed)"
+}
+
+# SMB Share Audit — list shares and check permissions
+function Show-SMBShareAudit {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                       SMB SHARE AUDIT").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    try {
+        $shares = @(Get-SmbShare -ErrorAction Stop | Where-Object { $_.Name -notlike "*$" -or $_.Name -eq "C$" -or $_.Name -eq "D$" -or $_.Name -eq "ADMIN$" })
+    }
+    catch {
+        Write-OutputColor "  Failed to query SMB shares: $_" -color "Error"
+        return
+    }
+
+    if ($shares.Count -eq 0) {
+        Write-OutputColor "  No SMB shares found." -color "Info"
+        return
+    }
+
+    $userShares = @($shares | Where-Object { $_.Name -notlike "*$" })
+    $adminShares = @($shares | Where-Object { $_.Name -like "*$" })
+    $issues = @()
+
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  SHARE SUMMARY".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  User Shares:    $($userShares.Count)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Admin Shares:   $($adminShares.Count)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Show all user-visible shares with permissions
+    if ($userShares.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  USER SHARES".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        foreach ($share in $userShares | Sort-Object Name) {
+            $pathStr = if ($share.Path.Length -gt 34) { $share.Path.Substring(0, 31) + "..." } else { $share.Path }
+            $line = "  $($share.Name.PadRight(20)) $pathStr"
+            Write-OutputColor "  │$($line.PadRight(72))│" -color "Info"
+
+            # Check access
+            try {
+                $access = @(Get-SmbShareAccess -Name $share.Name -ErrorAction Stop)
+                foreach ($ace in $access) {
+                    $aceColor = "Info"
+                    if ($ace.AccountName -match "Everyone" -and $ace.AccessRight -ne "Read") {
+                        $aceColor = "Warning"
+                        $issues += "Share '$($share.Name)' grants $($ace.AccessRight) to Everyone"
+                    }
+                    $aceLine = "    $($ace.AccountName.PadRight(30)) $($ace.AccessControlType)/$($ace.AccessRight)"
+                    if ($aceLine.Length -gt 72) { $aceLine = $aceLine.Substring(0, 69) + "..." }
+                    Write-OutputColor "  │$($aceLine.PadRight(72))│" -color $aceColor
+                }
+            } catch {
+                Write-OutputColor "  │$("    (could not read permissions)".PadRight(72))│" -color "Warning"
+            }
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+        Write-OutputColor "" -color "Info"
+    }
+
+    # Check encryption status
+    try {
+        $smbConfig = Get-SmbServerConfiguration -ErrorAction Stop
+        $encryptLine = "  SMB Encryption:   $(if ($smbConfig.EncryptData) { 'Enabled' } else { 'Disabled' })"
+        $encColor = if ($smbConfig.EncryptData) { "Success" } else { "Warning" }
+        $smb1Line = "  SMBv1 Enabled:    $(if ($smbConfig.EnableSMB1Protocol) { 'Yes (not recommended)' } else { 'No (secure)' })"
+        $smb1Color = if ($smbConfig.EnableSMB1Protocol) { "Warning" } else { "Success" }
+
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  SMB SECURITY".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        Write-OutputColor "  │$($encryptLine.PadRight(72))│" -color $encColor
+        Write-OutputColor "  │$($smb1Line.PadRight(72))│" -color $smb1Color
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+        Write-OutputColor "" -color "Info"
+
+        if ($smbConfig.EnableSMB1Protocol) {
+            $issues += "SMBv1 is enabled (security risk)"
+        }
+    } catch {}
+
+    # Issues summary
+    if ($issues.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Warning"
+        Write-OutputColor "  │$("  SECURITY ISSUES ($($issues.Count))".PadRight(72))│" -color "Warning"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Warning"
+        foreach ($issue in $issues) {
+            $issueLine = "  [!] $issue"
+            if ($issueLine.Length -gt 72) { $issueLine = $issueLine.Substring(0, 69) + "..." }
+            Write-OutputColor "  │$($issueLine.PadRight(72))│" -color "Warning"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Warning"
+    } else {
+        Write-OutputColor "  No security issues detected." -color "Success"
+    }
+
+    Add-SessionChange -Category "System" -Description "Ran SMB share audit ($($shares.Count) shares, $($issues.Count) issues)"
+}
 #endregion

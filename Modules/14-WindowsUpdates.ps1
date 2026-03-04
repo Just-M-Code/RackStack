@@ -66,7 +66,9 @@ function Install-WindowsUpdates {
         if ($scanJobFailed) {
             try {
                 if ($job.ChildJobs.Count -gt 0) { $scanError = $job.ChildJobs[0].Error | Out-String }
-            } catch {}
+            } catch {
+                Write-OutputColor "  Could not extract scan error details: $_" -color "Warning"
+            }
         }
         Remove-Job $job -Force -ErrorAction SilentlyContinue
 

@@ -87,7 +87,9 @@ function Install-HyperVRole {
                     $jobError = $installJob.ChildJobs[0].Error | Out-String
                     if ($jobError) { $jobError = $jobError.Trim() }
                 }
-            } catch {}
+            } catch {
+                Write-OutputColor "  Could not extract job error details: $_" -color "Warning"
+            }
             if ($jobFailed -and -not $jobError) {
                 $jobError = "Job failed without error details. Check Windows Event Log."
             }
