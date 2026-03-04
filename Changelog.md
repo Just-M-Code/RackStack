@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## v1.18.1
+
+- **Bug Fix:** `Remove-NetIPAddress` and `Remove-NetRoute` calls now specify `-AddressFamily IPv4` — without this flag, IPv6 link-local addresses and routes were stripped unnecessarily during IP reconfiguration (09-SET, 45-ConfigExport, 50-EntryPoint).
+- **Bug Fix:** Standard vSwitch creation uses `$ManagementName` variable instead of hardcoded `"Management"` — respects `defaults.json` override for management NIC naming (09-SET).
+- **Bug Fix:** iSCSI target discovery no longer filters out already-connected targets — the `IsConnected` filter prevented multipath connections through additional portals since targets connected via the first portal appeared as already connected, blocking MPIO setup. Now attempts connection through each portal and gracefully handles already-connected sessions (10-iSCSI).
+- 63 modules, 1854 tests
+
 ## v1.18.0
 
 - **New Feature:** Reboot Pending Details — enumerates every registry and WMI source that signals a pending reboot and reports the exact root cause: CBS pending packages, Windows Update completion, pending file rename operations, hostname change (showing old and new names), SCCM/ConfigMgr client reboot requests, and domain join changes. Operations menu option [29] (35-Utilities).

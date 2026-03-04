@@ -490,8 +490,8 @@ function Start-BatchMode {
                 $oldDNS = (Get-DnsClientServerAddress -InterfaceAlias $adapterName -AddressFamily IPv4 -ErrorAction SilentlyContinue).ServerAddresses
 
                 # Clear existing config
-                Remove-NetIPAddress -InterfaceAlias $adapterName -Confirm:$false -ErrorAction SilentlyContinue
-                Remove-NetRoute -InterfaceAlias $adapterName -Confirm:$false -ErrorAction SilentlyContinue
+                Remove-NetIPAddress -InterfaceAlias $adapterName -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
+                Remove-NetRoute -InterfaceAlias $adapterName -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
 
                 # Set IP
                 New-NetIPAddress -InterfaceAlias $adapterName -IPAddress $Config.IPAddress `
@@ -519,7 +519,7 @@ function Start-BatchMode {
                 $undoOldPrefix = if ($oldIP) { $oldIP.PrefixLength } else { 24 }
                 $undoOldGW = $oldGW
                 $undoOldDNS = $oldDNS
-                $script:BatchUndoStack.Add(@{ Step = $stepNum; Description = "Restore network config on $undoAdapter"; Reversible = $true; UndoScript = [scriptblock]::Create("Remove-NetIPAddress -InterfaceAlias '$undoAdapterEsc' -Confirm:`$false -ErrorAction SilentlyContinue; Remove-NetRoute -InterfaceAlias '$undoAdapterEsc' -Confirm:`$false -ErrorAction SilentlyContinue; if ('$undoOldIP') { New-NetIPAddress -InterfaceAlias '$undoAdapterEsc' -IPAddress '$undoOldIP' -PrefixLength $undoOldPrefix $(if($undoOldGW){"-DefaultGateway '$undoOldGW'"}) -ErrorAction SilentlyContinue }") })
+                $script:BatchUndoStack.Add(@{ Step = $stepNum; Description = "Restore network config on $undoAdapter"; Reversible = $true; UndoScript = [scriptblock]::Create("Remove-NetIPAddress -InterfaceAlias '$undoAdapterEsc' -AddressFamily IPv4 -Confirm:`$false -ErrorAction SilentlyContinue; Remove-NetRoute -InterfaceAlias '$undoAdapterEsc' -AddressFamily IPv4 -Confirm:`$false -ErrorAction SilentlyContinue; if ('$undoOldIP') { New-NetIPAddress -InterfaceAlias '$undoAdapterEsc' -IPAddress '$undoOldIP' -PrefixLength $undoOldPrefix $(if($undoOldGW){"-DefaultGateway '$undoOldGW'"}) -ErrorAction SilentlyContinue }") })
             }
             catch {
                 Write-OutputColor "           Failed: $_" -color "Error"

@@ -923,10 +923,10 @@ function Connect-iSCSITargets {
                 Write-OutputColor "    Portal already registered." -color "Info"
             }
 
-            # Discover targets
-            $targets = Get-IscsiTarget -ErrorAction Stop | Where-Object { $_.IsConnected -eq $false }
+            # Discover targets (include already-connected targets for multipath via additional portals)
+            $targets = @(Get-IscsiTarget -ErrorAction Stop)
 
-            if ($targets) {
+            if ($targets.Count -gt 0) {
                 foreach ($target in $targets) {
                     Write-OutputColor "    Connecting to target: $($target.NodeAddress)..." -color "Info"
                     try {
@@ -935,12 +935,17 @@ function Connect-iSCSITargets {
                         Write-OutputColor "    Connected successfully!" -color "Success"
                     }
                     catch {
-                        Write-OutputColor "    Failed to connect: $_" -color "Warning"
+                        if ($_.Exception.Message -match 'already.*connect|session.*exist') {
+                            Write-OutputColor "    Already connected through this portal." -color "Info"
+                        }
+                        else {
+                            Write-OutputColor "    Failed to connect: $_" -color "Warning"
+                        }
                     }
                 }
             }
             else {
-                Write-OutputColor "    No disconnected targets found for this portal." -color "Info"
+                Write-OutputColor "    No targets discovered." -color "Info"
             }
         }
         catch {

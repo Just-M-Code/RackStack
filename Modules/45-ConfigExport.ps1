@@ -606,8 +606,8 @@ function Import-ConfigurationProfile {
             Write-OutputColor "  [2/13] Configuring network..." -color "Info"
             try {
                 $adapterName = $configProfile.Network.AdapterName
-                Remove-NetIPAddress -InterfaceAlias $adapterName -Confirm:$false -ErrorAction SilentlyContinue
-                Remove-NetRoute -InterfaceAlias $adapterName -Confirm:$false -ErrorAction SilentlyContinue
+                Remove-NetIPAddress -InterfaceAlias $adapterName -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
+                Remove-NetRoute -InterfaceAlias $adapterName -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
 
                 New-NetIPAddress -InterfaceAlias $adapterName -IPAddress $configProfile.Network.IPAddress `
                     -PrefixLength $configProfile.Network.SubnetCIDR -DefaultGateway $configProfile.Network.Gateway -ErrorAction Stop

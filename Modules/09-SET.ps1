@@ -481,8 +481,8 @@ function Add-CustomVNIC {
             $cidr = $ipResult[1]
             $adapterAlias = "vEthernet ($vnicName)"
             try {
-                Remove-NetIPAddress -InterfaceAlias $adapterAlias -Confirm:$false -ErrorAction SilentlyContinue
-                Remove-NetRoute -InterfaceAlias $adapterAlias -Confirm:$false -ErrorAction SilentlyContinue
+                Remove-NetIPAddress -InterfaceAlias $adapterAlias -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
+                Remove-NetRoute -InterfaceAlias $adapterAlias -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
                 New-NetIPAddress -InterfaceAlias $adapterAlias -IPAddress $ipAddress -PrefixLength $cidr -ErrorAction Stop
                 Write-OutputColor "  IP $ipAddress/$cidr set on '$vnicName'." -color "Success"
             }
@@ -646,7 +646,7 @@ function New-StandardVSwitch {
                     Start-Sleep -Seconds 1
                 }
                 if ($vnicReady) {
-                    Rename-VMNetworkAdapter -ManagementOS -Name $SwitchName -NewName "Management" -ErrorAction SilentlyContinue
+                    Rename-VMNetworkAdapter -ManagementOS -Name $SwitchName -NewName $ManagementName -ErrorAction SilentlyContinue
                 }
 
                 Write-OutputColor "  External switch '$SwitchName' created!" -color "Success"

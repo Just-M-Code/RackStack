@@ -30,10 +30,16 @@
     7h3 4b1d3r
 
 .VERSION
-    1.18.0
+    1.18.1
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.18.1
+    LOGIC BUG FIXES — ADDRESSFAMILY SCOPING + ISCSI MULTIPATH:
+    - FIX: Remove-NetIPAddress/Remove-NetRoute calls now specify -AddressFamily IPv4 — without this, IPv6 link-local addresses and routes were stripped unnecessarily during IP reconfiguration (09-SET, 45-ConfigExport, 50-EntryPoint)
+    - FIX: Standard vSwitch creation uses $ManagementName variable instead of hardcoded "Management" — respects defaults.json override for management NIC naming (09-SET)
+    - FIX: iSCSI target discovery no longer filters out already-connected targets — the IsConnected filter prevented multipath connections through additional portals; now attempts connection through each portal and gracefully handles already-connected sessions (10-iSCSI)
 
 .CHANGELOG v1.18.0
     NEW FEATURES — REBOOT DETAILS + MEMORY DIAGNOSTICS:
