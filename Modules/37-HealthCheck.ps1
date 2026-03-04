@@ -122,6 +122,30 @@ function Show-SystemHealthCheck {
     }
     Write-OutputColor "" -color "Info"
 
+    # Certificates
+    Write-OutputColor "=== CERTIFICATES ===" -color "Success"
+    try {
+        $now = Get-Date
+        $allCerts = @(Get-ChildItem -Path Cert:\LocalMachine\My -ErrorAction SilentlyContinue)
+        if ($allCerts.Count -eq 0) {
+            Write-OutputColor "  No certificates in LocalMachine\My store." -color "Info"
+        } else {
+            foreach ($cert in ($allCerts | Sort-Object NotAfter)) {
+                $subject = $cert.Subject
+                if ($subject.Length -gt 40) { $subject = $subject.Substring(0, 37) + "..." }
+                $daysLeft = [math]::Floor(($cert.NotAfter - $now).TotalDays)
+                $expiryStr = "$($cert.NotAfter.ToString('yyyy-MM-dd')) (${daysLeft}d)"
+                $certColor = if ($daysLeft -lt 0) { "Error" } elseif ($daysLeft -lt 30) { "Warning" } else { "Success" }
+                $statusTag = if ($daysLeft -lt 0) { "EXPIRED" } elseif ($daysLeft -lt 30) { "EXPIRING" } else { "OK" }
+                Write-OutputColor "  [$statusTag] $subject" -color $certColor
+                Write-OutputColor "           Expires: $expiryStr  Thumbprint: $($cert.Thumbprint.Substring(0,8))..." -color $certColor
+            }
+        }
+    } catch {
+        Write-OutputColor "  Certificate check unavailable: $_" -color "Debug"
+    }
+    Write-OutputColor "" -color "Info"
+
     # Summary
     Write-OutputColor "=== SUMMARY ===" -color "Success"
     $issues = @()
@@ -132,6 +156,10 @@ function Show-SystemHealthCheck {
         if ($usedPercent -gt 90) { $issues += "Low disk space on $($disk.DeviceID)" }
     }
     if (Test-RebootPending) { $issues += "Reboot pending" }
+    $expiredCertCount = @(Get-ChildItem -Path Cert:\LocalMachine\My -ErrorAction SilentlyContinue | Where-Object { $_.NotAfter -le (Get-Date) }).Count
+    $expiringCertCount = @(Get-ChildItem -Path Cert:\LocalMachine\My -ErrorAction SilentlyContinue | Where-Object { $_.NotAfter -lt (Get-Date).AddDays(30) -and $_.NotAfter -gt (Get-Date) }).Count
+    if ($expiredCertCount -gt 0) { $issues += "$expiredCertCount expired certificate(s)" }
+    if ($expiringCertCount -gt 0) { $issues += "$expiringCertCount certificate(s) expiring within 30 days" }
 
     if ($issues.Count -eq 0) {
         Write-OutputColor "  System health: GOOD - No issues detected" -color "Success"
@@ -421,6 +449,52 @@ function Show-ServerReadiness {
         $items += @{ Category = "SYSTEM"; Name = "Windows License"; Value = "Activated"; Color = "Success"; Symbol = "[OK]" }
     } else {
         $items += @{ Category = "SYSTEM"; Name = "Windows License"; Value = "Not Activated"; Color = "Warning"; Symbol = "[--]" }
+    }
+
+    # Uptime check - warn if server hasn't rebooted in 30+ days
+    $total++
+    try {
+        $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction SilentlyContinue
+        if ($null -ne $osInfo -and $null -ne $osInfo.LastBootUpTime) {
+            $uptime = (Get-Date) - $osInfo.LastBootUpTime
+            $uptimeDays = [math]::Floor($uptime.TotalDays)
+            if ($uptimeDays -gt 60) {
+                $items += @{ Category = "SYSTEM"; Name = "Uptime"; Value = "$uptimeDays days (reboot recommended)"; Color = "Error"; Symbol = "[!!]" }
+            } elseif ($uptimeDays -gt 30) {
+                $items += @{ Category = "SYSTEM"; Name = "Uptime"; Value = "$uptimeDays days"; Color = "Warning"; Symbol = "[--]" }
+            } else {
+                $ready++
+                $items += @{ Category = "SYSTEM"; Name = "Uptime"; Value = "$uptimeDays days"; Color = "Success"; Symbol = "[OK]" }
+            }
+        } else {
+            $ready++
+            $items += @{ Category = "SYSTEM"; Name = "Uptime"; Value = "Unknown"; Color = "Info"; Symbol = "[--]" }
+        }
+    } catch {
+        $items += @{ Category = "SYSTEM"; Name = "Uptime"; Value = "Check failed"; Color = "Warning"; Symbol = "[--]" }
+    }
+
+    # --- SECURITY ---
+    # Certificate expiration check - scan LocalMachine\My for certs expiring within 30 days
+    $total++
+    try {
+        $now = Get-Date
+        $warnDate = $now.AddDays(30)
+        $certs = @(Get-ChildItem -Path Cert:\LocalMachine\My -ErrorAction SilentlyContinue | Where-Object { $_.NotAfter -lt $warnDate -and $_.NotAfter -gt $now })
+        $expiredCerts = @(Get-ChildItem -Path Cert:\LocalMachine\My -ErrorAction SilentlyContinue | Where-Object { $_.NotAfter -le $now })
+        if ($expiredCerts.Count -gt 0) {
+            $items += @{ Category = "SECURITY"; Name = "Certificates"; Value = "$($expiredCerts.Count) EXPIRED"; Color = "Error"; Symbol = "[!!]" }
+        } elseif ($certs.Count -gt 0) {
+            $soonest = ($certs | Sort-Object NotAfter | Select-Object -First 1).NotAfter
+            $daysLeft = [math]::Floor(($soonest - $now).TotalDays)
+            $items += @{ Category = "SECURITY"; Name = "Certificates"; Value = "$($certs.Count) expiring within 30d (next: ${daysLeft}d)"; Color = "Warning"; Symbol = "[--]" }
+        } else {
+            $ready++
+            $allCerts = @(Get-ChildItem -Path Cert:\LocalMachine\My -ErrorAction SilentlyContinue)
+            $items += @{ Category = "SECURITY"; Name = "Certificates"; Value = "$($allCerts.Count) cert(s), none expiring soon"; Color = "Success"; Symbol = "[OK]" }
+        }
+    } catch {
+        $items += @{ Category = "SECURITY"; Name = "Certificates"; Value = "Check failed"; Color = "Warning"; Symbol = "[--]" }
     }
 
     # --- RENDER ---

@@ -184,7 +184,9 @@ function Set-VMIPAddress {
                 return
             }
         }
-    } catch {}
+    } catch {
+        Write-OutputColor "  Could not validate subnet: $_" -color "Warning"
+    }
 
     # Confirm before applying
     Write-OutputColor "`nConfiguration to apply:" -color "Info"

@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.9.63
+
+- **New Feature:** Server readiness dashboard now includes a certificate expiration check — scans `LocalMachine\My` store for expired and soon-to-expire certificates (within 30 days), reports count and soonest expiry date, and counts toward the readiness score (37-HealthCheck).
+- **New Feature:** Server readiness dashboard now includes an uptime check — warns if the server hasn't rebooted in 30+ days, flags as critical at 60+ days, helping catch servers that have fallen behind on patch cycles (37-HealthCheck).
+- **New Feature:** System health check now includes a full certificate inventory section — lists all certificates in `LocalMachine\My` sorted by expiry date with status tags (OK/EXPIRING/EXPIRED), days remaining, and truncated thumbprints. Certificate issues are also surfaced in the health check summary (37-HealthCheck).
+- **Bug Fix:** AD replication partner metadata now wraps `Get-ADReplicationPartnerMetadata` result in `@()` at assignment — on domain controllers with a single replication partner, `.Count` returned `$null` in PS 5.1, causing the force-sync prompt at line 429 to never appear (61-ActiveDirectory).
+- **Bug Fix:** BitLocker key backup now adds `-ErrorAction Stop` and a null guard on `Get-BitLockerVolume` — previously, if the cmdlet failed (invalid mount point, service issues), the code crashed on `.KeyProtector` property access with an unhandled null-dereference error (31-BitLocker).
+- **Bug Fix:** IP configuration subnet validation now surfaces errors with a warning message instead of using a bare `catch {}` — previously, any exception during subnet calculation was silently swallowed, potentially allowing invalid gateway configurations without warning (07-IPConfiguration).
+- **Bug Fix:** Server role template viewer now wraps `Where-Object` results in `@()` at assignment — previously used `@()` only at point-of-use with redundant null checks. Consistent with codebase patterns and eliminates PS 5.1 `.Count` fragility on single-role servers (60-ServerRoleTemplates).
+- 63 modules, 1854 tests
+
 ## v1.9.62
 
 - **Bug Fix:** Health check disk latency evaluation now wraps the pipeline result in `@()` — on single-disk systems, the pipeline returned a bare scalar where `.Count` returned `$null` in PS 5.1, causing `$null -gt 0` to evaluate as `$false` and the "FAIR" warning to never fire when disk latency was between 10-20 ms (37-HealthCheck).

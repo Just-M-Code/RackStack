@@ -256,13 +256,13 @@ function Test-ADDSReplicationHealth {
     try {
         Import-Module ActiveDirectory -ErrorAction Stop
 
-        $replPartners = Get-ADReplicationPartnerMetadata -Target $env:COMPUTERNAME -ErrorAction Stop
+        $replPartners = @(Get-ADReplicationPartnerMetadata -Target $env:COMPUTERNAME -ErrorAction Stop)
 
         Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
         Write-OutputColor "  │$("  POST-PROMOTION REPLICATION STATUS".PadRight(72))│" -color "Info"
         Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
 
-        if (@($replPartners).Count -eq 0) {
+        if ($replPartners.Count -eq 0) {
             Write-OutputColor "  │$("  No replication partners found (expected for first DC in forest)".PadRight(72))│" -color "Info"
         } else {
             foreach ($partner in $replPartners) {

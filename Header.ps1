@@ -30,10 +30,20 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.62
+    1.9.63
 
 .LAST UPDATED
     03/03/2026
+
+.CHANGELOG v1.9.63
+    CERTIFICATE CHECKS, READINESS & SAFETY:
+    - NEW: Server readiness dashboard now checks for expired and soon-to-expire SSL/TLS certificates in LocalMachine\My store
+    - NEW: Server readiness dashboard now checks server uptime — warns at 30+ days, flags at 60+ days without reboot
+    - NEW: System health check includes full certificate inventory with expiry dates, status tags, and thumbprints
+    - FIX: AD replication partner metadata wraps result in @() — single-partner DCs no longer skip replication status/force-sync due to .Count returning null
+    - FIX: BitLocker key backup adds null guard and -ErrorAction Stop on Get-BitLockerVolume — prevents crash when volume info is unavailable
+    - FIX: IP configuration subnet validation surfaces errors instead of silently swallowing with bare catch {}
+    - FIX: Server role template viewer wraps Where-Object results in @() at assignment — consistent .Count behavior on single-role servers
 
 .CHANGELOG v1.9.62
     MONITORING & EXPORT PATCH:

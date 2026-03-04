@@ -209,7 +209,12 @@ function Show-BitLockerManagement {
                     try {
                         if (Test-WindowsServer) {
                             # Server: backup to Active Directory
-                            $blVolInfo = Get-BitLockerVolume -MountPoint $vol.MountPoint
+                            $blVolInfo = Get-BitLockerVolume -MountPoint $vol.MountPoint -ErrorAction Stop
+                            if ($null -eq $blVolInfo) {
+                                Write-OutputColor "  Could not retrieve BitLocker volume info." -color "Error"
+                                Write-PressEnter
+                                continue
+                            }
                             $recoveryProtector = $blVolInfo.KeyProtector | Where-Object { $_.KeyProtectorType -eq "RecoveryPassword" } | Select-Object -First 1
                             if ($null -eq $recoveryProtector) {
                                 Write-OutputColor "  No recovery password key protector found." -color "Error"

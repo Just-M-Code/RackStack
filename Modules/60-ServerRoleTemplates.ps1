@@ -367,13 +367,13 @@ function Show-InstalledRoles {
         }
 
         # Group by feature type
-        $roles = $installedFeatures | Where-Object { $_.FeatureType -eq "Role" }
-        $roleServices = $installedFeatures | Where-Object { $_.FeatureType -eq "Role Service" }
-        $features = $installedFeatures | Where-Object { $_.FeatureType -eq "Feature" }
+        $roles = @($installedFeatures | Where-Object { $_.FeatureType -eq "Role" })
+        $roleServices = @($installedFeatures | Where-Object { $_.FeatureType -eq "Role Service" })
+        $features = @($installedFeatures | Where-Object { $_.FeatureType -eq "Feature" })
 
-        if ($null -ne $roles -and @($roles).Count -gt 0) {
+        if ($roles.Count -gt 0) {
             Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
-            Write-OutputColor "  │$("  ROLES ($(@($roles).Count))".PadRight(72))│" -color "Info"
+            Write-OutputColor "  │$("  ROLES ($($roles.Count))".PadRight(72))│" -color "Info"
             Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
             foreach ($role in $roles) {
                 Write-MenuItem "  $($role.DisplayName)" -Status $role.Name -StatusColor "Success"
@@ -382,9 +382,9 @@ function Show-InstalledRoles {
             Write-OutputColor "" -color "Info"
         }
 
-        if ($null -ne $roleServices -and @($roleServices).Count -gt 0) {
+        if ($roleServices.Count -gt 0) {
             Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
-            Write-OutputColor "  │$("  ROLE SERVICES ($(@($roleServices).Count))".PadRight(72))│" -color "Info"
+            Write-OutputColor "  │$("  ROLE SERVICES ($($roleServices.Count))".PadRight(72))│" -color "Info"
             Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
             foreach ($svc in $roleServices) {
                 Write-MenuItem "  $($svc.DisplayName)" -Status $svc.Name -StatusColor "Info"
@@ -393,9 +393,9 @@ function Show-InstalledRoles {
             Write-OutputColor "" -color "Info"
         }
 
-        if ($null -ne $features -and @($features).Count -gt 0) {
+        if ($features.Count -gt 0) {
             Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
-            Write-OutputColor "  │$("  FEATURES ($(@($features).Count))".PadRight(72))│" -color "Info"
+            Write-OutputColor "  │$("  FEATURES ($($features.Count))".PadRight(72))│" -color "Info"
             Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
             foreach ($feat in $features) {
                 Write-MenuItem "  $($feat.DisplayName)" -Status $feat.Name -StatusColor "Info"
