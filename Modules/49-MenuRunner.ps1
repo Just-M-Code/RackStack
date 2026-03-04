@@ -235,13 +235,14 @@ function Start-Show-SecurityAccessMenu {
             "2" { Enable-PowerShellRemoting; Write-PressEnter }
             "3" { Disable-WindowsFirewallDomainPrivate; Write-PressEnter }
             "4" { Set-FirewallRuleTemplates; Write-PressEnter }
-            "5" { Set-DefenderExclusions; Write-PressEnter }
-            "6" { Add-LocalAdminAccount; Write-PressEnter }
-            "7" { Disable-BuiltInAdminAccount; Write-PressEnter }
-            "8" { Show-LocalAccountAudit; Write-PressEnter }
+            "5" { Show-FirewallRuleSearch }
+            "6" { Set-DefenderExclusions; Write-PressEnter }
+            "7" { Add-LocalAdminAccount; Write-PressEnter }
+            "8" { Disable-BuiltInAdminAccount; Write-PressEnter }
+            "9" { Show-LocalAccountAudit; Write-PressEnter }
             "back" { return }
             default {
-                Write-OutputColor "Invalid choice. Please enter 1-8 or B." -color "Error"
+                Write-OutputColor "Invalid choice. Please enter 1-9 or B." -color "Error"
                 Start-Sleep -Seconds 2
             }
         }

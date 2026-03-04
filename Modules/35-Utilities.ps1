@@ -1016,4 +1016,122 @@ function Show-SMBShareAudit {
 
     Add-SessionChange -Category "System" -Description "Ran SMB share audit ($($shares.Count) shares, $($issues.Count) issues)"
 }
+
+# Installed Software Inventory — list installed programs with version, publisher, date
+function Show-InstalledSoftware {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                   INSTALLED SOFTWARE INVENTORY").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    Write-OutputColor "  Scanning installed software (registry)..." -color "Info"
+
+    $software = @()
+    $regPaths = @(
+        "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*"
+        "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
+    )
+
+    foreach ($regPath in $regPaths) {
+        try {
+            $entries = @(Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue |
+                Where-Object { $_.DisplayName -and $_.DisplayName.Trim() -ne "" })
+            foreach ($entry in $entries) {
+                $software += [PSCustomObject]@{
+                    Name      = $entry.DisplayName
+                    Version   = if ($entry.DisplayVersion) { $entry.DisplayVersion } else { "N/A" }
+                    Publisher = if ($entry.Publisher) { $entry.Publisher } else { "Unknown" }
+                    InstallDate = if ($entry.InstallDate -and $entry.InstallDate -match '^\d{8}$') {
+                        "$($entry.InstallDate.Substring(4,2))/$($entry.InstallDate.Substring(6,2))/$($entry.InstallDate.Substring(0,4))"
+                    } else { "N/A" }
+                    Size      = if ($entry.EstimatedSize) { [math]::Round($entry.EstimatedSize / 1024, 1) } else { $null }
+                }
+            }
+        } catch {}
+    }
+
+    # Deduplicate by name+version
+    $software = @($software | Sort-Object Name, Version -Unique)
+
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  SUMMARY: $($software.Count) programs installed".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+
+    # Group by publisher for top publishers
+    $byPublisher = $software | Group-Object Publisher | Sort-Object Count -Descending | Select-Object -First 5
+    foreach ($pub in $byPublisher) {
+        $pubName = if ($pub.Name.Length -gt 40) { $pub.Name.Substring(0, 37) + "..." } else { $pub.Name }
+        Write-OutputColor "  │$("  $($pubName.PadRight(50)) $($pub.Count) app(s)".PadRight(72))│" -color "Info"
+    }
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Offer search or full list
+    Write-OutputColor "  [1] Show all programs" -color "Info"
+    Write-OutputColor "  [2] Search by name" -color "Info"
+    Write-OutputColor "  [3] Export to CSV" -color "Info"
+    Write-OutputColor "  [B] ◄ Back" -color "Info"
+    Write-OutputColor "" -color "Info"
+    $choice = Read-Host "  Select"
+
+    switch ($choice) {
+        "1" {
+            Clear-Host
+            Write-OutputColor "" -color "Info"
+            Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+            Write-OutputColor "  │$("  ALL INSTALLED SOFTWARE ($($software.Count))".PadRight(72))│" -color "Info"
+            Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+            foreach ($app in $software | Sort-Object Name) {
+                $name = if ($app.Name.Length -gt 40) { $app.Name.Substring(0, 37) + "..." } else { $app.Name }
+                $ver = if ($app.Version.Length -gt 14) { $app.Version.Substring(0, 11) + "..." } else { $app.Version }
+                $line = "  $($name.PadRight(42)) $($ver.PadRight(14)) $($app.InstallDate)"
+                Write-OutputColor "  │$($line.PadRight(72))│" -color "Info"
+            }
+            Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+        }
+        "2" {
+            Write-OutputColor "  Enter search term:" -color "Info"
+            $term = Read-Host "  Search"
+            if ([string]::IsNullOrWhiteSpace($term)) { return }
+            $matches_ = @($software | Where-Object { $_.Name -like "*$term*" -or $_.Publisher -like "*$term*" })
+            Clear-Host
+            Write-OutputColor "" -color "Info"
+            $resultHeader = "  SEARCH: '$term' ($($matches_.Count) results)"
+            Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+            Write-OutputColor "  │$($resultHeader.PadRight(72))│" -color "Info"
+            Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+            if ($matches_.Count -eq 0) {
+                Write-OutputColor "  │$("  No matching software found.".PadRight(72))│" -color "Info"
+            } else {
+                foreach ($app in $matches_ | Sort-Object Name) {
+                    $name = if ($app.Name.Length -gt 40) { $app.Name.Substring(0, 37) + "..." } else { $app.Name }
+                    $ver = if ($app.Version.Length -gt 14) { $app.Version.Substring(0, 11) + "..." } else { $app.Version }
+                    $line = "  $($name.PadRight(42)) $($ver.PadRight(14)) $($app.InstallDate)"
+                    Write-OutputColor "  │$($line.PadRight(72))│" -color "Info"
+                }
+            }
+            Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+        }
+        "3" {
+            $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+            $csvPath = "$script:TempPath\SoftwareInventory_${env:COMPUTERNAME}_$timestamp.csv"
+            try {
+                $software | Sort-Object Name |
+                    Select-Object Name, Version, Publisher, InstallDate, @{N='SizeMB';E={$_.Size}} |
+                    Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
+                Write-OutputColor "  Exported $($software.Count) entries to:" -color "Success"
+                Write-OutputColor "  $csvPath" -color "Info"
+            } catch {
+                Write-OutputColor "  Export failed: $_" -color "Error"
+            }
+        }
+        default { return }
+    }
+
+    Add-SessionChange -Category "System" -Description "Viewed installed software inventory ($($software.Count) programs)"
+    Write-PressEnter
+}
 #endregion

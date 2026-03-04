@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.10.0
+
+- **New Feature:** Firewall Rule Search — search firewall rules by display name (with wildcard support), by port number, or browse all enabled inbound allow rules, all block rules, and custom/recently created rules. Results show direction, action, and enabled status with color coding. Accessible from Security & Access > option [5] (16-Firewall, 48-MenuDisplay, 49-MenuRunner).
+- **New Feature:** Installed Software Inventory — scans both 32-bit and 64-bit registry uninstall keys, deduplicates entries, groups by publisher, supports name search, and can export to CSV. Accessible from Operations > option [18] (35-Utilities, 56-OperationsMenu).
+- **Bug Fix:** Network Diagnostics ARP table adapter name lookup uses `-ErrorAction Stop` inside `try/catch` — previously, `-ErrorAction SilentlyContinue` made the catch block unreachable, so adapter lookup failures were silently ignored instead of falling back to the interface index (58-NetworkDiagnostics).
+- Security & Access menu expanded from 8 to 9 items — Firewall Rule Search inserted as [5], Defender Exclusions shifted to [6], admin account options renumbered to [7]-[9] (48-MenuDisplay, 49-MenuRunner).
+- 63 modules, 1854 tests
+
 ## v1.9.67
 
 - **New Feature:** Scheduled Task Viewer — lists all scheduled tasks with status, last run time, and result codes. Highlights custom (non-Microsoft) tasks separately, flags tasks that failed their last run with hex error codes, and shows disabled custom tasks. Accessible from Operations > option [16] (35-Utilities, 56-OperationsMenu).

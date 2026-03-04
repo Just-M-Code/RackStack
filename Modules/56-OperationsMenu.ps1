@@ -53,6 +53,7 @@ function Show-OperationsMenu {
         Write-MenuItem "[15] Collect Metrics (Interval)"
         Write-MenuItem "[16] Scheduled Task Viewer"
         Write-MenuItem "[17] SMB Share Audit"
+        Write-MenuItem "[18] Installed Software Inventory"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
 
@@ -144,6 +145,9 @@ function Show-OperationsMenu {
             "17" {
                 Show-SMBShareAudit
                 Write-PressEnter
+            }
+            "18" {
+                Show-InstalledSoftware
             }
             "b" { return }
             "B" { return }

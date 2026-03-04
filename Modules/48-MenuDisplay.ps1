@@ -375,16 +375,17 @@ function Show-SecurityAccessMenu {
     Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
     Write-MenuItem "[3]  Configure Windows Firewall" -Status $fwDisplay -StatusColor $fwColor
     Write-MenuItem "[4]  Firewall Rule Templates"
-    Write-MenuItem "[5]  Defender Exclusions"
+    Write-MenuItem "[5]  Firewall Rule Search ►"
+    Write-MenuItem "[6]  Defender Exclusions"
     Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
     Write-OutputColor "" -color "Info"
 
     Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
     Write-OutputColor "  │$("  ADMIN ACCOUNTS".PadRight(72))│" -color "Info"
     Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
-    Write-MenuItem "[6]  Add Local Admin Account"
-    Write-MenuItem "[7]  Disable Built-in Admin" -Status $adminDisplay -StatusColor $adminColor
-    Write-MenuItem "[8]  Local Account Audit"
+    Write-MenuItem "[7]  Add Local Admin Account"
+    Write-MenuItem "[8]  Disable Built-in Admin" -Status $adminDisplay -StatusColor $adminColor
+    Write-MenuItem "[9]  Local Account Audit"
     Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  [B] ◄ Back to Server Config" -color "Info"

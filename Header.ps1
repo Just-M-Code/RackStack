@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.9.67
+    1.10.0
 
 .LAST UPDATED
-    03/03/2026
+    03/04/2026
+
+.CHANGELOG v1.10.0
+    FIREWALL SEARCH, SOFTWARE INVENTORY & MENU EXPANSION:
+    - NEW: Firewall Rule Search — search by name (wildcard), port number, show enabled inbound allow rules, all block rules, or custom/recently created rules. Color-coded results with direction and action. Accessible from Security & Access menu option [5] (16-Firewall, 48-MenuDisplay, 49-MenuRunner)
+    - NEW: Installed Software Inventory — scans registry for all installed programs, deduplicates 32/64-bit entries, groups by publisher, supports name search and CSV export. Accessible from Operations menu option [18] (35-Utilities, 56-OperationsMenu)
+    - FIX: Network Diagnostics ARP table adapter lookup uses -ErrorAction Stop — SilentlyContinue inside try/catch made the catch unreachable (58-NetworkDiagnostics)
+    - Security & Access menu expanded from 8 to 9 items with renumbered admin account options (48-MenuDisplay, 49-MenuRunner)
 
 .CHANGELOG v1.9.67
     TASK VIEWER, SHARE AUDIT & ERROR HANDLING:

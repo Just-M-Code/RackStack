@@ -114,4 +114,151 @@ function Disable-WindowsFirewallDomainPrivate {
         default { return }
     }
 }
+
+# Firewall Rule Search & Browser
+function Show-FirewallRuleSearch {
+    while ($true) {
+        if ($global:ReturnToMainMenu) { return }
+        Clear-Host
+        Write-OutputColor "" -color "Info"
+        Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+        Write-OutputColor "  ║$(("                    FIREWALL RULE SEARCH").PadRight(72))║" -color "Info"
+        Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+        Write-OutputColor "" -color "Info"
+
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  SEARCH OPTIONS".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        Write-MenuItem "[1]  Search by Name"
+        Write-MenuItem "[2]  Search by Port"
+        Write-MenuItem "[3]  Show All Enabled Inbound Allow Rules"
+        Write-MenuItem "[4]  Show All Block Rules"
+        Write-MenuItem "[5]  Show Recently Created Rules"
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+        Write-OutputColor "" -color "Info"
+        Write-OutputColor "  [B] ◄ Back" -color "Info"
+        Write-OutputColor "" -color "Info"
+
+        $choice = Read-Host "  Select"
+        $navResult = Test-NavigationCommand -UserInput $choice
+        if ($navResult.ShouldReturn) { return }
+
+        $rules = $null
+        $title = ""
+
+        switch ($choice) {
+            "1" {
+                Write-OutputColor "" -color "Info"
+                Write-OutputColor "  Enter search term (supports wildcards: *sql*, *rdp*):" -color "Info"
+                $searchTerm = Read-Host "  Search"
+                if ([string]::IsNullOrWhiteSpace($searchTerm)) { continue }
+                if ($searchTerm -notlike "*`**") { $searchTerm = "*$searchTerm*" }
+                $title = "Rules matching '$searchTerm'"
+                try {
+                    $rules = @(Get-NetFirewallRule -DisplayName $searchTerm -ErrorAction Stop)
+                } catch {
+                    if ($_.Exception.Message -like "*No MSFT_NetFirewallRule*" -or $_.Exception.Message -like "*No matching*") {
+                        $rules = @()
+                    } else {
+                        Write-OutputColor "  Search failed: $_" -color "Error"
+                        Write-PressEnter
+                        continue
+                    }
+                }
+            }
+            "2" {
+                Write-OutputColor "" -color "Info"
+                Write-OutputColor "  Enter port number (e.g., 443, 3389, 5985):" -color "Info"
+                $portStr = Read-Host "  Port"
+                if ($portStr -notmatch '^\d+$') {
+                    Write-OutputColor "  Invalid port number." -color "Error"
+                    Start-Sleep -Seconds 1
+                    continue
+                }
+                $title = "Rules for port $portStr"
+                try {
+                    $portFilters = @(Get-NetFirewallPortFilter -ErrorAction Stop | Where-Object {
+                        $_.LocalPort -eq $portStr -or $_.RemotePort -eq $portStr
+                    })
+                    if ($portFilters.Count -gt 0) {
+                        $ruleIds = @($portFilters | ForEach-Object { $_.InstanceID })
+                        $rules = @(Get-NetFirewallRule -ErrorAction Stop | Where-Object { $_.InstanceID -in $ruleIds })
+                    } else {
+                        $rules = @()
+                    }
+                } catch {
+                    Write-OutputColor "  Search failed: $_" -color "Error"
+                    Write-PressEnter
+                    continue
+                }
+            }
+            "3" {
+                $title = "Enabled Inbound Allow Rules"
+                try {
+                    $rules = @(Get-NetFirewallRule -Direction Inbound -Action Allow -Enabled True -ErrorAction Stop)
+                } catch {
+                    Write-OutputColor "  Query failed: $_" -color "Error"
+                    Write-PressEnter
+                    continue
+                }
+            }
+            "4" {
+                $title = "Block Rules (All)"
+                try {
+                    $rules = @(Get-NetFirewallRule -Action Block -ErrorAction Stop)
+                } catch {
+                    Write-OutputColor "  Query failed: $_" -color "Error"
+                    Write-PressEnter
+                    continue
+                }
+            }
+            "5" {
+                $title = "Custom / Recently Created Rules"
+                try {
+                    $allRules = @(Get-NetFirewallRule -ErrorAction Stop)
+                    # Non-default rules (no Microsoft group, or user-created)
+                    $rules = @($allRules | Where-Object {
+                        [string]::IsNullOrEmpty($_.DisplayGroup) -or $_.DisplayGroup -notlike "@*"
+                    })
+                } catch {
+                    Write-OutputColor "  Query failed: $_" -color "Error"
+                    Write-PressEnter
+                    continue
+                }
+            }
+            default { continue }
+        }
+
+        # Display results
+        Clear-Host
+        Write-OutputColor "" -color "Info"
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  $title ($(@($rules).Count) results)".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+
+        if ($null -eq $rules -or @($rules).Count -eq 0) {
+            Write-OutputColor "  │$("  No matching rules found.".PadRight(72))│" -color "Info"
+        } else {
+            $displayRules = @($rules) | Sort-Object DisplayName | Select-Object -First 40
+            foreach ($rule in $displayRules) {
+                $dir = if ($rule.Direction -eq "Inbound") { "IN " } else { "OUT" }
+                $act = if ($rule.Action -eq "Allow") { "ALLOW" } else { "BLOCK" }
+                $ena = if ($rule.Enabled -eq "True") { "" } else { " [OFF]" }
+                $actColor = if ($rule.Action -eq "Allow") { "Success" } else { "Warning" }
+                $name = $rule.DisplayName
+                if ($name.Length -gt 46) { $name = $name.Substring(0, 43) + "..." }
+                $line = "  $dir $($act.PadRight(6)) $name$ena"
+                if ($line.Length -gt 72) { $line = $line.Substring(0, 72) }
+                Write-OutputColor "  │$($line.PadRight(72))│" -color $actColor
+            }
+            if (@($rules).Count -gt 40) {
+                Write-OutputColor "  │$("  ... and $(@($rules).Count - 40) more rules".PadRight(72))│" -color "Info"
+            }
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+
+        Add-SessionChange -Category "Security" -Description "Searched firewall rules: $title"
+        Write-PressEnter
+    }
+}
 #endregion

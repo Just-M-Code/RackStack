@@ -564,7 +564,7 @@ function Show-ArpTable {
 
         foreach ($entry in $arpEntries) {
             $mac = if ($entry.LinkLayerAddress) { $entry.LinkLayerAddress } else { "N/A" }
-            $ifAlias = try { (Get-NetAdapter -InterfaceIndex $entry.InterfaceIndex -ErrorAction SilentlyContinue).Name } catch { $entry.InterfaceIndex }
+            $ifAlias = try { (Get-NetAdapter -InterfaceIndex $entry.InterfaceIndex -ErrorAction Stop).Name } catch { $entry.InterfaceIndex }
             if ($ifAlias.Length -gt 10) { $ifAlias = $ifAlias.Substring(0, 10) }
             $line = "  $($entry.IPAddress.PadRight(20))$($mac.PadRight(20))$($entry.State.ToString().PadRight(14))$ifAlias"
             Write-MenuItem -Text $line
