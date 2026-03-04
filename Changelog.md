@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.14.0
+
+- **New Feature:** Event Log Alert Summary — scans System and Application event logs for critical, error, and warning events in the last 24 hours. Shows summary counts, groups events by source with counts and age, and lists the 10 most recent critical/error events with timestamps. Accessible from Operations > option [21] (35-Utilities, 56-OperationsMenu).
+- **New Feature:** Uptime & Reboot History — displays current system uptime with color-coded warnings (30+ days yellow, 60+ days red), and lists the last 15 planned and unexpected reboots from the event log. Unexpected shutdowns (crash/power loss) are flagged in red. Accessible from Operations > option [22] (35-Utilities, 56-OperationsMenu).
+- 63 modules, 1854 tests
+
 ## v1.13.0
 
 - **New Feature:** VSS Writer Status Dashboard — queries all Volume Shadow Copy writers via vssadmin, shows stable/failed/unknown counts, lists failed writers with error details. Useful before backups and replica operations. Accessible from Operations > option [20] (35-Utilities, 56-OperationsMenu).

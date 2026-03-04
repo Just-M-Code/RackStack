@@ -1333,4 +1333,195 @@ function Show-VSSWriterStatus {
 
     Add-SessionChange -Category "System" -Description "VSS writer check: $($stable.Count) stable, $($failed.Count) failed of $($writers.Count) total"
 }
+
+# Event Log Alert Summary (last 24 hours)
+function Show-EventLogAlerts {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                  EVENT LOG ALERTS (LAST 24 HOURS)").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    $cutoff = (Get-Date).AddHours(-24)
+    $logs = @("System", "Application")
+    $allEvents = @()
+
+    foreach ($logName in $logs) {
+        Write-OutputColor "  Scanning $logName log..." -color "Info"
+        try {
+            $events = @(Get-WinEvent -FilterHashtable @{ LogName = $logName; Level = 1,2,3; StartTime = $cutoff } -ErrorAction Stop)
+            foreach ($e in $events) { $allEvents += [PSCustomObject]@{ Log = $logName; Event = $e } }
+        } catch {
+            if ($_.Exception.Message -notmatch "No events were found") {
+                Write-OutputColor "  Could not read $logName log: $_" -color "Warning"
+            }
+        }
+    }
+
+    if ($allEvents.Count -eq 0) {
+        Write-OutputColor "  No critical, error, or warning events in the last 24 hours." -color "Success"
+        Write-OutputColor "" -color "Info"
+        Add-SessionChange -Category "System" -Description "Event log alert check: 0 events in last 24h"
+        return
+    }
+
+    # Group by source
+    $grouped = $allEvents | Group-Object { $_.Event.ProviderName } | Sort-Object Count -Descending
+
+    # Summary counts
+    $critCount = @($allEvents | Where-Object { $_.Event.Level -eq 1 }).Count
+    $errCount = @($allEvents | Where-Object { $_.Event.Level -eq 2 }).Count
+    $warnCount = @($allEvents | Where-Object { $_.Event.Level -eq 3 }).Count
+
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  SUMMARY".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  Total Events:    $($allEvents.Count)".PadRight(72))│" -color "Info"
+    if ($critCount -gt 0) {
+        Write-OutputColor "  │$("  Critical:        $critCount".PadRight(72))│" -color "Error"
+    }
+    if ($errCount -gt 0) {
+        Write-OutputColor "  │$("  Errors:          $errCount".PadRight(72))│" -color "Error"
+    }
+    if ($warnCount -gt 0) {
+        Write-OutputColor "  │$("  Warnings:        $warnCount".PadRight(72))│" -color "Warning"
+    }
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Top sources
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  TOP SOURCES BY EVENT COUNT".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    $topN = $grouped | Select-Object -First 15
+    foreach ($g in $topN) {
+        $srcName = $g.Name
+        if ($srcName.Length -gt 35) { $srcName = $srcName.Substring(0, 32) + "..." }
+        $latestEvent = $g.Group | Sort-Object { $_.Event.TimeCreated } -Descending | Select-Object -First 1
+        $age = [math]::Round(((Get-Date) - $latestEvent.Event.TimeCreated).TotalHours, 1)
+        $levelName = switch ($latestEvent.Event.Level) { 1 { "CRIT" } 2 { "ERR" } 3 { "WARN" } default { "???" } }
+        $lineText = "  $($srcName.PadRight(37)) $($g.Count.ToString().PadLeft(4))  ${age}h ago  $levelName"
+        if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+        $color = switch ($latestEvent.Event.Level) { 1 { "Error" } 2 { "Error" } 3 { "Warning" } default { "Info" } }
+        Write-OutputColor "  │$($lineText.PadRight(72))│" -color $color
+    }
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Show latest 10 critical/error events
+    $topEvents = @($allEvents | Where-Object { $_.Event.Level -le 2 } | Sort-Object { $_.Event.TimeCreated } -Descending | Select-Object -First 10)
+    if ($topEvents.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Error"
+        Write-OutputColor "  │$("  LATEST CRITICAL/ERROR EVENTS (up to 10)".PadRight(72))│" -color "Error"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Error"
+        foreach ($item in $topEvents) {
+            $e = $item.Event
+            $time = $e.TimeCreated.ToString("MM/dd HH:mm")
+            $src = $e.ProviderName
+            if ($src.Length -gt 22) { $src = $src.Substring(0, 19) + "..." }
+            $msg = ($e.Message -split "`n")[0]
+            if ($null -eq $msg) { $msg = "Event ID $($e.Id)" }
+            if ($msg.Length -gt 38) { $msg = $msg.Substring(0, 35) + "..." }
+            $lineText = "  $time  $($src.PadRight(22)) $msg"
+            if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+            Write-OutputColor "  │$($lineText.PadRight(72))│" -color "Error"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Error"
+    }
+
+    Add-SessionChange -Category "System" -Description "Event log alerts: $critCount critical, $errCount errors, $warnCount warnings from $($grouped.Count) sources in last 24h"
+}
+
+# Uptime & Reboot History
+function Show-UptimeRebootHistory {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                    UPTIME & REBOOT HISTORY").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Current uptime
+    try {
+        $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
+        $lastBoot = $os.LastBootUpTime
+        $uptime = (Get-Date) - $lastBoot
+        $uptimeStr = ""
+        if ($uptime.Days -gt 0) { $uptimeStr += "$($uptime.Days)d " }
+        $uptimeStr += "$($uptime.Hours)h $($uptime.Minutes)m"
+
+        $uptimeColor = "Success"
+        if ($uptime.Days -ge 60) { $uptimeColor = "Error" }
+        elseif ($uptime.Days -ge 30) { $uptimeColor = "Warning" }
+
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  CURRENT UPTIME".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        Write-OutputColor "  │$("  Last Boot:    $($lastBoot.ToString('yyyy-MM-dd HH:mm:ss'))".PadRight(72))│" -color "Info"
+        Write-OutputColor "  │$("  Uptime:       $uptimeStr".PadRight(72))│" -color $uptimeColor
+        if ($uptime.Days -ge 60) {
+            Write-OutputColor "  │$("  WARNING: Server has not rebooted in $($uptime.Days) days!".PadRight(72))│" -color "Error"
+        } elseif ($uptime.Days -ge 30) {
+            Write-OutputColor "  │$("  NOTE: Server uptime exceeds 30 days".PadRight(72))│" -color "Warning"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    } catch {
+        Write-OutputColor "  Could not determine uptime: $_" -color "Error"
+    }
+
+    Write-OutputColor "" -color "Info"
+
+    # Reboot history from event log (Event ID 1074 = planned shutdown/restart, 6008 = unexpected)
+    Write-OutputColor "  Scanning event log for reboot history..." -color "Info"
+
+    $reboots = @()
+    try {
+        $shutdownEvents = @(Get-WinEvent -FilterHashtable @{ LogName = "System"; Id = 1074 } -MaxEvents 20 -ErrorAction Stop)
+        foreach ($e in $shutdownEvents) {
+            $reason = ($e.Message -split "`n")[0]
+            if ($null -eq $reason) { $reason = "Planned restart" }
+            if ($reason.Length -gt 60) { $reason = $reason.Substring(0, 57) + "..." }
+            $reboots += [PSCustomObject]@{ Time = $e.TimeCreated; Type = "Planned"; Reason = $reason }
+        }
+    } catch {
+        if ($_.Exception.Message -notmatch "No events were found") {
+            Write-OutputColor "  Could not read planned shutdown events: $_" -color "Warning"
+        }
+    }
+
+    try {
+        $unexpectedEvents = @(Get-WinEvent -FilterHashtable @{ LogName = "System"; Id = 6008 } -MaxEvents 10 -ErrorAction Stop)
+        foreach ($e in $unexpectedEvents) {
+            $reboots += [PSCustomObject]@{ Time = $e.TimeCreated; Type = "UNEXPECTED"; Reason = "Unexpected shutdown (crash/power loss)" }
+        }
+    } catch {
+        if ($_.Exception.Message -notmatch "No events were found") {
+            Write-OutputColor "  Could not read unexpected shutdown events: $_" -color "Warning"
+        }
+    }
+
+    $reboots = @($reboots | Sort-Object Time -Descending | Select-Object -First 15)
+
+    if ($reboots.Count -eq 0) {
+        Write-OutputColor "  No reboot events found in the event log." -color "Info"
+    } else {
+        $unexpectedCount = @($reboots | Where-Object { $_.Type -eq "UNEXPECTED" }).Count
+        Write-OutputColor "" -color "Info"
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+        Write-OutputColor "  │$("  REBOOT HISTORY (last $($reboots.Count) events, $unexpectedCount unexpected)".PadRight(72))│" -color "Info"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+        foreach ($r in $reboots) {
+            $time = $r.Time.ToString("yyyy-MM-dd HH:mm")
+            $typeStr = $r.Type.PadRight(10)
+            $lineText = "  $time  $typeStr"
+            if ($lineText.Length -gt 72) { $lineText = $lineText.Substring(0, 72) }
+            $color = if ($r.Type -eq "UNEXPECTED") { "Error" } else { "Info" }
+            Write-OutputColor "  │$($lineText.PadRight(72))│" -color $color
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    }
+
+    Add-SessionChange -Category "System" -Description "Uptime check: $uptimeStr, $($reboots.Count) reboots in history ($unexpectedCount unexpected)"
+}
 #endregion

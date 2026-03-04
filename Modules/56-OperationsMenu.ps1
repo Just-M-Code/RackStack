@@ -56,6 +56,8 @@ function Show-OperationsMenu {
         Write-MenuItem "[18] Installed Software Inventory"
         Write-MenuItem "[19] Certificate Expiry Check"
         Write-MenuItem "[20] VSS Writer Status"
+        Write-MenuItem "[21] Event Log Alerts (24h)"
+        Write-MenuItem "[22] Uptime & Reboot History"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
 
@@ -157,6 +159,14 @@ function Show-OperationsMenu {
             }
             "20" {
                 Show-VSSWriterStatus
+                Write-PressEnter
+            }
+            "21" {
+                Show-EventLogAlerts
+                Write-PressEnter
+            }
+            "22" {
+                Show-UptimeRebootHistory
                 Write-PressEnter
             }
             "b" { return }

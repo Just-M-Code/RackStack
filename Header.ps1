@@ -30,10 +30,15 @@
     7h3 4b1d3r
 
 .VERSION
-    1.13.0
+    1.14.0
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.14.0
+    EVENT LOG ALERTS & UPTIME DASHBOARD:
+    - NEW: Event Log Alert Summary — scans System and Application logs for critical, error, and warning events in the last 24 hours. Groups by source with event counts, shows latest critical/error events with timestamps. Accessible from Operations menu option [21] (35-Utilities, 56-OperationsMenu)
+    - NEW: Uptime & Reboot History — shows current system uptime with color-coded warnings (30+ days yellow, 60+ days red), lists last 15 planned and unexpected reboots from event log with timestamps. Accessible from Operations menu option [22] (35-Utilities, 56-OperationsMenu)
 
 .CHANGELOG v1.13.0
     VSS WRITER STATUS & AD PREREQUISITES FIX:
