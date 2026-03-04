@@ -43,12 +43,13 @@ function Export-HTMLHealthReport {
     $uptimeStr = if ($uptime) { "{0} days, {1} hours, {2} minutes" -f $uptime.Days, $uptime.Hours, $uptime.Minutes } else { "Unknown" }
 
     # CPU load
-    $cpuLoad = ($cpuAll | Measure-Object -Property LoadPercentage -Average).Average
+    $cpuLoadMeasure = if ($cpuAll) { ($cpuAll | Measure-Object -Property LoadPercentage -Average).Average } else { $null }
+    $cpuLoad = if ($null -ne $cpuLoadMeasure) { $cpuLoadMeasure } else { 0 }
     $cpuStatus = if ($cpuLoad -gt 80) { "bad" } elseif ($cpuLoad -gt 50) { "warn" } else { "good" }
 
     # Memory
-    $totalMemGB = [math]::Round($os.TotalVisibleMemorySize / 1MB, 2)
-    $freeMemGB = [math]::Round($os.FreePhysicalMemory / 1MB, 2)
+    $totalMemGB = if ($os) { [math]::Round($os.TotalVisibleMemorySize / 1MB, 2) } else { 0 }
+    $freeMemGB = if ($os) { [math]::Round($os.FreePhysicalMemory / 1MB, 2) } else { 0 }
     $usedMemGB = $totalMemGB - $freeMemGB
     $memPercent = if ($totalMemGB -gt 0) { [math]::Round(($usedMemGB / $totalMemGB) * 100, 1) } else { 0 }
     $memStatus = if ($memPercent -gt 90) { "bad" } elseif ($memPercent -gt 75) { "warn" } else { "good" }
@@ -167,7 +168,7 @@ function Export-HTMLHealthReport {
     try {
         $topP = Get-Process -ErrorAction SilentlyContinue | Sort-Object CPU -Descending | Select-Object -First 5
         foreach ($p in $topP) {
-            $pCPU = [math]::Round($p.CPU, 1)
+            $pCPU = if ($null -ne $p.CPU) { [math]::Round($p.CPU, 1) } else { 0 }
             $pMem = [math]::Round($p.WorkingSet64 / 1MB, 0)
             $topProcsHtml += "<tr><td>$($p.ProcessName)</td><td>$pCPU</td><td>$pMem</td></tr>"
         }
@@ -243,8 +244,8 @@ function Export-HTMLHealthReport {
 
         <h2>CPU</h2>
         <div class="info-grid">
-            <div class="info-box"><div class="info-label">Processor</div><div class="info-value">$($cpu.Name)</div></div>
-            <div class="info-box"><div class="info-label">Cores / Logical</div><div class="info-value">$($cpu.NumberOfCores) / $($cpu.NumberOfLogicalProcessors)</div></div>
+            <div class="info-box"><div class="info-label">Processor</div><div class="info-value">$(if ($cpu) { $cpu.Name } else { 'Unknown' })</div></div>
+            <div class="info-box"><div class="info-label">Cores / Logical</div><div class="info-value">$(if ($cpu) { "$($cpu.NumberOfCores) / $($cpu.NumberOfLogicalProcessors)" } else { 'N/A' })</div></div>
             <div class="info-box"><div class="info-label">Current Load</div><div class="info-value status-$cpuStatus">$([math]::Round($cpuLoad, 1))%</div></div>
         </div>
 

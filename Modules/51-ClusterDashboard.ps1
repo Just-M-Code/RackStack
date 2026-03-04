@@ -50,7 +50,7 @@ function Show-ClusterDashboard {
             "Down" { "Error" }
             default { "Info" }
         }
-        $stateDetail = if ($node.State -eq "Paused") { "Paused" } else { $node.State.ToString() }
+        $stateDetail = if ($node.State -eq "Paused") { "Paused" } elseif ($node.State) { $node.State.ToString() } else { "Unknown" }
         $nodeLine = "  $statusSymbol $($node.Name.PadRight(20)) $($stateDetail.PadRight(12)) VMs: $vmCount"
         if ($nodeLine.Length -gt 69) { $nodeLine = $nodeLine.Substring(0, 69) + "..." }
         Write-OutputColor "  │$($nodeLine.PadRight(72))│" -color $stateColor

@@ -352,7 +352,7 @@ function Invoke-DnsLookup {
                 "PTR"   { $r.NameHost }
                 "SOA"   { "$($r.PrimaryServer) (Serial: $($r.SerialNumber))" }
                 "TXT"   { ($r.Strings -join ' ') }
-                default { $r.ToString() }
+                default { if ($r) { "$r" } else { "(unknown)" } }
             }
             $line = "  [$type]  $data"
             Write-MenuItem -Text $line
@@ -564,9 +564,10 @@ function Show-ArpTable {
 
         foreach ($entry in $arpEntries) {
             $mac = if ($entry.LinkLayerAddress) { $entry.LinkLayerAddress } else { "N/A" }
-            $ifAlias = try { (Get-NetAdapter -InterfaceIndex $entry.InterfaceIndex -ErrorAction Stop).Name } catch { $entry.InterfaceIndex }
+            $ifAlias = try { (Get-NetAdapter -InterfaceIndex $entry.InterfaceIndex -ErrorAction Stop).Name } catch { "$($entry.InterfaceIndex)" }
             if ($ifAlias.Length -gt 10) { $ifAlias = $ifAlias.Substring(0, 10) }
-            $line = "  $($entry.IPAddress.PadRight(20))$($mac.PadRight(20))$($entry.State.ToString().PadRight(14))$ifAlias"
+            $stateStr = if ($entry.State) { $entry.State.ToString() } else { "Unknown" }
+            $line = "  $($entry.IPAddress.PadRight(20))$($mac.PadRight(20))$($stateStr.PadRight(14))$ifAlias"
             Write-MenuItem -Text $line
         }
 

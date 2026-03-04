@@ -30,10 +30,21 @@
     7h3 4b1d3r
 
 .VERSION
-    1.16.4
+    1.16.5
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.16.5
+    NULL SAFETY SWEEP ACROSS 5 MODULES:
+    - FIX: Health Check guards against null CPU properties from Get-CimInstance — $cpu.Name, NumberOfCores, NumberOfLogicalProcessors now safe when CIM query fails (37-HealthCheck)
+    - FIX: Health Check guards against null $proc.CPU in top processes — System/Idle processes have null CPU property in PS 5.1 (37-HealthCheck)
+    - FIX: HTML Reports guards against null CIM results — CPU load, memory values, CPU info in HTML template all null-safe (54-HTMLReports)
+    - FIX: HTML Reports guards against null $p.CPU in top processes table (54-HTMLReports)
+    - FIX: Service Manager uses actual service DisplayName with null fallback — custom MonitoredServices entries without DisplayName no longer crash (30-ServiceManager)
+    - FIX: Cluster Dashboard guards against null node State on .ToString() (51-ClusterDashboard)
+    - FIX: Network Diagnostics casts integer fallback to string for adapter alias — .Length on integer returns null in PS 5.1 (58-NetworkDiagnostics)
+    - FIX: Network Diagnostics uses null-safe string interpolation for DNS default case and ARP state (58-NetworkDiagnostics)
 
 .CHANGELOG v1.16.4
     NULL PROPERTY GUARDS ON TOSTRING CALLS:

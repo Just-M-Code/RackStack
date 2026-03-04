@@ -27,8 +27,11 @@ function Show-SystemHealthCheck {
     Write-OutputColor "=== CPU ===" -color "Success"
     $cpuAll = Get-CimInstance -ClassName Win32_Processor -ErrorAction SilentlyContinue
     $cpu = $cpuAll | Select-Object -First 1
-    Write-OutputColor "  Processor: $($cpu.Name)" -color "Info"
-    Write-OutputColor "  Cores: $($cpu.NumberOfCores) | Logical: $($cpu.NumberOfLogicalProcessors)" -color "Info"
+    $cpuName = if ($cpu) { $cpu.Name } else { "Unknown" }
+    $cpuCores = if ($cpu) { $cpu.NumberOfCores } else { "?" }
+    $cpuLogical = if ($cpu) { $cpu.NumberOfLogicalProcessors } else { "?" }
+    Write-OutputColor "  Processor: $cpuName" -color "Info"
+    Write-OutputColor "  Cores: $cpuCores | Logical: $cpuLogical" -color "Info"
 
     $cpuMeasure = $cpuAll | Measure-Object -Property LoadPercentage -Average
     $cpuLoad = if ($null -ne $cpuMeasure -and $null -ne $cpuMeasure.Average) { $cpuMeasure.Average } else { 0 }
@@ -285,7 +288,7 @@ function Show-SystemHealthCheck {
     try {
         $topProcs = Get-Process -ErrorAction SilentlyContinue | Sort-Object CPU -Descending | Select-Object -First 5
         foreach ($proc in $topProcs) {
-            $cpuSec = [math]::Round($proc.CPU, 1)
+            $cpuSec = if ($null -ne $proc.CPU) { [math]::Round($proc.CPU, 1) } else { 0 }
             $memMB = [math]::Round($proc.WorkingSet64 / 1MB, 0)
             Write-OutputColor "  $($proc.ProcessName.PadRight(30)) CPU: ${cpuSec}s  RAM: ${memMB}MB" -color "Info"
         }

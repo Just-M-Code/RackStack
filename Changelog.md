@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.16.5
+
+- **Bug Fix:** Health Check guards against null CPU properties when `Get-CimInstance Win32_Processor` fails silently — `$cpu.Name`, `NumberOfCores`, `NumberOfLogicalProcessors` now show "Unknown" instead of crashing (37-HealthCheck).
+- **Bug Fix:** Health Check guards against null `$proc.CPU` in top processes list — `System` and `Idle` processes have null `.CPU` in PS 5.1, causing `[math]::Round($null, 1)` (37-HealthCheck).
+- **Bug Fix:** HTML Reports guards against null CIM results — CPU load average, memory values, and CPU info in HTML template all null-safe when queries fail (54-HTMLReports).
+- **Bug Fix:** HTML Reports guards against null `$p.CPU` in top processes HTML table — same null `.CPU` issue as Health Check (54-HTMLReports).
+- **Bug Fix:** Service Manager uses actual service `DisplayName` with null fallback chain — custom `MonitoredServices` entries from defaults.json without a `DisplayName` field no longer crash on `.Length`/`.Substring()` (30-ServiceManager).
+- **Bug Fix:** Cluster Dashboard guards against null `$node.State` before `.ToString()` — partially populated cluster node objects during network errors no longer crash (51-ClusterDashboard).
+- **Bug Fix:** Network Diagnostics casts integer fallback to string for adapter alias — when `Get-NetAdapter` fails, the catch block returned an integer (`InterfaceIndex`), and `.Length` on an integer returns `$null` in PS 5.1 (58-NetworkDiagnostics).
+- **Bug Fix:** Network Diagnostics uses null-safe string interpolation for DNS default case and null-safe ARP entry state (58-NetworkDiagnostics).
+- 63 modules, 1854 tests
+
 ## v1.16.4
 
 - **Bug Fix:** Event Log Viewer guards against null `TimeCreated` — events with null timestamps caused "cannot call method on null-valued expression" on `.ToString()` (29-EventLogViewer).

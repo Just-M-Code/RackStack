@@ -60,7 +60,8 @@ function Show-ServiceManager {
                 } else {
                     "Warning"
                 }
-                $displayName = if ($svc.DisplayName.Length -gt 35) { $svc.DisplayName.Substring(0,32) + "..." } else { $svc.DisplayName }
+                $dn = if ($service.DisplayName) { $service.DisplayName } elseif ($svc.DisplayName) { $svc.DisplayName } else { $svc.Name }
+                $displayName = if ($dn.Length -gt 35) { $dn.Substring(0,32) + "..." } else { $dn }
                 Write-OutputColor "  │$("  [$idx] $displayName : $status [$startTag]".PadRight(72))│" -color $color
                 $serviceList += $service
                 $idx++
