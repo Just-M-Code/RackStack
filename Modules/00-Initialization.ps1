@@ -135,13 +135,13 @@ if (-not $script:ModuleRoot) { $script:ModuleRoot = $PSScriptRoot }
 if (-not $script:ModuleRoot -and $script:ScriptPath) {
     $script:ModuleRoot = [System.IO.Path]::GetDirectoryName($script:ScriptPath)
 }
-$script:ScriptVersion = "1.17.1"
+$script:ScriptVersion = "1.17.2"
 $script:ScriptStartTime = Get-Date
 
 # OS version detection (for feature compatibility)
 # 2012/2012 R2 lack SET, Storage Replica, Defender PowerShell module
 # 2008 R2 SP1 supported with WMF 5.1 installed (run Install-Prerequisites.ps1)
-$script:OSBuildNumber = [int](Get-CimInstance Win32_OperatingSystem).BuildNumber
+$script:OSBuildNumber = try { [int](Get-CimInstance Win32_OperatingSystem -ErrorAction Stop).BuildNumber } catch { [int](Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').CurrentBuildNumber }
 $script:IsServer2008R2 = $script:OSBuildNumber -eq 7601        # 6.1.7601 (SP1)
 $script:IsServer2012 = $script:OSBuildNumber -eq 9200           # 6.2.9200
 $script:IsServer2012R2 = $script:OSBuildNumber -eq 9600         # 6.3.9600

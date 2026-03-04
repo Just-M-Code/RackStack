@@ -30,10 +30,21 @@
     7h3 4b1d3r
 
 .VERSION
-    1.17.1
+    1.17.2
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.17.2
+    ROBUSTNESS SWEEP — 8 FIXES:
+    - FIX: Process handle leak in credential storage — cmdkey.exe process was never disposed; timeout path would also crash reading ExitCode on a still-running process (35-Utilities)
+    - FIX: Script initialization falls back to registry when CIM service is unresponsive — unguarded Get-CimInstance at top level would crash the entire tool before any menu could display (00-Initialization)
+    - FIX: Port scan disposes TcpClient on error — if BeginConnect or WaitOne threw, the socket handle leaked; now uses try/finally (58-NetworkDiagnostics)
+    - FIX: Certificate display guards against null Subject — certs with Subject Alternative Names only have null Subject, causing blank output (37-HealthCheck, 35-Utilities)
+    - FIX: Command history display guards against null Command — corrupted or hand-edited history JSON would crash PadRight on null (55-QoLFeatures)
+    - FIX: VHD download checks cache path before use — if host storage was never initialized, Substring on null path would crash (41-VHDManagement)
+    - FIX: Adapter table guards against null InterfaceDescription — virtual or transitional adapters can have null description, crashing PadRight (06-NetworkAdapters)
+    - FIX: Quick setup storage detection uses @() wrapper for PS 5.1 — single-item pipeline results lack .Count property without array wrapping (50-EntryPoint)
 
 .CHANGELOG v1.17.1
     PS 5.1 COMPATIBILITY FIX:

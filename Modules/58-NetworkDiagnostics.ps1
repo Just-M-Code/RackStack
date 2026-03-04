@@ -496,19 +496,19 @@ function Invoke-QuickPortScan {
     foreach ($p in $ports) {
         $jobs.Add((Start-Job -ScriptBlock {
             param($IP, $Port)
+            $tcp = $null
             try {
                 $tcp = New-Object System.Net.Sockets.TcpClient
                 $connect = $tcp.BeginConnect($IP, $Port, $null, $null)
                 $wait = $connect.AsyncWaitHandle.WaitOne(2000, $false)
                 if ($wait -and $tcp.Connected) {
                     $tcp.EndConnect($connect)
-                    $tcp.Close()
                     return "OPEN"
                 }
-                $tcp.Close()
                 return "CLOSED"
             }
             catch { return "CLOSED" }
+            finally { if ($tcp) { $tcp.Close() } }
         } -ArgumentList $target, $p.Port))
     }
 

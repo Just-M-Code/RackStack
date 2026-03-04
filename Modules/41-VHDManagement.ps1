@@ -155,6 +155,10 @@ function Get-SyspreppedVHD {
     }
 
     # Pre-check: verify destination has enough free space
+    if (-not $cachePath) {
+        Write-OutputColor "  VHD cache path not configured. Run Host Storage Setup first." -color "Error"
+        return $null
+    }
     $destDriveLetter = $cachePath.Substring(0, 1)
     $destVolume = Get-Volume -DriveLetter $destDriveLetter -ErrorAction SilentlyContinue
     if ($destVolume) {

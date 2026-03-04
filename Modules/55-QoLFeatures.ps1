@@ -286,7 +286,8 @@ function Show-CommandHistory {
         $recentHistory = $script:CommandHistory | Select-Object -Last 20
         $index = 1
         foreach ($cmd in $recentHistory) {
-            $cmdStr = if ($cmd.Command.Length -gt 40) { $cmd.Command.Substring(0,37) + "..." } else { $cmd.Command.PadRight(40) }
+            $cmdName = if ($cmd.Command) { $cmd.Command } else { "(unknown)" }
+            $cmdStr = if ($cmdName.Length -gt 40) { $cmdName.Substring(0,37) + "..." } else { $cmdName.PadRight(40) }
             $timeStr = if ($cmd.Timestamp -and $cmd.Timestamp.Length -ge 16) { $cmd.Timestamp.Substring(5,11) } else { "           " }
             Write-OutputColor "  │  [$($index.ToString().PadLeft(2))] $cmdStr $timeStr│" -color "Info"
             $index++

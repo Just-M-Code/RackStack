@@ -714,9 +714,15 @@ function Save-StoredCredential {
         $startInfo.RedirectStandardOutput = $true
         $startInfo.RedirectStandardError = $true
         $proc = [System.Diagnostics.Process]::Start($startInfo)
-        $proc.WaitForExit(10000)
-        $password = $null
-        return ($proc.ExitCode -eq 0)
+        try {
+            $exited = $proc.WaitForExit(10000)
+            $password = $null
+            if (-not $exited) { return $false }
+            return ($proc.ExitCode -eq 0)
+        }
+        finally {
+            if ($proc) { $proc.Dispose() }
+        }
     }
     catch {
         Write-OutputColor "Failed to save credential: $_" -color "Error"
@@ -1178,7 +1184,7 @@ function Show-CertificateExpiryCheck {
             })
             foreach ($cert in $certs) {
                 $daysLeft = [math]::Round(($cert.NotAfter - $now).TotalDays, 0)
-                $subject = $cert.Subject
+                $subject = if ($cert.Subject) { $cert.Subject } else { "(no subject)" }
                 if ($subject.Length -gt 40) { $subject = $subject.Substring(0, 37) + "..." }
                 $allCerts += [PSCustomObject]@{
                     Store     = $store.Name

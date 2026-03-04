@@ -1,5 +1,17 @@
 ﻿# Changelog
 
+## v1.17.2
+
+- **Bug Fix:** Process handle leak in credential storage — `cmdkey.exe` process was never disposed after use; timeout path would also crash reading `ExitCode` on a still-running process. Now uses `try/finally` with `Dispose()` (35-Utilities).
+- **Bug Fix:** Script initialization falls back to registry when CIM service is unresponsive — unguarded `Get-CimInstance` at top level would crash the entire tool before any menu could display. Now falls back to `HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\CurrentBuildNumber` (00-Initialization).
+- **Bug Fix:** Port scan disposes `TcpClient` on error — if `BeginConnect` or `WaitOne` threw, the socket handle leaked. Now uses `try/finally` for cleanup (58-NetworkDiagnostics).
+- **Bug Fix:** Certificate display guards against null Subject — certificates with Subject Alternative Names only can have null `Subject`, causing blank output instead of "(no subject)" (37-HealthCheck, 35-Utilities).
+- **Bug Fix:** Command history display guards against null Command — corrupted or hand-edited `history.json` would crash `.PadRight()` on null (55-QoLFeatures).
+- **Bug Fix:** VHD download checks cache path before use — if host storage was never initialized, `.Substring()` on null path would crash (41-VHDManagement).
+- **Bug Fix:** Adapter table guards against null InterfaceDescription — virtual or transitional adapters can have null description, crashing `.PadRight()` (06-NetworkAdapters).
+- **Bug Fix:** Quick setup storage detection uses `@()` wrapper for PS 5.1 — single-item pipeline results lack `.Count` property without array wrapping (50-EntryPoint).
+- 63 modules, 1854 tests
+
 ## v1.17.1
 
 - **Bug Fix:** VM Checkpoint Management uses `*-VMSnapshot` cmdlets instead of `*-VMCheckpoint` — Server 2012 R2 only has the `VMSnapshot` variants; `VMCheckpoint` was introduced in Server 2016. Affects list, restore, and delete operations (52-VMCheckpoints).

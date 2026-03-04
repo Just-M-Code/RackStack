@@ -993,7 +993,7 @@ function Start-BatchMode {
         $storageAlready = $false
         if ($checkDrive) {
             $checkPaths = @("$($checkDrive):\Virtual Machines", "$($checkDrive):\ISOs", "$($checkDrive):\Virtual Machines\_BaseImages")
-            $storageAlready = ($checkPaths | Where-Object { Test-Path $_ }).Count -eq 3
+            $storageAlready = @($checkPaths | Where-Object { Test-Path $_ }).Count -eq 3
         }
         if ($storageAlready) {
             Write-OutputColor "  [$stepNum/$totalSteps] Host storage: already initialized on $($checkDrive):" -color "Debug"

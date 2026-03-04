@@ -299,7 +299,7 @@ function Show-AdaptersTable {
     Write-OutputColor $separator -color "Info"
 
     foreach ($adapter in $adapters) {
-        $desc = $adapter.InterfaceDescription
+        $desc = if ($adapter.InterfaceDescription) { $adapter.InterfaceDescription } else { "" }
         if ($desc.Length -gt $columnWidths.Description) {
             $desc = $desc.Substring(0, $columnWidths.Description - 3) + "..."
         }

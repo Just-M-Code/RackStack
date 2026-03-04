@@ -134,7 +134,7 @@ function Show-SystemHealthCheck {
             Write-OutputColor "  No certificates in LocalMachine\My store." -color "Info"
         } else {
             foreach ($cert in ($allCerts | Sort-Object NotAfter)) {
-                $subject = $cert.Subject
+                $subject = if ($cert.Subject) { $cert.Subject } else { "(no subject)" }
                 if ($subject.Length -gt 40) { $subject = $subject.Substring(0, 37) + "..." }
                 $daysLeft = [math]::Floor(($cert.NotAfter - $now).TotalDays)
                 $expiryStr = "$($cert.NotAfter.ToString('yyyy-MM-dd')) (${daysLeft}d)"
