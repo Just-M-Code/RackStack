@@ -415,8 +415,8 @@ function Get-AvailableVMStoragePaths {
     }
     catch {
         return @{
-            DefaultVHDPath = "C:\Hyper-V\Virtual Hard Disks"
-            DefaultVMPath = "C:\Hyper-V"
+            DefaultVHDPath = "$env:SystemDrive\Hyper-V\Virtual Hard Disks"
+            DefaultVMPath = "$env:SystemDrive\Hyper-V"
         }
     }
 }

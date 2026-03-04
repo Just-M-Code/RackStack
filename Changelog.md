@@ -1,5 +1,13 @@
 ﻿# Changelog
 
+## v1.19.1
+
+- **Bug Fix:** Port scan results now correctly match ports when some scans time out — results tracked per-job index instead of sequential array (58-NetworkDiagnostics).
+- **Bug Fix:** Subnet sweep batches jobs (50 at a time) instead of spawning up to 254 concurrent processes which could exhaust system memory (58-NetworkDiagnostics).
+- **Bug Fix:** Hyper-V Replica status shows HTTP/HTTPS as "Disabled" when auth type doesn't include that protocol, instead of always showing port numbers (62-HyperVReplica).
+- **Bug Fix:** VM Deployment fallback paths use `$env:SystemDrive` instead of hardcoded `C:\` (44-VMDeployment).
+- 63 modules, 1853 tests
+
 ## v1.19.0
 
 - **Bug Fix:** "Home" navigation now works from all nested menus — added `ReturnToMainMenu` checks to 17 menu loops across iSCSI, Firewall Templates, NTP, Disk Cleanup, BitLocker, ISO Download, Cluster Dashboard, VM Checkpoints, VM Export/Import, Network Diagnostics, Hyper-V Replica, Storage Backends, and Settings.

@@ -278,28 +278,41 @@ function Invoke-SubnetSweep {
 
     $alive = @()
     $total = $end - $start + 1
+    $batchSize = 50
 
-    # Use parallel jobs for speed
-    $jobs = [System.Collections.Generic.List[object]]::new()
-    for ($i = $start; $i -le $end; $i++) {
-        $ip = "$subnet.$i"
-        $jobs.Add((Start-Job -ScriptBlock {
-            param($IP)
-            $result = Test-Connection -ComputerName $IP -Count 1 -Quiet -ErrorAction SilentlyContinue
-            [PSCustomObject]@{ IP = $IP; Alive = $result }
-        } -ArgumentList $ip))
+    # Use parallel jobs in batches to avoid spawning too many processes
+    $allResults = [System.Collections.Generic.List[object]]::new()
+    $timedOutCount = 0
+    for ($batchStart = $start; $batchStart -le $end; $batchStart += $batchSize) {
+        $batchEnd = [math]::Min($batchStart + $batchSize - 1, $end)
+        $jobs = [System.Collections.Generic.List[object]]::new()
+        for ($i = $batchStart; $i -le $batchEnd; $i++) {
+            $ip = "$subnet.$i"
+            $jobs.Add((Start-Job -ScriptBlock {
+                param($IP)
+                $result = Test-Connection -ComputerName $IP -Count 1 -Quiet -ErrorAction SilentlyContinue
+                [PSCustomObject]@{ IP = $IP; Alive = $result }
+            } -ArgumentList $ip))
+        }
+        $completed = ($batchStart - $start)
+        Write-Host "`r  Scanning $completed/$total hosts..." -NoNewline
+        $null = $jobs | Wait-Job -Timeout 30
+        $timedOut = @($jobs | Where-Object { $_.State -eq 'Running' })
+        $timedOutCount += $timedOut.Count
+        foreach ($j in $jobs) {
+            if ($j.State -eq 'Completed') {
+                $r = Receive-Job -Job $j -ErrorAction SilentlyContinue
+                if ($r) { $allResults.Add($r) }
+            }
+        }
+        $jobs | Remove-Job -Force
+    }
+    Write-Host ""
+    if ($timedOutCount -gt 0) {
+        Write-OutputColor "  Warning: $timedOutCount ping(s) timed out" -color "Warning"
     }
 
-    Write-OutputColor "  Waiting for $(@($jobs).Count) pings to complete..." -color "Info"
-    $completedJobs = @($jobs | Wait-Job -Timeout 30)
-    $results = $completedJobs | Receive-Job
-    $timedOutJobs = @($jobs | Where-Object { $_.State -eq 'Running' })
-    if ($timedOutJobs.Count -gt 0) {
-        Write-OutputColor "  Warning: $($timedOutJobs.Count) ping(s) timed out" -color "Warning"
-    }
-    $jobs | Remove-Job -Force
-
-    $alive = @($results | Where-Object { $_.Alive } | Sort-Object { ($_.IP -split '\.') | ForEach-Object { [int]$_ } })
+    $alive = @($allResults | Where-Object { $_.Alive } | Sort-Object { ($_.IP -split '\.') | ForEach-Object { [int]$_ } })
 
     Write-OutputColor "" -color "Info"
     Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
@@ -513,11 +526,18 @@ function Invoke-QuickPortScan {
         } -ArgumentList $target, $p.Port))
     }
 
-    $completedJobs = @($jobs | Wait-Job -Timeout 15)
-    $jobResults = $completedJobs | Receive-Job
+    $null = $jobs | Wait-Job -Timeout 15
     $timedOutJobs = @($jobs | Where-Object { $_.State -eq 'Running' })
     if ($timedOutJobs.Count -gt 0) {
         Write-OutputColor "  Warning: $($timedOutJobs.Count) port scan(s) timed out" -color "Warning"
+    }
+
+    # Collect results per-job to maintain port alignment
+    $jobResults = @{}
+    for ($i = 0; $i -lt $jobs.Count; $i++) {
+        if ($jobs[$i].State -eq 'Completed') {
+            $jobResults[$i] = Receive-Job -Job $jobs[$i] -ErrorAction SilentlyContinue
+        }
     }
     $jobs | Remove-Job -Force
 
@@ -533,7 +553,7 @@ function Invoke-QuickPortScan {
 
     $openCount = 0
     for ($i = 0; $i -lt $ports.Count; $i++) {
-        $status = if ($i -lt @($jobResults).Count) { @($jobResults)[$i] } else { "TIMEOUT" }
+        $status = if ($jobResults.ContainsKey($i)) { $jobResults[$i] } else { "TIMEOUT" }
         $statusColor = if ($status -eq "OPEN") { "Success" } else { "Error" }
         if ($status -eq "OPEN") { $openCount++ }
         $line = "  $($ports[$i].Port.ToString().PadRight(8))$($ports[$i].Name.PadRight(14))$status"

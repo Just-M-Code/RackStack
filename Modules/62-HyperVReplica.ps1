@@ -129,8 +129,9 @@ function Enable-ReplicaServer {
         if ($lineStr.Length -gt 69) { $lineStr = $lineStr.Substring(0, 69) + "..." }
         Write-OutputColor "  │$($lineStr.PadRight(72))│" -color "Info"
 
-        $httpEnabled = if ($replicaConfig.HttpPort) { "Port $($replicaConfig.HttpPort)" } else { "Disabled" }
-        $httpsEnabled = if ($replicaConfig.HttpsPort) { "Port $($replicaConfig.HttpsPort)" } else { "Disabled" }
+        $authType = $replicaConfig.AllowedAuthenticationType.ToString()
+        $httpEnabled = if ($authType -match 'Kerberos|Integrated') { "Port $($replicaConfig.HttpPort)" } else { "Disabled" }
+        $httpsEnabled = if ($authType -match 'Certificate|Integrated') { "Port $($replicaConfig.HttpsPort)" } else { "Disabled" }
         Write-OutputColor "  │$("  HTTP: $httpEnabled".PadRight(72))│" -color "Info"
         Write-OutputColor "  │$("  HTTPS: $httpsEnabled".PadRight(72))│" -color "Info"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"

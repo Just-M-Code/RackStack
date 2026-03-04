@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.19.0
+    1.19.1
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.19.1
+    BUG FIXES — 4 FIXES:
+    - FIX: Port scan results now correctly match ports when some scans time out — results tracked per-job index instead of sequential array (Network Diagnostics)
+    - FIX: Subnet sweep batches jobs (50 at a time) instead of spawning up to 254 concurrent processes which could exhaust system memory (Network Diagnostics)
+    - FIX: Hyper-V Replica status shows HTTP/HTTPS as Disabled when auth type doesn't include that protocol, instead of always showing port numbers (Hyper-V Replica)
+    - FIX: VM Deployment fallback paths use $env:SystemDrive instead of hardcoded C:\ (VM Deployment)
 
 .CHANGELOG v1.19.0
     NAVIGATION + RESILIENCE SWEEP — 20 FIXES:
