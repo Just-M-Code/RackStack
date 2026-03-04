@@ -313,7 +313,7 @@ function Install-ScriptUpdate {
     if ($isExe) {
         # EXE self-update: write a helper batch script that replaces the exe after we exit
         $targetPath = $script:ScriptPath
-        $batchPath = Join-Path $env:TEMP "RackStack_update.cmd"
+        $batchPath = Join-Path $env:TEMP "RackStack_update_$([System.IO.Path]::GetRandomFileName()).cmd"
         $batchContent = @"
 @echo off
 echo Updating RackStack...
@@ -702,12 +702,21 @@ function Save-StoredCredential {
     )
 
     try {
-        # Use cmdkey for credential storage
+        # Use cmdkey for credential storage — launch via ProcessStartInfo to keep password out of PowerShell pipeline/transcript
         $username = $Credential.UserName
         $password = $Credential.GetNetworkCredential().Password
 
-        $null = cmdkey /generic:$Target /user:$username /pass:$password 2>&1
-        return $true
+        $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $startInfo.FileName = "cmdkey.exe"
+        $startInfo.Arguments = "/generic:$Target /user:$username /pass:$password"
+        $startInfo.UseShellExecute = $false
+        $startInfo.CreateNoWindow = $true
+        $startInfo.RedirectStandardOutput = $true
+        $startInfo.RedirectStandardError = $true
+        $proc = [System.Diagnostics.Process]::Start($startInfo)
+        $proc.WaitForExit(10000)
+        $password = $null
+        return ($proc.ExitCode -eq 0)
     }
     catch {
         Write-OutputColor "Failed to save credential: $_" -color "Error"

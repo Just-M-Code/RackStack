@@ -232,6 +232,16 @@ function Show-BitLockerManagement {
                                 $savePath = "$env:USERPROFILE\Desktop\BitLockerKey_$($vol.MountPoint -replace '[:\\]','')_$(Get-Date -Format 'yyyyMMdd_HHmmss').txt"
                                 Write-OutputColor "  Using default path: $savePath" -color "Info"
                             }
+                            if ($savePath -match '^\\\\\w') {
+                                Write-OutputColor "  WARNING: Saving BitLocker keys to a network path is a security risk!" -color "Error"
+                                if (-not (Confirm-UserAction -Message "Save to network path anyway?")) { continue }
+                            }
+                            $saveDir = Split-Path $savePath -Parent
+                            if ($saveDir -and -not (Test-Path -LiteralPath $saveDir)) {
+                                Write-OutputColor "  Directory does not exist: $saveDir" -color "Error"
+                                Write-PressEnter
+                                continue
+                            }
                             $blVol = Get-BitLockerVolume -MountPoint $vol.MountPoint
                             $keys = $blVol.KeyProtector | Where-Object { $_.RecoveryPassword }
                             if ($keys) {
@@ -267,6 +277,7 @@ function Show-BitLockerManagement {
                     if ($keys) {
                         Write-OutputColor "" -color "Info"
                         Write-OutputColor "  Recovery Key(s) for $($vol.MountPoint):" -color "Warning"
+                        Write-OutputColor "  NOTE: Keys will appear in the session transcript log." -color "Warning"
                         foreach ($key in $keys) {
                             Write-OutputColor "  ID: $($key.KeyProtectorId)" -color "Info"
                             Write-OutputColor "  Key: $($key.RecoveryPassword)" -color "Success"

@@ -248,6 +248,11 @@ function Invoke-SubnetSweep {
     $subnet = Read-Host $prompt
     if ([string]::IsNullOrWhiteSpace($subnet) -and $defaultSubnet) { $subnet = $defaultSubnet }
     if ([string]::IsNullOrWhiteSpace($subnet)) { return }
+    if ($subnet -notmatch '^\d{1,3}\.\d{1,3}\.\d{1,3}$') {
+        Write-OutputColor "  Invalid subnet format. Use X.X.X (e.g., 192.168.1)" -color "Error"
+        Write-PressEnter
+        return
+    }
 
     $startInput = Read-Host "  Start IP (last octet) [1]"
     $endInput = Read-Host "  End IP (last octet) [254]"

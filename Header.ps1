@@ -30,10 +30,21 @@
     7h3 4b1d3r
 
 .VERSION
-    1.16.6
+    1.16.7
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.16.7
+    SECURITY HARDENING (8 FIXES):
+    - FIX: Remote service management rejects wildcard characters in service names — entering '*' could match all services, causing a mass stop/restart on the target (56-OperationsMenu)
+    - FIX: Subnet sweep validates three-octet base format — invalid input like four-octet IPs would spawn 254 failing background jobs, exhausting resources (58-NetworkDiagnostics)
+    - FIX: Self-update batch script uses random filename in TEMP — eliminates predictable path that could be pre-created by another user for privilege escalation (35-Utilities)
+    - FIX: NTP server custom entry validates hostname/IP format — prevents misconfiguration that could cascade into Kerberos and iSCSI failures (19-NTPConfiguration)
+    - FIX: Temp path setting validates format and warns on UNC paths — transcripts written to network shares could expose session activity (56-OperationsMenu)
+    - FIX: BitLocker key save validates directory exists and warns on UNC paths — recovery keys are highly sensitive and should stay local (31-BitLocker)
+    - FIX: BitLocker show recovery key warns about transcript capture — keys displayed on-screen are recorded in the session transcript log (31-BitLocker)
+    - FIX: Credential storage uses ProcessStartInfo instead of pipeline cmdkey call — keeps plaintext password out of PowerShell transcript logging (35-Utilities)
 
 .CHANGELOG v1.16.6
     RESOURCE LEAK + VALIDATION BYPASS FIXES:

@@ -74,8 +74,10 @@ function Set-NTPConfiguration {
             "4" {
                 Write-OutputColor "" -color "Info"
                 $customNTP = Read-Host "  Enter NTP server address"
-                if ($customNTP) {
+                if ($customNTP -and $customNTP -match '^[a-zA-Z0-9][a-zA-Z0-9\.\-]*[a-zA-Z0-9]$') {
                     Set-NTPServer -Server $customNTP
+                } elseif ($customNTP) {
+                    Write-OutputColor "  Invalid NTP server format. Use a hostname or IP address." -color "Error"
                 }
             }
             "5" {

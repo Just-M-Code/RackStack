@@ -375,6 +375,11 @@ function Invoke-RemoteServiceManager {
         $navResult = Test-NavigationCommand -UserInput $svcAction
         if ($navResult.ShouldReturn) { return }
         if ([string]::IsNullOrWhiteSpace($svcAction) -or $svcAction -eq 'B' -or $svcAction -eq 'b') { return }
+        if ($svcAction -match '[\*\?\[\]]') {
+            Write-OutputColor "  Wildcard characters not allowed in service names." -color "Error"
+            Write-PressEnter
+            return
+        }
 
         $action = Read-Host "  Action: [S]tart, [T]op, [R]estart"
         $actionName = switch ($action) {
@@ -1292,8 +1297,18 @@ function Show-EditDefaults {
                 Write-OutputColor "  Enter temp path (current: $($script:TempPath)):" -color "Info"
                 $val = Read-Host "  Path"
                 if (-not [string]::IsNullOrWhiteSpace($val)) {
-                    $script:TempPath = $val
-                    Write-OutputColor "  Temp path set to $val" -color "Success"
+                    if (-not (Test-Path $val -IsValid)) {
+                        Write-OutputColor "  Invalid path format." -color "Error"
+                    } elseif ($val -match '^\\\\\w') {
+                        Write-OutputColor "  Warning: UNC path — transcripts and exports will be written to a network share." -color "Warning"
+                        if (Confirm-UserAction -Message "Use network path anyway?") {
+                            $script:TempPath = $val
+                            Write-OutputColor "  Temp path set to $val" -color "Success"
+                        }
+                    } else {
+                        $script:TempPath = $val
+                        Write-OutputColor "  Temp path set to $val" -color "Success"
+                    }
                 }
                 Start-Sleep -Seconds 1
             }

@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.16.7
+
+- **Security:** Remote service management rejects wildcard characters in service names — entering `*` could match all services, causing a mass stop/restart on the remote target (56-OperationsMenu).
+- **Security:** Subnet sweep validates three-octet base format — invalid input (e.g., four-octet IP) would spawn 254 failing background jobs, exhausting system resources (58-NetworkDiagnostics).
+- **Security:** Self-update batch script uses random filename in `%TEMP%` — eliminates predictable path that could be pre-created by another local user for privilege escalation (35-Utilities).
+- **Security:** NTP server custom entry validates hostname/IP format — prevents misconfiguration that could cascade into Kerberos authentication failures (19-NTPConfiguration).
+- **Security:** Temp path setting validates format and warns on UNC paths — transcripts written to network shares could expose session activity (56-OperationsMenu).
+- **Security:** BitLocker key save validates directory existence and warns on UNC paths — recovery keys should stay on local storage (31-BitLocker).
+- **Security:** BitLocker show recovery key warns about transcript capture — keys displayed on-screen are recorded in the session transcript log file (31-BitLocker).
+- **Security:** Credential storage uses `ProcessStartInfo` instead of pipeline `cmdkey` call — keeps plaintext password out of PowerShell transcript logging (35-Utilities).
+- 63 modules, 1854 tests
+
 ## v1.16.6
 
 - **Bug Fix:** FileServer HEAD request wraps HTTP response in `try/finally` — if `ContentLength` threw an exception, the response was never closed, leaking HTTP connections and sockets under repeated failures (39-FileServer).
