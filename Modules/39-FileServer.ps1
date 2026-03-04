@@ -521,9 +521,13 @@ function Get-FileServerFileSize {
         }
 
         $response = $request.GetResponse()
-        $size = $response.ContentLength
-        $response.Close()
-        return $size
+        try {
+            $size = $response.ContentLength
+            return $size
+        }
+        finally {
+            $response.Close()
+        }
     }
     catch {
         return -1

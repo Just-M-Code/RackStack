@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.16.6
+
+- **Bug Fix:** FileServer HEAD request wraps HTTP response in `try/finally` — if `ContentLength` threw an exception, the response was never closed, leaking HTTP connections and sockets under repeated failures (39-FileServer).
+- **Bug Fix:** Storage Replica volume validation uses a flag instead of `break` inside `foreach`/`switch` — in PowerShell, `break` inside a `foreach` nested in a `switch` exits the `switch`, not the `foreach`. Now reports ALL invalid volumes at once and properly blocks partnership creation (33-StorageReplica).
+- 63 modules, 1854 tests
+
 ## v1.16.5
 
 - **Bug Fix:** Health Check guards against null CPU properties when `Get-CimInstance Win32_Processor` fails silently — `$cpu.Name`, `NumberOfCores`, `NumberOfLogicalProcessors` now show "Unknown" instead of crashing (37-HealthCheck).

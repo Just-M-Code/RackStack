@@ -30,10 +30,15 @@
     7h3 4b1d3r
 
 .VERSION
-    1.16.5
+    1.16.6
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.16.6
+    RESOURCE LEAK + VALIDATION BYPASS FIXES:
+    - FIX: FileServer HEAD request wraps response in try/finally — if ContentLength threw, the HTTP connection was never closed, leaking sockets under repeated failures (39-FileServer)
+    - FIX: Storage Replica volume validation uses flag instead of break inside foreach/switch — break inside foreach inside switch exits the switch in PowerShell, not the foreach; now reports ALL invalid volumes and properly blocks partnership creation (33-StorageReplica)
 
 .CHANGELOG v1.16.5
     NULL SAFETY SWEEP ACROSS 5 MODULES:

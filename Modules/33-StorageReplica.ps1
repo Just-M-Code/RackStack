@@ -136,12 +136,14 @@ function Show-StorageReplicaManagement {
                 }
 
                 # Validate volume format (drive letter with colon)
+                $validVolumes = $true
                 foreach ($vol in @($srcVol, $destVol, $srcLog, $destLog)) {
                     if ($vol -notmatch '^[A-Za-z]:$') {
                         Write-OutputColor "  Invalid volume format '$vol'. Expected format: E:" -color "Error"
-                        break
+                        $validVolumes = $false
                     }
                 }
+                if (-not $validVolumes) { break }
 
                 Write-OutputColor "" -color "Info"
                 Write-OutputColor "  [1] Synchronous (zero data loss)" -color "Info"
