@@ -1,4 +1,9 @@
-# Changelog
+﻿# Changelog
+
+## v1.17.1
+
+- **Bug Fix:** VM Checkpoint Management uses `*-VMSnapshot` cmdlets instead of `*-VMCheckpoint` — Server 2012 R2 only has the `VMSnapshot` variants; `VMCheckpoint` was introduced in Server 2016. Affects list, restore, and delete operations (52-VMCheckpoints).
+- 63 modules, 1854 tests
 
 ## v1.17.0
 

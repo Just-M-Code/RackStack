@@ -30,10 +30,14 @@
     7h3 4b1d3r
 
 .VERSION
-    1.17.0
+    1.17.1
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.17.1
+    PS 5.1 COMPATIBILITY FIX:
+    - FIX: VM Checkpoint Management uses *-VMSnapshot cmdlets instead of *-VMCheckpoint — Server 2012 R2 only has the VMSnapshot variants; VMCheckpoint was added in Server 2016 (52-VMCheckpoints)
 
 .CHANGELOG v1.17.0
     NEW FEATURES — SCHEDULED TASKS + FIREWALL SUMMARY:

@@ -13,7 +13,7 @@ function Get-VMCheckpointList {
     if ($VMName) { $params['VMName'] = $VMName }
 
     try {
-        $checkpoints = @(Get-VMCheckpoint @params -ErrorAction Stop | Sort-Object VMName, CreationTime)
+        $checkpoints = @(Get-VMSnapshot @params -ErrorAction Stop | Sort-Object VMName, CreationTime)
 
         if ($checkpoints.Count -eq 0) {
             return @{ Success = $true; Checkpoints = @(); Message = "No checkpoints found" }
@@ -289,7 +289,7 @@ function Restore-VMCheckpointWizard {
     Write-OutputColor "  Restoring checkpoint..." -color "Info"
 
     try {
-        Restore-VMCheckpoint -VMCheckpoint $selectedCP -Confirm:$false -ErrorAction Stop
+        Restore-VMSnapshot -VMSnapshot $selectedCP -Confirm:$false -ErrorAction Stop
 
         Write-OutputColor "  Checkpoint restored successfully!" -color "Success"
         Add-SessionChange -Category "VM" -Description "Restored checkpoint '$($selectedCP.Name)' on VM '$($selectedCP.VMName)'"
@@ -355,7 +355,7 @@ function Remove-VMCheckpointWizard {
         foreach ($cp in $result.Checkpoints) {
             Write-OutputColor "  Deleting: $($cp.VMName) - $($cp.Name)..." -color "Info"
             try {
-                Remove-VMCheckpoint -VMCheckpoint $cp -Confirm:$false -ErrorAction Stop
+                Remove-VMSnapshot -VMSnapshot $cp -Confirm:$false -ErrorAction Stop
                 $deleted++
             }
             catch {
@@ -377,7 +377,7 @@ function Remove-VMCheckpointWizard {
         if (-not (Confirm-UserAction -Message "Delete this checkpoint?")) { return }
 
         try {
-            Remove-VMCheckpoint -VMCheckpoint $selectedCP -Confirm:$false -ErrorAction Stop
+            Remove-VMSnapshot -VMSnapshot $selectedCP -Confirm:$false -ErrorAction Stop
             Write-OutputColor "  Checkpoint deleted successfully!" -color "Success"
             Add-SessionChange -Category "VM" -Description "Deleted checkpoint '$($selectedCP.Name)' from VM '$($selectedCP.VMName)'"
         }
