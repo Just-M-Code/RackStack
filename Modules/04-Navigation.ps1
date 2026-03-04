@@ -126,7 +126,7 @@ function Show-AuditLog {
     }
 
     # Read last 50 entries
-    $lines = @(Get-Content $auditFile -Tail 50 -ErrorAction SilentlyContinue)
+    $lines = @(Get-Content -LiteralPath $auditFile -Tail 50 -ErrorAction SilentlyContinue)
 
     if ($lines.Count -eq 0) {
         Write-OutputColor "  Audit log is empty." -color "Info"

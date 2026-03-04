@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.20.3
+    1.20.4
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.20.4
+    BUG FIXES — GET-CONTENT -LITERALPATH + NAVIGATION TRAPS:
+    - FIX: Get-Content calls use -LiteralPath across 10 instances in 7 modules — prevents wildcard interpretation on config-derived paths (Navigation, Help, FileServer, Config Export, Entry Point, HTML Reports, QoL Features, Operations Menu)
+    - FIX: VM Deployment standard and custom summary loops now handle "home" and "back" navigation — prevents users getting trapped in edit loop (VM Deployment)
+    - FIX: Add-MultipleVNICs loop checks ReturnToMainMenu flag after each vNIC creation — prevents re-prompting after "home" navigation (SET)
+    64 modules, 1873 tests
 
 .CHANGELOG v1.20.3
     BUG FIXES — DEEP -LITERALPATH SWEEP ACROSS ALL FILE OPERATIONS:

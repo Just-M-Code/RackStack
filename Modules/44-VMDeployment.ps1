@@ -2163,6 +2163,7 @@ function Publish-StandardVM {
 
     # Show summary and allow editing
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         Show-VMConfigSummary -Config $config
 
         Write-OutputColor "" -color "Info"
@@ -2182,6 +2183,9 @@ function Publish-StandardVM {
         Write-OutputColor "" -color "Info"
 
         $choice = Read-Host "Enter choice"
+        $navResult = Test-NavigationCommand -UserInput $choice
+        if ($navResult.Action -eq "home") { $global:ReturnToMainMenu = $true; return }
+        if ($navResult.ShouldReturn) { return }
 
         if (-not (Invoke-VMConfigEditAction -Config $config -Choice $choice)) {
             switch ("$choice".ToUpper()) {
@@ -2260,6 +2264,7 @@ function Publish-CustomVM {
 
     # Final review and create
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         Show-VMConfigSummary -Config $config
 
         Write-OutputColor "" -color "Info"
@@ -2277,6 +2282,9 @@ function Publish-CustomVM {
         Write-OutputColor "" -color "Info"
 
         $choice = Read-Host "Enter choice"
+        $navResult = Test-NavigationCommand -UserInput $choice
+        if ($navResult.Action -eq "home") { $global:ReturnToMainMenu = $true; return }
+        if ($navResult.ShouldReturn) { return }
 
         if (-not (Invoke-VMConfigEditAction -Config $config -Choice $choice)) {
             switch ("$choice".ToUpper()) {

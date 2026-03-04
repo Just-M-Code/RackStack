@@ -256,7 +256,7 @@ function Show-Changelog {
         $changelogPath = Join-Path (Split-Path $PSCommandPath) "Changelog.md"
     }
     if (Test-Path -LiteralPath $changelogPath) {
-        $changelog = Get-Content $changelogPath -Raw -Encoding UTF8
+        $changelog = Get-Content -LiteralPath $changelogPath -Raw -Encoding UTF8
         # Strip markdown headers for cleaner display
         $changelog = $changelog -replace '^# Changelog\s*\n', ''
         $changelog = $changelog -replace '(?m)^## ', ''

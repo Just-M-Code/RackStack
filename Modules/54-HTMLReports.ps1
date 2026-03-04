@@ -801,7 +801,7 @@ function Export-HTMLTrendReport {
     $failedFiles = 0
     foreach ($file in $files) {
         try {
-            $data = Get-Content $file.FullName -Raw | ConvertFrom-Json
+            $data = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
             $snapshots += $data
         } catch {
             $failedFiles++

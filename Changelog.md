@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## v1.20.4
+
+- **Bug Fix:** `Get-Content` calls use `-LiteralPath` across 10 instances in 7 modules — prevents wildcard interpretation on config-derived paths (04-Navigation, 34-Help, 39-FileServer, 45-ConfigExport, 50-EntryPoint, 54-HTMLReports, 55-QoLFeatures, 56-OperationsMenu).
+- **Bug Fix:** VM Deployment standard and custom summary loops now handle "home" and "back" navigation via `Test-NavigationCommand` — prevents users getting trapped in the edit loop (44-VMDeployment).
+- **Bug Fix:** `Add-MultipleVNICs` loop checks `$global:ReturnToMainMenu` flag after each vNIC creation — prevents re-prompting after "home" navigation (09-SET).
+- 64 modules, 1873 tests
+
 ## v1.20.3
 
 - **Bug Fix:** `Get-Item` calls use `-LiteralPath` for all config-derived and user-input paths across FileServer, VHD Management, and Navigation (10 instances).

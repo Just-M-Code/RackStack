@@ -506,7 +506,9 @@ function Add-MultipleVNICs {
     $createdVNICs = @()
 
     while ($true) {
+        if ($global:ReturnToMainMenu) { return }
         Add-CustomVNIC
+        if ($global:ReturnToMainMenu) { return }
 
         # Check what was just created (by looking at session changes)
         $lastChange = $script:SessionChanges | Select-Object -Last 1

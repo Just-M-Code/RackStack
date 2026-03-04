@@ -565,7 +565,7 @@ function Import-CompanyDefaults {
     }
 
     try {
-        $companyData = Get-Content $CompanyFilePath -Raw | ConvertFrom-Json
+        $companyData = Get-Content -LiteralPath $CompanyFilePath -Raw | ConvertFrom-Json
         foreach ($prop in $companyData.PSObject.Properties) {
             if ($prop.Name -like "_*") { continue }  # Skip metadata fields
             if ($null -ne $prop.Value -and $prop.Value -ne "") {
@@ -622,7 +622,7 @@ function Import-Defaults {
         if (Test-Path $script:DefaultsPath) {
             # defaults.json exists: silently re-load company file if previously selected
             try {
-                $existingDefaults = Get-Content $script:DefaultsPath -Raw | ConvertFrom-Json
+                $existingDefaults = Get-Content -LiteralPath $script:DefaultsPath -Raw | ConvertFrom-Json
                 if ($existingDefaults._companyDefaults) {
                     $matchingFile = $companyFiles | Where-Object { $_.Name -eq $existingDefaults._companyDefaults } | Select-Object -First 1
                     if ($matchingFile) {
@@ -661,7 +661,7 @@ function Import-Defaults {
     # Tier 3: Merge personal defaults from file if it exists
     if (Test-Path -LiteralPath $script:DefaultsPath) {
         try {
-            $fileDefaults = Get-Content $script:DefaultsPath -Raw | ConvertFrom-Json
+            $fileDefaults = Get-Content -LiteralPath $script:DefaultsPath -Raw | ConvertFrom-Json
             foreach ($prop in $fileDefaults.PSObject.Properties) {
                 if ($prop.Name -like "_*") { continue }  # Skip metadata fields
                 if ($null -ne $prop.Value -and $prop.Value -ne "") {
@@ -881,7 +881,7 @@ function Import-Defaults {
     $script:CustomAVMAKeys = @{}
     if ((Test-Path -LiteralPath $script:DefaultsPath)) {
         try {
-            $fileData = Get-Content $script:DefaultsPath -Raw | ConvertFrom-Json
+            $fileData = Get-Content -LiteralPath $script:DefaultsPath -Raw | ConvertFrom-Json
             if ($fileData.CustomKMSKeys) {
                 foreach ($verProp in $fileData.CustomKMSKeys.PSObject.Properties) {
                     $editionHash = @{}

@@ -437,7 +437,7 @@ function Get-FileServerFile {
             # Check for error page (tiny file = likely HTML error)
             $fileSize = (Get-Item -LiteralPath $destFile -ErrorAction SilentlyContinue).Length
             if ($fileSize -lt 1000) {
-                $content = Get-Content $destFile -Raw -ErrorAction SilentlyContinue
+                $content = Get-Content -LiteralPath $destFile -Raw -ErrorAction SilentlyContinue
                 if ($content -match "html|error|not found|denied|exception") {
                     Remove-Item -LiteralPath $destFile -Force -ErrorAction SilentlyContinue
                     if ($attempt -ge $maxAttempts) {

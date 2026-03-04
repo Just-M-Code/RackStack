@@ -16,7 +16,7 @@ function Import-Favorites {
     Initialize-AppConfigDir
     if (Test-Path -LiteralPath $script:FavoritesPath) {
         try {
-            $script:Favorites = @(Get-Content $script:FavoritesPath -Raw | ConvertFrom-Json)
+            $script:Favorites = @(Get-Content -LiteralPath $script:FavoritesPath -Raw | ConvertFrom-Json)
             if (-not $script:Favorites) { $script:Favorites = @() }
         }
         catch {
@@ -235,7 +235,7 @@ function Import-CommandHistory {
     Initialize-AppConfigDir
     if (Test-Path -LiteralPath $script:HistoryPath) {
         try {
-            $script:CommandHistory = @(Get-Content $script:HistoryPath -Raw | ConvertFrom-Json)
+            $script:CommandHistory = @(Get-Content -LiteralPath $script:HistoryPath -Raw | ConvertFrom-Json)
             if (-not $script:CommandHistory) { $script:CommandHistory = @() }
         }
         catch {
@@ -345,7 +345,7 @@ function Restore-SessionState {
     if (-not (Test-Path -LiteralPath $script:SessionStatePath)) { return $false }
 
     try {
-        $sessionState = Get-Content $script:SessionStatePath -Raw | ConvertFrom-Json
+        $sessionState = Get-Content -LiteralPath $script:SessionStatePath -Raw | ConvertFrom-Json
 
         # Check if session is recent (within 24 hours)
         $savedTime = [datetime]::ParseExact($sessionState.SavedAt, "yyyy-MM-dd HH:mm:ss", $null)

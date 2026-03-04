@@ -1469,7 +1469,7 @@ if ($script:ScriptPath) {
             [Environment]::Exit(1)
         }
         try {
-            $batchConfig = Get-Content $batchConfigPath -Raw | ConvertFrom-Json
+            $batchConfig = Get-Content -LiteralPath $batchConfigPath -Raw | ConvertFrom-Json
             $configHash = @{}
             $batchConfig.PSObject.Properties | ForEach-Object { $configHash[$_.Name] = $_.Value }
             Start-BatchMode -Config $configHash
