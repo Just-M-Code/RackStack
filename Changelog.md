@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.13.0
+
+- **New Feature:** VSS Writer Status Dashboard — queries all Volume Shadow Copy writers via vssadmin, shows stable/failed/unknown counts, lists failed writers with error details. Useful before backups and replica operations. Accessible from Operations > option [20] (35-Utilities, 56-OperationsMenu).
+- **Bug Fix:** Active Directory prerequisites check uses safe `@()` wrapping for `IPv4Address.Count` — previously, a single-NIC server could fail the static IP prerequisite check because `.Count` returns `$null` on single objects in PS 5.1 (61-ActiveDirectory).
+- 63 modules, 1854 tests
+
 ## v1.12.0
 
 - **New Feature:** Windows Defender Status Dashboard — shows real-time protection status for all 5 protection layers (real-time, behavior monitor, download scanning, network inspection, antispyware), signature version/age/last update date, engine version, scan history (last full and quick scan with age), and recent threat detections (last 10). Color-coded warnings for disabled protections and stale signatures (>1 day yellow, >7 days red). Accessible from Security & Access > option [7] (17-DefenderExclusions, 48-MenuDisplay, 49-MenuRunner).

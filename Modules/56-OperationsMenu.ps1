@@ -55,6 +55,7 @@ function Show-OperationsMenu {
         Write-MenuItem "[17] SMB Share Audit"
         Write-MenuItem "[18] Installed Software Inventory"
         Write-MenuItem "[19] Certificate Expiry Check"
+        Write-MenuItem "[20] VSS Writer Status"
         Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
         Write-OutputColor "" -color "Info"
 
@@ -152,6 +153,10 @@ function Show-OperationsMenu {
             }
             "19" {
                 Show-CertificateExpiryCheck
+                Write-PressEnter
+            }
+            "20" {
+                Show-VSSWriterStatus
                 Write-PressEnter
             }
             "b" { return }

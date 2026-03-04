@@ -1242,4 +1242,95 @@ function Show-CertificateExpiryCheck {
 
     Add-SessionChange -Category "Security" -Description "Certificate expiry check: $($expired.Count) expired, $($expiringSoon.Count) expiring soon, $($valid.Count) valid"
 }
+
+# VSS Writer Health Dashboard
+function Show-VSSWriterStatus {
+    Clear-Host
+    Write-OutputColor "" -color "Info"
+    Write-OutputColor "  ╔════════════════════════════════════════════════════════════════════════╗" -color "Info"
+    Write-OutputColor "  ║$(("                     VSS WRITER STATUS").PadRight(72))║" -color "Info"
+    Write-OutputColor "  ╚════════════════════════════════════════════════════════════════════════╝" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    Write-OutputColor "  Querying VSS writers..." -color "Info"
+
+    try {
+        $vssOutput = vssadmin list writers 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-OutputColor "  Failed to query VSS writers (exit code $LASTEXITCODE)" -color "Error"
+            return
+        }
+    } catch {
+        Write-OutputColor "  Could not run vssadmin: $_" -color "Error"
+        return
+    }
+
+    # Parse vssadmin output
+    $writers = @()
+    $currentWriter = $null
+    foreach ($line in $vssOutput) {
+        $lineStr = "$line".Trim()
+        if ($lineStr -match "^Writer name:\s*'(.+)'") {
+            if ($null -ne $currentWriter) { $writers += $currentWriter }
+            $currentWriter = @{ Name = $Matches[1]; State = "Unknown"; LastError = "No error" }
+        }
+        elseif ($lineStr -match "^\s*State:\s*\[(\d+)\]\s*(.+)") {
+            if ($null -ne $currentWriter) { $currentWriter.State = $Matches[2].Trim() }
+        }
+        elseif ($lineStr -match "^\s*Last error:\s*(.+)") {
+            if ($null -ne $currentWriter) { $currentWriter.LastError = $Matches[1].Trim() }
+        }
+    }
+    if ($null -ne $currentWriter) { $writers += $currentWriter }
+
+    $stable = @($writers | Where-Object { $_.State -eq "Stable" })
+    $failed = @($writers | Where-Object { $_.State -ne "Stable" -and $_.State -ne "Unknown" })
+    $unknown = @($writers | Where-Object { $_.State -eq "Unknown" })
+
+    # Summary
+    Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Info"
+    Write-OutputColor "  │$("  SUMMARY".PadRight(72))│" -color "Info"
+    Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Info"
+    Write-OutputColor "  │$("  Total Writers:   $($writers.Count)".PadRight(72))│" -color "Info"
+    Write-OutputColor "  │$("  Stable:          $($stable.Count)".PadRight(72))│" -color $(if ($stable.Count -eq $writers.Count) { "Success" } else { "Info" })
+    Write-OutputColor "  │$("  Failed/Other:    $($failed.Count)".PadRight(72))│" -color $(if ($failed.Count -gt 0) { "Error" } else { "Success" })
+    Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Info"
+    Write-OutputColor "" -color "Info"
+
+    # Show failed writers first
+    if ($failed.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Error"
+        Write-OutputColor "  │$("  FAILED / UNSTABLE WRITERS ($($failed.Count))".PadRight(72))│" -color "Error"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Error"
+        foreach ($w in $failed) {
+            $wName = $w.Name
+            if ($wName.Length -gt 38) { $wName = $wName.Substring(0, 35) + "..." }
+            $line = "  $($wName.PadRight(40)) $($w.State)"
+            if ($line.Length -gt 72) { $line = $line.Substring(0, 72) }
+            Write-OutputColor "  │$($line.PadRight(72))│" -color "Error"
+            if ($w.LastError -ne "No error") {
+                $errLine = "    Error: $($w.LastError)"
+                if ($errLine.Length -gt 72) { $errLine = $errLine.Substring(0, 69) + "..." }
+                Write-OutputColor "  │$($errLine.PadRight(72))│" -color "Warning"
+            }
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Error"
+        Write-OutputColor "" -color "Info"
+    }
+
+    # Show all stable writers
+    if ($stable.Count -gt 0) {
+        Write-OutputColor "  ┌────────────────────────────────────────────────────────────────────────┐" -color "Success"
+        Write-OutputColor "  │$("  STABLE WRITERS ($($stable.Count))".PadRight(72))│" -color "Success"
+        Write-OutputColor "  ├────────────────────────────────────────────────────────────────────────┤" -color "Success"
+        foreach ($w in $stable) {
+            $wName = $w.Name
+            if ($wName.Length -gt 62) { $wName = $wName.Substring(0, 59) + "..." }
+            Write-OutputColor "  │$("  $wName".PadRight(72))│" -color "Success"
+        }
+        Write-OutputColor "  └────────────────────────────────────────────────────────────────────────┘" -color "Success"
+    }
+
+    Add-SessionChange -Category "System" -Description "VSS writer check: $($stable.Count) stable, $($failed.Count) failed of $($writers.Count) total"
+}
 #endregion

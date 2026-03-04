@@ -27,7 +27,7 @@ function Test-ADDSPrerequisites {
     $staticIP = $false
     try {
         $adapters = Get-NetIPConfiguration -ErrorAction SilentlyContinue | Where-Object {
-            $null -ne $_.IPv4Address -and $_.IPv4Address.Count -gt 0
+            $null -ne $_.IPv4Address -and @($_.IPv4Address).Count -gt 0
         }
         foreach ($adapter in $adapters) {
             $ifIndex = $adapter.InterfaceIndex

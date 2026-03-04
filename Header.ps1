@@ -30,10 +30,15 @@
     7h3 4b1d3r
 
 .VERSION
-    1.12.0
+    1.13.0
 
 .LAST UPDATED
     03/04/2026
+
+.CHANGELOG v1.13.0
+    VSS WRITER STATUS & AD PREREQUISITES FIX:
+    - NEW: VSS Writer Status Dashboard — queries all Volume Shadow Copy writers via vssadmin, shows stable/failed/unknown counts, lists failed writers with error details. Useful before backups and replica operations. Accessible from Operations menu option [20] (35-Utilities, 56-OperationsMenu)
+    - FIX: Active Directory prerequisites check uses safe @() wrapping for IPv4Address.Count — previously, a single-NIC server could fail the static IP prerequisite check because .Count returns $null on single objects in PS 5.1 (61-ActiveDirectory)
 
 .CHANGELOG v1.12.0
     DEFENDER STATUS DASHBOARD & SECURITY MENU EXPANSION:
