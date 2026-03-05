@@ -1,5 +1,17 @@
 ﻿# Changelog
 
+## v1.20.9
+
+- **Bug Fix:** Remote directory creation in VM deployment uses `-ErrorAction Stop` — prevents silent failure and confusing Hyper-V errors when WinRM fails (44-VMDeployment).
+- **Bug Fix:** `Remove-SRPartnership` includes `-Confirm:$false` — prevents hanging in non-interactive/batch contexts after user already confirmed (33-StorageReplica).
+- **Bug Fix:** `Initialize-Disk` includes `-Confirm:$false` — prevents hanging in non-interactive contexts after user confirmation (38-StorageManager).
+- **Bug Fix:** `Set-Partition` drive letter assignment uses `-ErrorAction Stop` with try/catch — reports failure instead of showing incorrect success (38-StorageManager).
+- **Bug Fix:** VM NIC configuration wrapped in per-NIC try/catch — reports individual NIC failures instead of silently deploying misconfigured VMs (44-VMDeployment).
+- **Bug Fix:** Remote profile copy `Invoke-Command` uses `-ErrorAction Stop` — prevents false success message when remote write fails (35-Utilities).
+- **Bug Fix:** VM deployment storage init failure resets all connection state variables — prevents stale values in subsequent attempts (44-VMDeployment).
+- **Bug Fix:** Windows Update install job extracts error details before `Remove-Job` — shows actual failure reason instead of generic message (14-WindowsUpdates).
+- 64 modules, 1873 tests
+
 ## v1.20.8
 
 - **Bug Fix:** Storage Replica replication mode prompt validates input and supports navigation — prevents silently selecting Asynchronous mode for any non-"1" input (33-StorageReplica).

@@ -240,7 +240,7 @@ function Show-FailedTasks {
                     LastRun = $info.LastRunTime
                 })
             }
-        } catch { }
+        } catch { $null = $_ }
     }
 
     Write-OutputColor "" -color "Info"

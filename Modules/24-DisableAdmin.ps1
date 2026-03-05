@@ -71,7 +71,7 @@ function Disable-BuiltInAdminAccount {
         }
     }
     catch {
-        Write-OutputColor "Error: $_" -color "Error"
+        Write-OutputColor "Failed to disable Administrator account: $_" -color "Error"
         $global:DisabledAdminReboot = $false
     }
 }

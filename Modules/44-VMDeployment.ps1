@@ -1692,7 +1692,7 @@ function New-VMDirectories {
             ComputerName = $ComputerName
             ScriptBlock = $scriptBlock
             ArgumentList = @($VMSpecificPath, $VHDSpecificPath)
-            ErrorAction = "SilentlyContinue"
+            ErrorAction = "Stop"
         }
         if ($script:VMDeploymentCredential) { $invokeParams.Credential = $script:VMDeploymentCredential }
         Invoke-Command @invokeParams
@@ -1837,12 +1837,16 @@ function Set-VMNetworkConfig {
     $nicIndex = 1
     foreach ($nic in $Config.NICs) {
         $adapterName = "Network Adapter $nicIndex"
-        Add-VMNetworkAdapter -VM $VM -Name $adapterName -ErrorAction SilentlyContinue
-        if ($nic.SwitchName) {
-            Connect-VMNetworkAdapter -VMName $VM.Name -Name $adapterName -SwitchName $nic.SwitchName -ErrorAction SilentlyContinue
-        }
-        if ($nic.VLAN) {
-            Set-VMNetworkAdapterVlan -VMName $VM.Name -VMNetworkAdapterName $adapterName -Access -VlanId $nic.VLAN -ErrorAction SilentlyContinue
+        try {
+            Add-VMNetworkAdapter -VM $VM -Name $adapterName -ErrorAction Stop
+            if ($nic.SwitchName) {
+                Connect-VMNetworkAdapter -VMName $VM.Name -Name $adapterName -SwitchName $nic.SwitchName -ErrorAction Stop
+            }
+            if ($nic.VLAN) {
+                Set-VMNetworkAdapterVlan -VMName $VM.Name -VMNetworkAdapterName $adapterName -Access -VlanId $nic.VLAN -ErrorAction Stop
+            }
+        } catch {
+            Write-OutputColor "  Warning: NIC $nicIndex configuration failed — $_" -color "Warning"
         }
         $nicIndex++
     }
@@ -2891,6 +2895,9 @@ function Start-VMDeployment {
                 Write-OutputColor "  Storage setup is required. Returning to connection menu." -color "Warning"
                 Write-PressEnter
                 $script:VMDeploymentConnected = $false
+                $script:VMDeploymentTarget = $null
+                $script:VMDeploymentCredential = $null
+                $script:VMDeploymentMode = $null
                 continue
             }
         }

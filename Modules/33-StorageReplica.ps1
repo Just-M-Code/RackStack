@@ -231,7 +231,7 @@ function Show-StorageReplicaManagement {
                         $sel = $partnerships[[int]$pNum - 1]
                         if (Confirm-UserAction -Message "Remove this partnership?") {
                             try {
-                                Get-SRPartnership | Where-Object { $_.SourceComputerName -eq $sel.SourceComputerName } | Remove-SRPartnership -ErrorAction Stop
+                                Get-SRPartnership | Where-Object { $_.SourceComputerName -eq $sel.SourceComputerName } | Remove-SRPartnership -Confirm:$false -ErrorAction Stop
                                 Write-OutputColor "  Partnership removed." -color "Success"
                             }
                             catch {

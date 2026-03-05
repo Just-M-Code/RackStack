@@ -483,7 +483,7 @@ function Initialize-NewDisk {
         Write-OutputColor "" -color "Info"
         Write-OutputColor "Initializing disk..." -color "Info"
 
-        Initialize-Disk -Number $disk.Number -PartitionStyle $partitionStyle -ErrorAction Stop
+        Initialize-Disk -Number $disk.Number -PartitionStyle $partitionStyle -Confirm:$false -ErrorAction Stop
 
         Write-OutputColor "Disk $($disk.Number) initialized successfully as $partitionStyle!" -color "Success"
         Add-SessionChange -Category "Storage" -Description "Initialized Disk $($disk.Number) as $partitionStyle"
@@ -751,15 +751,21 @@ function New-DiskPartition {
             $newPartition = New-Partition -DiskNumber $disk.Number -Size $partitionSize -ErrorAction Stop
         }
 
+        $driveAssigned = $false
         if ($assignDriveLetter -and $driveLetter) {
             Write-OutputColor "Assigning drive letter $driveLetter..." -color "Info"
-            Set-Partition -DiskNumber $disk.Number -PartitionNumber $newPartition.PartitionNumber -NewDriveLetter $driveLetter -ErrorAction SilentlyContinue
+            try {
+                Set-Partition -DiskNumber $disk.Number -PartitionNumber $newPartition.PartitionNumber -NewDriveLetter $driveLetter -ErrorAction Stop
+                $driveAssigned = $true
+            } catch {
+                Write-OutputColor "  Warning: Could not assign drive letter $driveLetter — $_" -color "Warning"
+            }
         }
 
         Write-OutputColor "" -color "Info"
         Write-OutputColor "Partition created successfully!" -color "Success"
         Write-OutputColor "Partition Number: $($newPartition.PartitionNumber)" -color "Info"
-        if ($driveLetter) {
+        if ($driveAssigned) {
             Write-OutputColor "Drive Letter: $driveLetter" -color "Info"
         }
         Write-OutputColor "" -color "Info"

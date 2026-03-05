@@ -555,7 +555,7 @@ function Invoke-RemoteProfileApply {
             param($path, $content, $tempDir)
             if (-not (Test-Path $tempDir)) { New-Item -Path $tempDir -ItemType Directory -Force | Out-Null }
             $content | Out-File -FilePath $path -Encoding UTF8 -Force
-        } -ArgumentList $remotePath, $profileContent, $remoteTempDir
+        } -ArgumentList $remotePath, $profileContent, $remoteTempDir -ErrorAction Stop
 
         Write-OutputColor "Profile copied to: $remotePath" -color "Success"
         Write-OutputColor "" -color "Info"

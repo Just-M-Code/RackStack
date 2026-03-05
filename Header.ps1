@@ -30,10 +30,22 @@
     7h3 4b1d3r
 
 .VERSION
-    1.20.8
+    1.20.9
 
 .LAST UPDATED
     03/05/2026
+
+.CHANGELOG v1.20.9
+    BUG FIXES — ERROR HANDLING, CONFIRM PROMPTS, STATE ROLLBACK:
+    - FIX: Remote directory creation in VM deployment uses -ErrorAction Stop — prevents silent failure when WinRM fails (VM Deployment)
+    - FIX: Remove-SRPartnership and Initialize-Disk include -Confirm:$false — prevents hanging in non-interactive contexts (Storage Replica, Storage Manager)
+    - FIX: Set-Partition drive letter assignment uses -ErrorAction Stop — reports failure instead of showing incorrect success (Storage Manager)
+    - FIX: VM NIC configuration wrapped in per-NIC try/catch — reports individual NIC failures (VM Deployment)
+    - FIX: Remote profile copy Invoke-Command uses -ErrorAction Stop — prevents false success message (Utilities)
+    - FIX: VM deployment storage init failure resets all connection state variables (VM Deployment)
+    - FIX: Windows Update install job extracts error details before Remove-Job (Windows Updates)
+    - FIX: Disable Administrator error message follows codebase convention (Disable Admin)
+    64 modules, 1873 tests
 
 .CHANGELOG v1.20.8
     BUG FIXES — INPUT VALIDATION, DEAD CODE CLEANUP:

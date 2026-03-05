@@ -135,10 +135,17 @@ function Install-WindowsUpdates {
 
         $installResult = Receive-Job $installJob -ErrorAction SilentlyContinue
         $installState = $installJob.State
+        $installError = $null
+        if ($installState -eq "Failed") {
+            try {
+                if ($installJob.ChildJobs.Count -gt 0) { $installError = $installJob.ChildJobs[0].Error | Out-String }
+            } catch { $null = $_ }
+        }
         Remove-Job $installJob -Force -ErrorAction SilentlyContinue
 
         if ($installState -eq "Failed") {
             Write-OutputColor "`nWindows update installation encountered errors." -color "Warning"
+            if ($installError) { Write-OutputColor "  Error: $($installError.Trim())" -color "Error" }
             Write-OutputColor "Some updates may not have been installed. Check Windows Update settings." -color "Warning"
         }
         else {
