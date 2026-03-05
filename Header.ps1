@@ -30,10 +30,21 @@
     7h3 4b1d3r
 
 .VERSION
-    1.20.5
+    1.20.6
 
 .LAST UPDATED
     03/05/2026
+
+.CHANGELOG v1.20.6
+    BUG FIXES — HARDCODED PATHS, LITERALPATH, DNS RECORDS, EMPTY RESPONSE GUARD:
+    - FIX: Disk Cleanup uses $env:SystemDrive instead of hardcoded C: for cleanmgr — works correctly when OS is on non-C: drive (Disk Cleanup)
+    - FIX: Remove-Item uses -LiteralPath for temp file and transcript log cleanup — prevents wildcard interpretation on bracket-containing filenames (Disk Cleanup, Entry Point)
+    - FIX: FileServer guards against empty HTTP response body before ConvertFrom-Json — gives clear error message instead of cryptic JSON parse error (FileServer)
+    - FIX: Domain join filters DNS response for A records before displaying IP — prevents showing blank IP when first result is CNAME/SOA (Domain Join)
+    - FIX: Get-FileHash uses -LiteralPath inside hash computation job — prevents hash failure on files with bracket characters in name (Navigation)
+    - FIX: Help text displays actual $script:TempPath instead of hardcoded C:\Temp — shows correct path when overridden via defaults.json (Help)
+    - FIX: Sysprep guidance text uses $env:SystemRoot and $env:SystemDrive instead of hardcoded C: paths (VHD Management)
+    64 modules, 1873 tests
 
 .CHANGELOG v1.20.5
     BUG FIXES — OUT-FILE AND EXPORT-CSV -LITERALPATH:

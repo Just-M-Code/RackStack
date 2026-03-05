@@ -515,7 +515,7 @@ function Get-FileHashBackground {
 
     $hashJob = Start-Job -ScriptBlock {
         param($path)
-        (Get-FileHash -Path $path -Algorithm SHA256).Hash
+        (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
     } -ArgumentList $FilePath
 
     $spinChars = @('|', '/', '-', '\')

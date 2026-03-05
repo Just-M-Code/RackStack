@@ -98,7 +98,10 @@ function Join-Domain {
     try {
         $dcRecords = Resolve-DnsName -Name $targetDomain -Type A -ErrorAction Stop
         if ($dcRecords) {
-            Write-OutputColor "  Domain resolved to $($dcRecords[0].IPAddress)" -color "Success"
+            $aRecord = $dcRecords | Where-Object { $_.Type -eq 'A' } | Select-Object -First 1
+            if ($aRecord) {
+                Write-OutputColor "  Domain resolved to $($aRecord.IPAddress)" -color "Success"
+            }
         }
     }
     catch {

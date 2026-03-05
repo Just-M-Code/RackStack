@@ -75,7 +75,7 @@ function Remove-OldTranscripts {
                 foreach ($log in $remainingLogs) {
                     if ($totalSize -le $maxBytes) { break }
                     $totalSize -= $log.Length
-                    Remove-Item $log.FullName -Force -ErrorAction SilentlyContinue
+                    Remove-Item -LiteralPath $log.FullName -Force -ErrorAction SilentlyContinue
                     $sizeCount++
                 }
                 if ($sizeCount -gt 0) {

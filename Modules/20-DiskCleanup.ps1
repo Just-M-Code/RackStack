@@ -81,7 +81,7 @@ function Start-DiskCleanup {
             }
             "5" {
                 Write-OutputColor "  Launching Windows Disk Cleanup..." -color "Info"
-                Start-Process cleanmgr -ArgumentList "/d C" -Wait
+                Start-Process cleanmgr -ArgumentList "/d $($env:SystemDrive.TrimEnd(':'))" -Wait
             }
             "b" { return }
             "B" { return }
@@ -106,7 +106,7 @@ function Invoke-QuickClean {
             foreach ($file in $files) {
                 try {
                     $fileSize = $file.Length
-                    Remove-Item $file.FullName -Force -ErrorAction Stop
+                    Remove-Item -LiteralPath $file.FullName -Force -ErrorAction Stop
                     $cleaned += $fileSize
                     $fileCount++
                 }

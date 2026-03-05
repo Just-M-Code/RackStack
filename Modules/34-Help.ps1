@@ -196,7 +196,7 @@ function Show-Help {
     Write-OutputColor "  │$("  - DNS presets: Google, Cloudflare, OpenDNS, Quad9 + custom".PadRight(72))│" -color "Success"
     Write-OutputColor "  │$("  - SET (Switch Embedded Teaming) requires Hyper-V installed first".PadRight(72))│" -color "Success"
     Write-OutputColor "  │$("  - Hostname format: SITENUMBER-ROLE (e.g., 123456-HV1, 123456-FS1)".PadRight(72))│" -color "Success"
-    Write-OutputColor "  │$("  - Transcript logs saved to C:\Temp\ with timestamps".PadRight(72))│" -color "Success"
+    Write-OutputColor "  │$("  - Transcript logs saved to $($script:TempPath)\ with timestamps".PadRight(72))│" -color "Success"
     Write-OutputColor "  │$("  - Batch mode: place batch_config.json next to script, run script".PadRight(72))│" -color "Success"
     Write-OutputColor "  │$("  - Config profiles: Save from one server, load onto another".PadRight(72))│" -color "Success"
     Write-OutputColor "  │$("  - VHD deploy: Pre-built images skip OS install (fastest method)".PadRight(72))│" -color "Success"

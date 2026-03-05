@@ -141,6 +141,9 @@ function Get-FileServerFiles {
                 if ($headers.Count -gt 0) { $requestParams.Headers = $headers }
 
                 $response = Invoke-WebRequest @requestParams
+                if ([string]::IsNullOrWhiteSpace($response.Content)) {
+                    throw "Server returned an empty response for the file listing."
+                }
                 $entries = $response.Content | ConvertFrom-Json
 
                 foreach ($entry in $entries) {

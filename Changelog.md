@@ -1,5 +1,16 @@
 ﻿# Changelog
 
+## v1.20.6
+
+- **Bug Fix:** Disk Cleanup uses `$env:SystemDrive` instead of hardcoded `C:` for `cleanmgr` — works correctly when OS is on a non-C: drive (20-DiskCleanup).
+- **Bug Fix:** `Remove-Item` uses `-LiteralPath` for temp file and transcript log cleanup — prevents wildcard interpretation on bracket-containing filenames (20-DiskCleanup, 50-EntryPoint).
+- **Bug Fix:** FileServer guards against empty HTTP response body before `ConvertFrom-Json` — gives clear error message instead of cryptic JSON parse error (39-FileServer).
+- **Bug Fix:** Domain join filters DNS response for A records before displaying IP — prevents showing blank IP when first result is CNAME/SOA (12-DomainJoin).
+- **Bug Fix:** `Get-FileHash` uses `-LiteralPath` inside hash computation job — prevents hash failure on files with bracket characters in name (04-Navigation).
+- **Bug Fix:** Help text displays actual `$script:TempPath` instead of hardcoded `C:\Temp` — shows correct path when overridden via defaults.json (34-Help).
+- **Bug Fix:** Sysprep guidance text uses `$env:SystemRoot` and `$env:SystemDrive` instead of hardcoded `C:` paths (41-VHDManagement).
+- 64 modules, 1873 tests
+
 ## v1.20.5
 
 - **Bug Fix:** `Out-File` calls use `-LiteralPath` for favorites, history, session state, and defaults file writes — prevents wildcard interpretation on config paths (55-QoLFeatures, 56-OperationsMenu).
