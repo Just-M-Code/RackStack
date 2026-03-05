@@ -497,7 +497,7 @@ function Get-CompanyDefaultsFiles {
     $results = @()
     if (-not $script:ModuleRoot) { return $results }
 
-    $files = Get-ChildItem -Path $script:ModuleRoot -Filter "*.defaults.json" -File -ErrorAction SilentlyContinue
+    $files = Get-ChildItem -LiteralPath $script:ModuleRoot -Filter "*.defaults.json" -File -ErrorAction SilentlyContinue
     foreach ($f in $files) {
         # Exclude defaults.json itself and defaults.example.json
         if ($f.Name -eq "defaults.json" -or $f.Name -eq "defaults.example.json") { continue }
@@ -619,7 +619,7 @@ function Import-Defaults {
 
     # Tier 2: Merge company defaults if available and not yet loaded
     if ($companyFiles.Count -gt 0 -and -not $script:CompanyDefaultsPath) {
-        if (Test-Path $script:DefaultsPath) {
+        if (Test-Path -LiteralPath $script:DefaultsPath) {
             # defaults.json exists: silently re-load company file if previously selected
             try {
                 $existingDefaults = Get-Content -LiteralPath $script:DefaultsPath -Raw | ConvertFrom-Json

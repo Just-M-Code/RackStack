@@ -38,7 +38,7 @@ function Exit-Script {
         # 1) Find all script-related files anywhere in the Administrator profile
         if (Test-Path -LiteralPath $adminFolder) {
             # Single file traversal for script-related files (monolithic, exe, configs)
-            $allProfileFiles = Get-ChildItem -Path $adminFolder -Recurse -Force -File -ErrorAction SilentlyContinue
+            $allProfileFiles = Get-ChildItem -LiteralPath $adminFolder -Recurse -Force -File -ErrorAction SilentlyContinue
             $monoFiles = $allProfileFiles | Where-Object {
                 $_.Name -like "$($script:ToolName) v*.ps1" -or
                 $_.Name -like "$($script:ToolName)*Configuration Tool*.ps1" -or
@@ -53,11 +53,11 @@ function Exit-Script {
             foreach ($f in $monoFiles) { $pathsToDelete.Add($f.FullName) }
 
             # Single directory traversal for module folders, tool folders, and test folders
-            $allProfileDirs = Get-ChildItem -Path $adminFolder -Recurse -Force -Directory -ErrorAction SilentlyContinue
+            $allProfileDirs = Get-ChildItem -LiteralPath $adminFolder -Recurse -Force -Directory -ErrorAction SilentlyContinue
             foreach ($folder in $allProfileDirs) {
-                if (Test-Path (Join-Path $folder.FullName "00-Initialization.ps1")) { $pathsToDelete.Add($folder.FullName) }
+                if (Test-Path -LiteralPath (Join-Path $folder.FullName "00-Initialization.ps1")) { $pathsToDelete.Add($folder.FullName) }
                 elseif ($folder.Name -eq "RackStack") { $pathsToDelete.Add($folder.FullName) }
-                elseif ($folder.Name -eq "Tests" -and (Test-Path (Join-Path $folder.FullName "Run-Tests.ps1"))) { $pathsToDelete.Add($folder.FullName) }
+                elseif ($folder.Name -eq "Tests" -and (Test-Path -LiteralPath (Join-Path $folder.FullName "Run-Tests.ps1"))) { $pathsToDelete.Add($folder.FullName) }
             }
         }
 

@@ -376,7 +376,7 @@ function Install-SelectedAgent {
     # Download using Get-FileServerFile (from FILESERVER DOWNLOAD region)
     $dlResult = Get-FileServerFile -FilePath $Agent.FilePath -DestinationPath $env:TEMP -FileName $Agent.FileName
 
-    if (-not $dlResult.Success -or -not (Test-Path $tempPath)) {
+    if (-not $dlResult.Success -or -not (Test-Path -LiteralPath $tempPath)) {
         Write-OutputColor "  Failed to download installer. $($dlResult.Error)" -color "Error"
         return
     }

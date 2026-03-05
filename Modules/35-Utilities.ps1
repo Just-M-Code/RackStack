@@ -1700,9 +1700,9 @@ function Show-DiskSpaceAnalyzer {
 
     $results = @()
     foreach ($item in $knownPaths) {
-        if (Test-Path $item.Path) {
+        if (Test-Path -LiteralPath $item.Path) {
             try {
-                $sizeBytes = (Get-ChildItem -Path $item.Path -Recurse -Force -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+                $sizeBytes = (Get-ChildItem -LiteralPath $item.Path -Recurse -Force -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
                 if ($null -eq $sizeBytes) { $sizeBytes = 0 }
                 $results += [PSCustomObject]@{ Label = $item.Label; Path = $item.Path; SizeGB = [math]::Round($sizeBytes / 1GB, 2) }
             } catch {

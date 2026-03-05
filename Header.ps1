@@ -30,10 +30,17 @@
     7h3 4b1d3r
 
 .VERSION
-    1.20.6
+    1.20.7
 
 .LAST UPDATED
     03/05/2026
+
+.CHANGELOG v1.20.7
+    BUG FIXES — COMPREHENSIVE GET-CHILDITEM, TEST-PATH, REMOVE-ITEM -LITERALPATH SWEEP:
+    - FIX: Get-ChildItem uses -LiteralPath across Disk Cleanup, Utilities disk analysis, Config Export baselines, Exit Cleanup profile scan, Entry Point transcript cleanup, HTML Reports metrics, Operations Menu company defaults (12 instances)
+    - FIX: Test-Path uses -LiteralPath for temp paths, WU cache, CBS logs, disk analysis paths, defaults path, agent installer temp path, exit cleanup folder checks (10 instances)
+    - FIX: Remove-Item uses -LiteralPath via ForEach-Object for pipeline operations — prevents wildcard interpretation when piping FileInfo objects (Disk Cleanup WU cache, Entry Point old logs)
+    64 modules, 1873 tests
 
 .CHANGELOG v1.20.6
     BUG FIXES — HARDCODED PATHS, LITERALPATH, DNS RECORDS, EMPTY RESPONSE GUARD:

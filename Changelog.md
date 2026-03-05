@@ -1,5 +1,12 @@
 ﻿# Changelog
 
+## v1.20.7
+
+- **Bug Fix:** `Get-ChildItem` uses `-LiteralPath` across 12 instances in Disk Cleanup, Utilities disk analysis, Config Export baselines, Exit Cleanup profile scan, Entry Point transcript cleanup, HTML Reports metrics, and Operations Menu company defaults.
+- **Bug Fix:** `Test-Path` uses `-LiteralPath` for temp paths, WU cache, CBS logs, disk analysis paths, defaults path, agent installer temp path, and exit cleanup folder checks (10 instances).
+- **Bug Fix:** `Remove-Item` uses `-LiteralPath` via `ForEach-Object` for pipeline operations — prevents wildcard interpretation when piping `FileInfo` objects (20-DiskCleanup WU cache, 50-EntryPoint old logs).
+- 64 modules, 1873 tests
+
 ## v1.20.6
 
 - **Bug Fix:** Disk Cleanup uses `$env:SystemDrive` instead of hardcoded `C:` for `cleanmgr` — works correctly when OS is on a non-C: drive (20-DiskCleanup).

@@ -49,7 +49,7 @@ function Remove-OldTranscripts {
 
     try {
         $logFilter = "$($script:ToolName)Config_*.log"
-        $allLogs = Get-ChildItem -Path $tempPath -Filter $logFilter -ErrorAction SilentlyContinue |
+        $allLogs = Get-ChildItem -LiteralPath $tempPath -Filter $logFilter -ErrorAction SilentlyContinue |
             Sort-Object LastWriteTime
 
         if (-not $allLogs) { return }
@@ -60,12 +60,12 @@ function Remove-OldTranscripts {
 
         if ($oldLogs.Count -gt 0) {
             $count = $oldLogs.Count
-            $oldLogs | Remove-Item -Force -ErrorAction SilentlyContinue
+            $oldLogs | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue }
             Write-OutputColor "Cleaned up $count old transcript(s) (older than $DaysToKeep days)" -color "Debug"
         }
 
         # Size-based safety: if transcript directory exceeds MaxDirectorySizeMB, remove oldest first
-        $remainingLogs = Get-ChildItem -Path $tempPath -Filter $logFilter -ErrorAction SilentlyContinue |
+        $remainingLogs = Get-ChildItem -LiteralPath $tempPath -Filter $logFilter -ErrorAction SilentlyContinue |
             Sort-Object LastWriteTime
         if ($remainingLogs) {
             $totalSize = ($remainingLogs | Measure-Object -Property Length -Sum).Sum

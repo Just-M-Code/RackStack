@@ -1234,7 +1234,7 @@ function Get-DriftBaselines {
     $baselineDir = "$script:AppConfigDir\baselines"
     if (-not (Test-Path -LiteralPath $baselineDir)) { return @() }
 
-    $files = Get-ChildItem -Path $baselineDir -Filter "*.json" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+    $files = Get-ChildItem -LiteralPath $baselineDir -Filter "*.json" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
     $baselines = @()
 
     foreach ($file in $files) {

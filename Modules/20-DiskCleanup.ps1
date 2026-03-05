@@ -18,21 +18,21 @@ function Start-DiskCleanup {
         # Temp files
         $tempPaths = @($env:TEMP, "$env:SystemRoot\Temp", "$env:SystemRoot\Prefetch")
         foreach ($path in $tempPaths) {
-            if (Test-Path $path) {
-                $tempSize += [long](Get-ChildItem $path -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
+            if (Test-Path -LiteralPath $path) {
+                $tempSize += [long](Get-ChildItem -LiteralPath $path -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
             }
         }
 
         # Windows Update cache
         $wuPath = "$env:SystemRoot\SoftwareDistribution\Download"
-        if (Test-Path $wuPath) {
-            $wuSize = [long](Get-ChildItem $wuPath -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
+        if (Test-Path -LiteralPath $wuPath) {
+            $wuSize = [long](Get-ChildItem -LiteralPath $wuPath -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
         }
 
         # CBS Logs
         $cbsPath = "$env:SystemRoot\Logs\CBS"
-        if (Test-Path $cbsPath) {
-            $logsSize = [long](Get-ChildItem $cbsPath -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
+        if (Test-Path -LiteralPath $cbsPath) {
+            $logsSize = [long](Get-ChildItem -LiteralPath $cbsPath -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum -ErrorAction SilentlyContinue).Sum
         }
 
         $totalPotential = $tempSize + $wuSize + $logsSize
@@ -101,8 +101,8 @@ function Invoke-QuickClean {
 
     $tempPaths = @($env:TEMP, "$env:SystemRoot\Temp")
     foreach ($tempPath in $tempPaths) {
-        if (Test-Path $tempPath) {
-            $files = Get-ChildItem $tempPath -Recurse -Force -File -ErrorAction SilentlyContinue
+        if (Test-Path -LiteralPath $tempPath) {
+            $files = Get-ChildItem -LiteralPath $tempPath -Recurse -Force -File -ErrorAction SilentlyContinue
             foreach ($file in $files) {
                 try {
                     $fileSize = $file.Length
@@ -171,8 +171,8 @@ function Clear-WindowsUpdateCache {
 
         # Clear download folder
         $wuPath = "$env:SystemRoot\SoftwareDistribution\Download"
-        if (Test-Path $wuPath) {
-            Get-ChildItem $wuPath -Recurse -Force -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+        if (Test-Path -LiteralPath $wuPath) {
+            Get-ChildItem -LiteralPath $wuPath -Recurse -Force -ErrorAction SilentlyContinue | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force -Recurse -ErrorAction SilentlyContinue }
         }
 
         # Restart services
