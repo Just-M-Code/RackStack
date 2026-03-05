@@ -1089,7 +1089,7 @@ function Export-Defaults {
     }
 
     try {
-        $defaults | ConvertTo-Json -Depth 5 | Out-File $script:DefaultsPath -Encoding UTF8 -Force
+        $defaults | ConvertTo-Json -Depth 5 | Out-File -LiteralPath $script:DefaultsPath -Encoding UTF8 -Force
     }
     catch {
         Write-OutputColor "Failed to save defaults: $_" -color "Error"

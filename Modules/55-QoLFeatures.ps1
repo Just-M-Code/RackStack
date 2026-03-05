@@ -30,7 +30,7 @@ function Import-Favorites {
 function Export-Favorites {
     Initialize-AppConfigDir
     try {
-        $script:Favorites | ConvertTo-Json -Depth 10 | Out-File $script:FavoritesPath -Encoding UTF8 -Force
+        $script:Favorites | ConvertTo-Json -Depth 10 | Out-File -LiteralPath $script:FavoritesPath -Encoding UTF8 -Force
     }
     catch {
         Write-OutputColor "  Warning: Could not save favorites: $($_.Exception.Message)" -color "Warning"
@@ -253,7 +253,7 @@ function Export-CommandHistory {
         if ($script:CommandHistory.Count -gt $script:MaxHistoryItems) {
             $script:CommandHistory = $script:CommandHistory | Select-Object -Last $script:MaxHistoryItems
         }
-        $script:CommandHistory | ConvertTo-Json -Depth 10 | Out-File $script:HistoryPath -Encoding UTF8 -Force
+        $script:CommandHistory | ConvertTo-Json -Depth 10 | Out-File -LiteralPath $script:HistoryPath -Encoding UTF8 -Force
     }
     catch {
         Write-OutputColor "  Warning: Could not save command history: $($_.Exception.Message)" -color "Warning"
@@ -333,7 +333,7 @@ function Save-SessionState {
     }
 
     try {
-        $sessionState | ConvertTo-Json -Depth 10 | Out-File $script:SessionStatePath -Encoding UTF8 -Force
+        $sessionState | ConvertTo-Json -Depth 10 | Out-File -LiteralPath $script:SessionStatePath -Encoding UTF8 -Force
     }
     catch {
         Write-OutputColor "  Warning: Could not save session state: $($_.Exception.Message)" -color "Warning"

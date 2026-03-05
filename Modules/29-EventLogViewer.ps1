@@ -89,7 +89,7 @@ function Show-EventLogViewer {
                 $csvPath = "$script:TempPath\EventLog_$timestamp.csv"
                 try {
                     $lastEvents | Select-Object TimeCreated, LevelDisplayName, Id, ProviderName, Message |
-                        Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
+                        Export-Csv -LiteralPath $csvPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
                     Write-OutputColor "  Exported $(@($lastEvents).Count) events to:" -color "Success"
                     Write-OutputColor "  $csvPath" -color "Info"
                 }

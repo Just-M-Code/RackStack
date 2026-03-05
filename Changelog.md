@@ -1,5 +1,11 @@
 ﻿# Changelog
 
+## v1.20.5
+
+- **Bug Fix:** `Out-File` calls use `-LiteralPath` for favorites, history, session state, and defaults file writes — prevents wildcard interpretation on config paths (55-QoLFeatures, 56-OperationsMenu).
+- **Bug Fix:** `Export-Csv` calls use `-LiteralPath` for event log and software inventory exports — prevents wildcard interpretation on constructed paths (29-EventLogViewer, 35-Utilities).
+- 64 modules, 1873 tests
+
 ## v1.20.4
 
 - **Bug Fix:** `Get-Content` calls use `-LiteralPath` across 10 instances in 7 modules — prevents wildcard interpretation on config-derived paths (04-Navigation, 34-Help, 39-FileServer, 45-ConfigExport, 50-EntryPoint, 54-HTMLReports, 55-QoLFeatures, 56-OperationsMenu).

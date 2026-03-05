@@ -1145,7 +1145,7 @@ function Show-InstalledSoftware {
             try {
                 $software | Sort-Object Name |
                     Select-Object Name, Version, Publisher, InstallDate, @{N='SizeMB';E={$_.Size}} |
-                    Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
+                    Export-Csv -LiteralPath $csvPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
                 Write-OutputColor "  Exported $($software.Count) entries to:" -color "Success"
                 Write-OutputColor "  $csvPath" -color "Info"
             } catch {

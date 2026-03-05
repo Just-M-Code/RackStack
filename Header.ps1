@@ -30,10 +30,16 @@
     7h3 4b1d3r
 
 .VERSION
-    1.20.4
+    1.20.5
 
 .LAST UPDATED
-    03/04/2026
+    03/05/2026
+
+.CHANGELOG v1.20.5
+    BUG FIXES — OUT-FILE AND EXPORT-CSV -LITERALPATH:
+    - FIX: Out-File calls use -LiteralPath for favorites, history, session state, and defaults file writes — prevents wildcard interpretation on config paths (QoL Features, Operations Menu)
+    - FIX: Export-Csv calls use -LiteralPath for event log and software inventory exports — prevents wildcard interpretation on constructed paths (Event Log Viewer, Utilities)
+    64 modules, 1873 tests
 
 .CHANGELOG v1.20.4
     BUG FIXES — GET-CONTENT -LITERALPATH + NAVIGATION TRAPS:
