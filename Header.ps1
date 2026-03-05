@@ -30,10 +30,18 @@
     7h3 4b1d3r
 
 .VERSION
-    1.20.7
+    1.20.8
 
 .LAST UPDATED
     03/05/2026
+
+.CHANGELOG v1.20.8
+    BUG FIXES — INPUT VALIDATION, DEAD CODE CLEANUP:
+    - FIX: Storage Replica replication mode prompt validates input and supports navigation — prevents silently selecting Asynchronous mode for any non-"1" input (Storage Replica)
+    - FIX: License type selection validates input as "1" or "2" — prevents silently selecting AVMA for any non-"1" input including nav commands (Operations Menu)
+    - FIX: Host Storage "0" back option checked before Test-NavigationCommand — restores "No changes made." feedback message (Host Storage)
+    - CLEANUP: Removed unreachable dead code — 3 "^[Bb]$" switch cases in timezone functions already handled by navigation system, duplicate nav check in Host Storage, dead 'b'/'B' check in Agent Installer
+    64 modules, 1873 tests
 
 .CHANGELOG v1.20.7
     BUG FIXES — COMPREHENSIVE GET-CHILDITEM, TEST-PATH, REMOVE-ITEM -LITERALPATH SWEEP:

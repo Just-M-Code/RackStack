@@ -1,5 +1,13 @@
 ﻿# Changelog
 
+## v1.20.8
+
+- **Bug Fix:** Storage Replica replication mode prompt validates input and supports navigation — prevents silently selecting Asynchronous mode for any non-"1" input (33-StorageReplica).
+- **Bug Fix:** License type selection (add/delete) validates input as "1" or "2" — prevents silently selecting AVMA for any non-"1" input including nav commands (56-OperationsMenu).
+- **Bug Fix:** Host Storage "0" back option checked before `Test-NavigationCommand` — restores "No changes made." feedback message (40-HostStorage).
+- **Cleanup:** Removed unreachable dead code — 3 `"^[Bb]$"` switch cases in timezone functions already handled by navigation system, duplicate nav check in Host Storage, dead `'b'/'B'` check in Agent Installer.
+- 64 modules, 1873 tests
+
 ## v1.20.7
 
 - **Bug Fix:** `Get-ChildItem` uses `-LiteralPath` across 12 instances in Disk Cleanup, Utilities disk analysis, Config Export baselines, Exit Cleanup profile scan, Entry Point transcript cleanup, HTML Reports metrics, and Operations Menu company defaults.

@@ -1055,9 +1055,6 @@ function Show-AgentManagement {
                 Start-Sleep -Seconds 1
             }
         }
-        elseif ($choice -eq 'b' -or $choice -eq 'B') {
-            return
-        }
     }
 }
 #endregion

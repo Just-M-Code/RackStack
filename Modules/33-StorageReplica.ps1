@@ -150,7 +150,16 @@ function Show-StorageReplicaManagement {
                 Write-OutputColor "  [1] Synchronous (zero data loss)" -color "Info"
                 Write-OutputColor "  [2] Asynchronous (better performance)" -color "Info"
                 $mode = Read-Host "  Select replication mode"
-                $repMode = if ($mode -eq "1") { "Synchronous" } else { "Asynchronous" }
+                $navResult = Test-NavigationCommand -UserInput $mode
+                if ($navResult.ShouldReturn) {
+                    if (Invoke-NavigationAction -NavResult $navResult) { return }
+                    continue
+                }
+                $repMode = if ($mode -eq "1") { "Synchronous" } elseif ($mode -eq "2") { "Asynchronous" } else {
+                    Write-OutputColor "  Invalid selection. Please enter 1 or 2." -color "Error"
+                    Start-Sleep -Seconds 1
+                    continue
+                }
 
                 if (Confirm-UserAction -Message "Create Storage Replica partnership?") {
                     try {

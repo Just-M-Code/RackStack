@@ -270,13 +270,13 @@ function Initialize-HostStorage {
 
     $driveChoice = Read-Host "  Select drive for VM storage"
 
-    $navResult = Test-NavigationCommand -UserInput $driveChoice
-    if ($navResult.ShouldReturn) { return $false }
-
     if ($driveChoice -eq "0") {
         Write-OutputColor "  No changes made." -color "Info"
         return $false
     }
+
+    $navResult = Test-NavigationCommand -UserInput $driveChoice
+    if ($navResult.ShouldReturn) { return $false }
 
     if ($driveChoice -match '^\d+$') {
         $choiceNum = [int]$driveChoice
@@ -291,8 +291,6 @@ function Initialize-HostStorage {
         }
     }
     else {
-        $navResult = Test-NavigationCommand -UserInput $driveChoice
-        if ($navResult.ShouldReturn) { return $false }
         Write-OutputColor "  Invalid choice." -color "Error"
         return $false
     }

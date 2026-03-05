@@ -127,7 +127,6 @@ function Show-TimezoneRegionPicker {
         }
 
         switch -Regex ($choice) {
-            "^[Bb]$" { return }
             "^[Aa]$" { Show-AllSystemTimezones }
             "^\d+$" {
                 $num = [int]$choice
@@ -190,7 +189,6 @@ function Show-RegionTimezones {
         }
 
         switch -Regex ($choice) {
-            "^[Bb]$" { return }
             "^\d+$" {
                 $num = [int]$choice
                 if ($num -ge 1 -and $num -le $timezones.Count) {
@@ -263,7 +261,6 @@ function Show-AllSystemTimezones {
         }
 
         switch -Regex ($choice) {
-            "^[Bb]$" { return }
             "^[Nn]$" {
                 if ($page -lt $totalPages - 1) { $page++ }
             }

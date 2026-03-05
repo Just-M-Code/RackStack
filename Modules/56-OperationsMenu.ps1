@@ -1441,6 +1441,11 @@ function Show-EditLicenses {
                 Write-OutputColor "  1. KMS (for hosts)" -color "Info"
                 Write-OutputColor "  2. AVMA (for VMs on Datacenter hosts)" -color "Info"
                 $typeChoice = Read-Host "  Select"
+                if ($typeChoice -ne "1" -and $typeChoice -ne "2") {
+                    Write-OutputColor "  Invalid selection. Please enter 1 or 2." -color "Error"
+                    Start-Sleep -Seconds 1
+                    continue
+                }
 
                 Write-OutputColor "Enter Windows Server version (e.g., Windows Server 2022):" -color "Info"
                 $version = Read-Host
@@ -1475,6 +1480,11 @@ function Show-EditLicenses {
             "D" {
                 Write-OutputColor "Delete from: 1. KMS  2. AVMA" -color "Info"
                 $typeChoice = Read-Host "  Select"
+                if ($typeChoice -ne "1" -and $typeChoice -ne "2") {
+                    Write-OutputColor "  Invalid selection. Please enter 1 or 2." -color "Error"
+                    Start-Sleep -Seconds 1
+                    continue
+                }
                 $targetKeys = if ($typeChoice -eq "1") { $script:CustomKMSKeys } else { $script:CustomAVMAKeys }
                 $typeName = if ($typeChoice -eq "1") { "KMS" } else { "AVMA" }
 
