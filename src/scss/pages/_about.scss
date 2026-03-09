@@ -1,0 +1,41 @@
+.profile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  gap: 2rem;
+  color: white;
+  margin-top: 2rem;
+  &-text {
+    text-transform: uppercase;
+    letter-spacing: 0.2rem;
+  }
+  &-api-link {
+    color: var(--accent-color);
+    text-decoration: none;
+  }
+  h1 {
+    font-size: 4rem;
+  }
+  &-image {
+    height: 15rem;
+    width: 15rem;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 0.3rem solid var(--accent-color);
+    padding: 1rem;
+  }
+  &-links {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2rem;
+    cursor: pointer;
+    a {
+      color: var(--accent-color);
+      svg {
+        font-size: 3rem;
+      }
+    }
+  }
+}
